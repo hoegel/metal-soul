@@ -4,6 +4,7 @@ from PySide6.QtCore import QTimer, Qt, QPoint, QRect
 from ui.hud import HUD
 from core.player import Player
 from config import *
+from core.enemy import load_enemies_from_json
 
 class GameView(QWidget):
     def __init__(self, main_window):
@@ -35,6 +36,8 @@ class GameView(QWidget):
 
         self.attack_effects = []
 
+        self.enemies = load_enemies_from_json("resources/data/enemies.json")
+
     def keyPressEvent(self, event: QKeyEvent):
         self.pressed_keys.add(event.key())
 
@@ -53,11 +56,32 @@ class GameView(QWidget):
     def perform_attack(self, point):
         atk = self.player.attack_type
         if atk == 1:
-            self.attack_effects.append(('melee', self.player_x, self.player_y, point.x(), point.y()))
+            self.attack_effects.append({
+                'type': 'melee',
+                'x': self.player_x,
+                'y': self.player_y,
+                'px': point.x(),
+                'py': point.y(),
+                'ttl': 10
+            })
         elif atk == 2:
-            self.attack_effects.append(('beam', self.player_x, self.player_y, point.x(), point.y()))
+            self.attack_effects.append({
+                'type': 'beam',
+                'x': self.player_x,
+                'y': self.player_y,
+                'px': point.x(),
+                'py': point.y(),
+                'ttl': 10
+            })
         elif atk == 3:
-            self.attack_effects.append(('bomb', self.player_x, self.player_y, point.x(), point.y()))
+            self.attack_effects.append({
+                'type': 'bomb',
+                'x': self.player_x,
+                'y': self.player_y,
+                'px': point.x(),
+                'py': point.y(),
+                'ttl': 10
+            })
 
     def update_game(self):
         dx = dy = 0
@@ -81,7 +105,77 @@ class GameView(QWidget):
         damage, hp, max_hp, speed = self.player.get_stats()
         #self.hud.update_stats(hp, max_hp)
 
+        for enemy in self.enemies:
+            enemy.move_towards(self.player_x, self.player_y)
+
+        self.resolve_collisions()
+
+        for effect in self.attack_effects:
+            effect['ttl'] -= 1
+        self.attack_effects = [e for e in self.attack_effects if e['ttl'] > 0]
+
         self.update()
+
+    def resolve_collisions(self):
+        to_remove = set()
+        damaged_enemies = set()
+
+        for effect in self.attack_effects:
+            atk_type = effect['type']
+            x = effect['x']
+            y = effect['y']
+            px = effect['px']
+            py = effect['py']
+
+            if atk_type == 'melee':
+                damage = 8
+                radius = 40
+                for enemy in self.enemies:
+                    if enemy in damaged_enemies:
+                        continue
+                    ex, ey, _, _ = enemy.rect()
+                    dist = ((ex - x) ** 2 + (ey - y) ** 2) ** 0.5
+                    if dist < radius:
+                        if enemy.take_damage(damage):
+                            to_remove.add(enemy)
+                        damaged_enemies.add(enemy)
+
+            elif atk_type == 'beam':
+                damage = 12
+                beam_threshold = 10  # расстояние до линии для попадания
+                dx = px - x
+                dy = py - y
+                length_squared = dx**2 + dy**2 if dx or dy else 1
+                for enemy in self.enemies:
+                    if enemy in damaged_enemies:
+                        continue
+                    ex, ey, _, _ = enemy.rect()
+
+                    # расстояние от врага до линии атаки
+                    t = max(0, min(1, ((ex - x) * dx + (ey - y) * dy) / length_squared))
+                    closest_x = x + t * dx
+                    closest_y = y + t * dy
+                    dist = ((closest_x - ex) ** 2 + (closest_y - ey) ** 2) ** 0.5
+
+                    if dist < beam_threshold:
+                        if enemy.take_damage(damage):
+                            to_remove.add(enemy)
+                        damaged_enemies.add(enemy)
+
+            elif atk_type == 'bomb':
+                damage = 18
+                radius = 50
+                for enemy in self.enemies:
+                    if enemy in damaged_enemies:
+                        continue
+                    ex, ey, _, _ = enemy.rect()
+                    dist = ((ex - px) ** 2 + (ey - py) ** 2) ** 0.5
+                    if dist < radius:
+                        if enemy.take_damage(damage):
+                            to_remove.add(enemy)
+                        damaged_enemies.add(enemy)
+
+        self.enemies = [e for e in self.enemies if e not in to_remove]
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -97,13 +191,26 @@ class GameView(QWidget):
         painter.drawRect(0, ROOM_SIZE[1] - 10, ROOM_SIZE[0], 10)
         painter.drawRect(ROOM_SIZE[0] - 10, 0, 10, ROOM_SIZE[1])
 
-        for atk_type, x, y, px, py in self.attack_effects:
+        for effect in self.attack_effects:
+            atk_type = effect['type']
+            x = effect['x']
+            y = effect['y']
+            px = effect['px']
+            py = effect['py']
+
             if atk_type == 'melee':
-                painter.setBrush(QColor(255, 255, 0))
+                painter.setBrush(QColor(255, 255, 0, 150))
                 painter.drawEllipse(x - 10, y - 10, 40, 40)
             elif atk_type == 'beam':
                 painter.setPen(QColor(0, 255, 255))
                 painter.drawLine(x + 10, y + 10, px, py)
             elif atk_type == 'bomb':
-                painter.setBrush(QColor(255, 0, 255))
-                painter.drawEllipse(px - 10, py - 10, 20, 20)
+                painter.setBrush(QColor(255, 0, 255, 180))
+                painter.drawEllipse(px - 20, py - 20, 40, 40)
+
+        for enemy in self.enemies:
+            painter.setBrush(QColor(200, 50, 50))
+            painter.drawEllipse(enemy.x, enemy.y, enemy.size, enemy.size)
+
+            painter.setPen(QColor(255, 255, 255))
+            painter.drawText(enemy.x, enemy.y - 5, f"{enemy.hp}/{enemy.max_hp}")
