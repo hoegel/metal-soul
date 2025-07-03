@@ -1,10 +1,12 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout
 from PySide6.QtGui import QPainter, QColor, QMouseEvent, QKeyEvent
-from PySide6.QtCore import QTimer, Qt, QPoint, QRect
+from PySide6.QtCore import QTimer, Qt, QPoint, QRect, QRectF
 from ui.hud import HUD
 from core.player import Player
 from config import *
 from core.enemy import load_enemies_from_json
+import math
+from core.weapon import *
 
 class GameView(QWidget):
     def __init__(self, main_window):
@@ -35,8 +37,16 @@ class GameView(QWidget):
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
         self.attack_effects = []
+        for weapon in self.player.weapons.values():
+            weapon.subscribe(self.on_enemies_hit)
 
         self.enemies = load_enemies_from_json("resources/data/enemies.json")
+
+    def on_enemies_hit(self, enemies):
+        for e in enemies:
+            if e in self.enemies:
+                self.enemies.remove(e)
+
 
     def keyPressEvent(self, event: QKeyEvent):
         self.pressed_keys.add(event.key())
@@ -51,37 +61,18 @@ class GameView(QWidget):
     def mousePressEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.LeftButton:
             if QRect(BORDER_SIZE, BORDER_SIZE, ROOM_SIZE[0] - 2 * BORDER_SIZE, ROOM_SIZE[1] - 2 * BORDER_SIZE).contains(event.pos()):
-                self.perform_attack(event.globalPos())
+                self.perform_attack(event.pos()) #XXX
 
-    def perform_attack(self, point):
-        atk = self.player.attack_type
-        if atk == 1:
-            self.attack_effects.append({
-                'type': 'melee',
-                'x': self.player_x,
-                'y': self.player_y,
-                'px': point.x(),
-                'py': point.y(),
-                'ttl': 10
-            })
-        elif atk == 2:
-            self.attack_effects.append({
-                'type': 'beam',
-                'x': self.player_x,
-                'y': self.player_y,
-                'px': point.x(),
-                'py': point.y(),
-                'ttl': 10
-            })
-        elif atk == 3:
-            self.attack_effects.append({
-                'type': 'bomb',
-                'x': self.player_x,
-                'y': self.player_y,
-                'px': point.x(),
-                'py': point.y(),
-                'ttl': 10
-            })
+    def perform_attack(self, mouse_pos):
+        player_pos = (self.player_x, self.player_y) #XXX
+        target_pos = (mouse_pos.x(), mouse_pos.y())
+
+        self.attack_effects.append({
+            'type': ['melee', 'beam', 'bomb'][self.player.attack_type - 1],
+            'x': player_pos[0], 'y': player_pos[1],
+            'px': target_pos[0], 'py': target_pos[1],
+            'ttl': 10
+        })
 
     def update_game(self):
         dx = dy = 0
@@ -193,20 +184,31 @@ class GameView(QWidget):
 
         for effect in self.attack_effects:
             atk_type = effect['type']
-            x = effect['x']
-            y = effect['y']
-            px = effect['px']
-            py = effect['py']
+            x, y = effect['x'], effect['y']
+            px, py = effect['px'], effect['py']
 
             if atk_type == 'melee':
-                painter.setBrush(QColor(255, 255, 0, 150))
-                painter.drawEllipse(x - 10, y - 10, 40, 40)
+                angle = math.degrees(math.atan2(py - y, px - x))
+                start_angle = int((angle - 45) * 16)
+                span_angle = int(90 * 16)
+
+                painter.setBrush(QColor(255, 255, 0, 180))
+                painter.setPen(Qt.NoPen)
+                painter.drawPie(QRectF(x - 40, y - 40, 80, 80), start_angle, span_angle)
+
             elif atk_type == 'beam':
-                painter.setPen(QColor(0, 255, 255))
-                painter.drawLine(x + 10, y + 10, px, py)
+                # Вычисляем конец луча до столкновения со стеной
+                end = Beam()._compute_wall_intersection(x, y, px, py)
+                if end:
+                    bx, by = end
+                    painter.setPen(QColor(0, 255, 255))
+                    painter.drawLine(x + 10, y + 10, bx, by)
+
             elif atk_type == 'bomb':
-                painter.setBrush(QColor(255, 0, 255, 180))
-                painter.drawEllipse(px - 20, py - 20, 40, 40)
+                painter.setBrush(QColor(255, 0, 255, 160))
+                painter.setPen(Qt.NoPen)
+                painter.drawEllipse(px - 25, py - 25, 50, 50)
+
 
         for enemy in self.enemies:
             painter.setBrush(QColor(200, 50, 50))
