@@ -21,10 +21,10 @@ class HUD(QWidget):
         self.major_chord_label = QLabel("Major chord")
         self.minor_chord_label = QLabel("Minor chord")
         
-        self.power_chord_label.setStyleSheet("color: gray; font-size: 16px;")
-        self.major_chord_label.setStyleSheet("color: gray; font-size: 16px;")
-        self.minor_chord_label.setStyleSheet("color: gray; font-size: 16px;")
-        
+        self.power_chord_label.setStyleSheet(f"background-color: {CHOSEN_WEAPON_COLOR}; font-size: 16px;")
+        self.major_chord_label.setStyleSheet(f"background-color: {NOT_CHOSEN_WEAPON_COLOR}; font-size: 16px;")
+        self.minor_chord_label.setStyleSheet(f"background-color: {NOT_CHOSEN_WEAPON_COLOR}; font-size: 16px;")
+            
         weapon_row.addWidget(self.power_chord_label)
         weapon_row.addWidget(self.major_chord_label)
         weapon_row.addWidget(self.minor_chord_label)
@@ -42,9 +42,15 @@ class HUD(QWidget):
     
     def update_chord(self, number):
         if(number == 1):
-            self.power_chord_label.setStyleSheet("color: black; font-size: 16px;")
+            self.power_chord_label.setStyleSheet(f"background-color: {CHOSEN_WEAPON_COLOR}; font-size: 16px;")
+            self.major_chord_label.setStyleSheet(f"background-color: {NOT_CHOSEN_WEAPON_COLOR}; font-size: 16px;")
+            self.minor_chord_label.setStyleSheet(f"background-color: {NOT_CHOSEN_WEAPON_COLOR}; font-size: 16px;")
         elif(number == 2):
-            self.major_chord_label.setStyleSheet("color: black; font-size: 16px;")
+            self.power_chord_label.setStyleSheet(f"background-color: {NOT_CHOSEN_WEAPON_COLOR}; font-size: 16px;")
+            self.major_chord_label.setStyleSheet(f"background-color: {CHOSEN_WEAPON_COLOR}; font-size: 16px;")
+            self.minor_chord_label.setStyleSheet(f"background-color: {NOT_CHOSEN_WEAPON_COLOR}; font-size: 16px;")
         elif(number == 3):
-            self.minor.setStyleSheet("color: black; font-size: 16px;")
+            self.power_chord_label.setStyleSheet(f"background-color: {NOT_CHOSEN_WEAPON_COLOR}; font-size: 16px;")
+            self.major_chord_label.setStyleSheet(f"background-color: {NOT_CHOSEN_WEAPON_COLOR}; font-size: 16px;")
+            self.minor_chord_label.setStyleSheet(f"background-color: {CHOSEN_WEAPON_COLOR}; font-size: 16px;")
 
