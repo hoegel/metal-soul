@@ -23,6 +23,7 @@ class Melee(Weapon):
         self.damage = 8
         self.radius = 40
         self.tod = 5
+        self.angle_range = math.pi / 2
 
     def attack(self, player_pos, target_pos, enemies):
         px, py = player_pos
@@ -35,12 +36,12 @@ class Melee(Weapon):
         main_angle = math.atan2(dy, dx)
 
         for enemy in enemies:
-            ex, ey, _, _ = enemy.rect()
+            ex, ey, esize, _ = enemy.rect()
             vec_x = ex - px
             vec_y = ey - py
             dist = math.hypot(vec_x, vec_y)
 
-            if dist > self.radius:
+            if dist > self.radius + esize:
                 continue
 
             angle_to_enemy = math.atan2(vec_y, vec_x)

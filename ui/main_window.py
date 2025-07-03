@@ -22,3 +22,4 @@ class MainWindow(QMainWindow):
 
     def start_game(self):
         self.stack.setCurrentWidget(self.game)
+        self.game.game_starts()

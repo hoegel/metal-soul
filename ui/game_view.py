@@ -26,6 +26,7 @@ class GameView(QWidget):
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_game)
         self.timer.start(16)
+        self.timer.stop()
 
         self.layout = QVBoxLayout(self)
         self.layout.setContentsMargins(0, 0, 0, 0)
@@ -41,6 +42,9 @@ class GameView(QWidget):
             weapon.subscribe(self.on_enemies_hit)
 
         self.enemies = load_enemies_from_json("resources/data/enemies.json")
+
+    def game_starts(self):
+        self.timer.start(16)
 
     def on_enemies_hit(self, enemies):
         for e in enemies:
@@ -71,8 +75,9 @@ class GameView(QWidget):
             'type': ['melee', 'beam', 'bomb'][self.player.attack_type - 1],
             'x': player_pos[0], 'y': player_pos[1],
             'px': target_pos[0], 'py': target_pos[1],
-            'ttl': 10
+            'time': 10
         })
+        self.player.attack(player_pos, target_pos, self.enemies)
 
     def update_game(self):
         dx = dy = 0
@@ -99,74 +104,74 @@ class GameView(QWidget):
         for enemy in self.enemies:
             enemy.move_towards(self.player_x, self.player_y)
 
-        self.resolve_collisions()
+        # self.resolve_collisions()
 
         for effect in self.attack_effects:
-            effect['ttl'] -= 1
-        self.attack_effects = [e for e in self.attack_effects if e['ttl'] > 0]
+            effect['time'] -= 1
+        self.attack_effects = [e for e in self.attack_effects if e['time'] > 0]
 
         self.update()
 
-    def resolve_collisions(self):
-        to_remove = set()
-        damaged_enemies = set()
+    # def resolve_collisions(self):
+    #     to_remove = set()
+    #     damaged_enemies = set()
 
-        for effect in self.attack_effects:
-            atk_type = effect['type']
-            x = effect['x']
-            y = effect['y']
-            px = effect['px']
-            py = effect['py']
+    #     for effect in self.attack_effects:
+    #         atk_type = effect['type']
+    #         x = effect['x']
+    #         y = effect['y']
+    #         px = effect['px']
+    #         py = effect['py']
 
-            if atk_type == 'melee':
-                damage = 8
-                radius = 40
-                for enemy in self.enemies:
-                    if enemy in damaged_enemies:
-                        continue
-                    ex, ey, _, _ = enemy.rect()
-                    dist = ((ex - x) ** 2 + (ey - y) ** 2) ** 0.5
-                    if dist < radius:
-                        if enemy.take_damage(damage):
-                            to_remove.add(enemy)
-                        damaged_enemies.add(enemy)
+    #         if atk_type == 'melee':
+    #             damage = 8
+    #             radius = 40
+    #             for enemy in self.enemies:
+    #                 if enemy in damaged_enemies:
+    #                     continue
+    #                 ex, ey, _, _ = enemy.rect()
+    #                 dist = ((ex - x) ** 2 + (ey - y) ** 2) ** 0.5
+    #                 if dist < radius:
+    #                     if enemy.take_damage(damage):
+    #                         to_remove.add(enemy)
+    #                     damaged_enemies.add(enemy)
 
-            elif atk_type == 'beam':
-                damage = 12
-                beam_threshold = 10  # расстояние до линии для попадания
-                dx = px - x
-                dy = py - y
-                length_squared = dx**2 + dy**2 if dx or dy else 1
-                for enemy in self.enemies:
-                    if enemy in damaged_enemies:
-                        continue
-                    ex, ey, _, _ = enemy.rect()
+    #         elif atk_type == 'beam':
+    #             damage = 12
+    #             beam_threshold = 10  # расстояние до линии для попадания
+    #             dx = px - x
+    #             dy = py - y
+    #             length_squared = dx**2 + dy**2 if dx or dy else 1
+    #             for enemy in self.enemies:
+    #                 if enemy in damaged_enemies:
+    #                     continue
+    #                 ex, ey, _, _ = enemy.rect()
 
-                    # расстояние от врага до линии атаки
-                    t = max(0, min(1, ((ex - x) * dx + (ey - y) * dy) / length_squared))
-                    closest_x = x + t * dx
-                    closest_y = y + t * dy
-                    dist = ((closest_x - ex) ** 2 + (closest_y - ey) ** 2) ** 0.5
+    #                 # расстояние от врага до линии атаки
+    #                 t = max(0, min(1, ((ex - x) * dx + (ey - y) * dy) / length_squared))
+    #                 closest_x = x + t * dx
+    #                 closest_y = y + t * dy
+    #                 dist = ((closest_x - ex) ** 2 + (closest_y - ey) ** 2) ** 0.5
 
-                    if dist < beam_threshold:
-                        if enemy.take_damage(damage):
-                            to_remove.add(enemy)
-                        damaged_enemies.add(enemy)
+    #                 if dist < beam_threshold:
+    #                     if enemy.take_damage(damage):
+    #                         to_remove.add(enemy)
+    #                     damaged_enemies.add(enemy)
 
-            elif atk_type == 'bomb':
-                damage = 18
-                radius = 50
-                for enemy in self.enemies:
-                    if enemy in damaged_enemies:
-                        continue
-                    ex, ey, _, _ = enemy.rect()
-                    dist = ((ex - px) ** 2 + (ey - py) ** 2) ** 0.5
-                    if dist < radius:
-                        if enemy.take_damage(damage):
-                            to_remove.add(enemy)
-                        damaged_enemies.add(enemy)
+    #         elif atk_type == 'bomb':
+    #             damage = 18
+    #             radius = 50
+    #             for enemy in self.enemies:
+    #                 if enemy in damaged_enemies:
+    #                     continue
+    #                 ex, ey, _, _ = enemy.rect()
+    #                 dist = ((ex - px) ** 2 + (ey - py) ** 2) ** 0.5
+    #                 if dist < radius:
+    #                     if enemy.take_damage(damage):
+    #                         to_remove.add(enemy)
+    #                     damaged_enemies.add(enemy)
 
-        self.enemies = [e for e in self.enemies if e not in to_remove]
+    #     self.enemies = [e for e in self.enemies if e not in to_remove]
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -188,13 +193,18 @@ class GameView(QWidget):
             px, py = effect['px'], effect['py']
 
             if atk_type == 'melee':
-                angle = math.degrees(math.atan2(py - y, px - x))
+                dx = px - x
+                dy = py - y
+                angle = math.degrees(math.atan2(-dy, dx))
+                angle = (angle + 360) % 360
+
                 start_angle = int((angle - 45) * 16)
                 span_angle = int(90 * 16)
 
                 painter.setBrush(QColor(255, 255, 0, 180))
                 painter.setPen(Qt.NoPen)
-                painter.drawPie(QRectF(x - 40, y - 40, 80, 80), start_angle, span_angle)
+                painter.drawPie(QRectF(x - 30, y - 30, 80, 80), start_angle, span_angle)
+
 
             elif atk_type == 'beam':
                 # Вычисляем конец луча до столкновения со стеной
