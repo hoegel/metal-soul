@@ -40,6 +40,7 @@ class GameView(QWidget):
 
         if event.key() in (Qt.Key_1, Qt.Key_2, Qt.Key_3):
             self.player.set_attack_type(int(event.text()))
+            self.hud.update_chord(int(event.text()))
 
     def keyReleaseEvent(self, event):
         self.pressed_keys.discard(event.key())
@@ -77,8 +78,8 @@ class GameView(QWidget):
         if self.bounds[1] <= new_y <= self.bounds[3]:
             self.player_y = new_y
 
-        hp, max_hp, mana, max_mana = self.player.get_stats()
-        self.hud.update_stats(hp, max_hp, mana, max_mana)
+        damage, hp, max_hp, speed = self.player.get_stats()
+        #self.hud.update_stats(hp, max_hp)
 
         self.update()
 

@@ -13,38 +13,38 @@ class HUD(QWidget):
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(10, 5, 10, 5)
 
-        top_row = QHBoxLayout()
-        bottom_row = QHBoxLayout()
         weapon_row = QHBoxLayout()
+        hp_row = QHBoxLayout()
+        
+        # Скилы        
+        self.power_chord_label = QLabel("Power chord")
+        self.major_chord_label = QLabel("Major chord")
+        self.minor_chord_label = QLabel("Minor chord")
+        
+        self.power_chord_label.setStyleSheet("color: gray; font-size: 16px;")
+        self.major_chord_label.setStyleSheet("color: gray; font-size: 16px;")
+        self.minor_chord_label.setStyleSheet("color: gray; font-size: 16px;")
+        
+        weapon_row.addWidget(self.power_chord_label)
+        weapon_row.addWidget(self.major_chord_label)
+        weapon_row.addWidget(self.minor_chord_label)
 
         # Жизнь
         self.hp_label = QLabel("HP: 100/100")
         self.hp_label.setStyleSheet("color: red; font-size: 16px;")
-        top_row.addWidget(self.hp_label)
+        hp_row.addWidget(self.hp_label)
 
-        # Мана
-        self.mana_label = QLabel("Mana: 50/50")
-        self.mana_label.setStyleSheet("color: cyan; font-size: 16px;")
-        top_row.addWidget(self.mana_label)
-
-        # Умения
-        for i in range(1, 5):
-            skill = QLabel(f"Skill {i}")
-            skill.setFixedSize(60, 20)
-            skill.setStyleSheet("background: gray; color: white; border: 1px solid white;")
-            bottom_row.addWidget(skill)
-
-        # Оружие
-        for i in range(1, 4):
-            weapon = QLabel(f"Weapon {i}")
-            weapon.setFixedSize(80, 20)
-            weapon.setStyleSheet("background: black; color: white; border: 1px solid white;")
-            weapon_row.addWidget(weapon)
-
-        main_layout.addLayout(top_row)
-        main_layout.addLayout(bottom_row)
         main_layout.addLayout(weapon_row)
+        main_layout.addLayout(hp_row)
     
-    def update_stats(self, hp, max_hp, mana, max_mana):
-        self.hp_label.setText(f"HP: {hp}/{max_hp}")
-        self.mana_label.setText(f"Mana: {mana}/{max_mana}")
+    #def update_stats(self, hp, max_hp):
+    #    self.hp_label.setText(f"HP: {hp}/{max_hp}")
+    
+    def update_chord(self, number):
+        if(number == 1):
+            self.power_chord_label.setStyleSheet("color: black; font-size: 16px;")
+        elif(number == 2):
+            self.major_chord_label.setStyleSheet("color: black; font-size: 16px;")
+        elif(number == 3):
+            self.minor.setStyleSheet("color: black; font-size: 16px;")
+

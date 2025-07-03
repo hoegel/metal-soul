@@ -1,9 +1,8 @@
 class Player:
     def __init__(self):
+        self.damage = 30
         self.max_hp = 100
         self.hp = 100
-        self.max_mana = 50
-        self.mana = 50
         self.speed = 4
 
         self.attack_type = 1  # 1 - ближняя, 2 - луч, 3 - бомба
@@ -13,4 +12,4 @@ class Player:
             self.attack_type = number
 
     def get_stats(self):
-        return self.hp, self.max_hp, self.mana, self.max_mana
+        return self.damage, self.hp, self.max_hp, self.speed
