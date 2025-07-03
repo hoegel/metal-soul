@@ -18,8 +18,8 @@ class GameView(QWidget):
         self.speed = 4
         self.pressed_keys = set()
 
-        self.bounds = [10, 10, ROOM_SIZE[0] - 10 - self.player_size, ROOM_SIZE[0] - 10 - self.player_size]  # границы: left, top, right, bottom
-
+        self.bounds = [BORDER_SIZE, BORDER_SIZE, ROOM_SIZE[0] - BORDER_SIZE - self.player_size, ROOM_SIZE[1] - BORDER_SIZE - self.player_size]  # границы: left, top, right, bottom
+                                                                                                                                                # self.player_size for hitbox
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_game)
         self.timer.start(16)
