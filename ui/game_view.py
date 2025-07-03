@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout
 from PySide6.QtGui import QPainter, QColor, QMouseEvent, QKeyEvent
-from PySide6.QtCore import QTimer, Qt, QPoint
+from PySide6.QtCore import QTimer, Qt, QPoint, QRect
 from ui.hud import HUD
 from core.player import Player
 from config import *
@@ -46,7 +46,8 @@ class GameView(QWidget):
 
     def mousePressEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.LeftButton:
-            self.perform_attack(event.globalPos())
+            if QRect(BORDER_SIZE, BORDER_SIZE, ROOM_SIZE[0] - 2 * BORDER_SIZE, ROOM_SIZE[1] - 2 * BORDER_SIZE).contains(event.pos()):
+                self.perform_attack(event.globalPos())
 
     def perform_attack(self, point):
         atk = self.player.attack_type
