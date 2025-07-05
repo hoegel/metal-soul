@@ -89,16 +89,17 @@ class GameView(QWidget):
                 self.perform_attack(event.pos()) #XXX
 
     def perform_attack(self, mouse_pos):
-        player_pos = (self.player_x, self.player_y) #XXX
-        target_pos = (mouse_pos.x(), mouse_pos.y())
+        if self.player.weapon.can_attack():
+            player_pos = (self.player_x, self.player_y) #XXX
+            target_pos = (mouse_pos.x(), mouse_pos.y())
 
-        self.attack_effects.append({
-            'type': ['melee', 'beam', 'bomb'][self.player.attack_type - 1],
-            'x': player_pos[0], 'y': player_pos[1],
-            'px': target_pos[0], 'py': target_pos[1],
-            'time': 10
-        })
-        self.player.attack(player_pos, target_pos, self.enemies)
+            self.attack_effects.append({
+                'type': ['melee', 'beam', 'bomb'][self.player.attack_type - 1],
+                'x': player_pos[0], 'y': player_pos[1],
+                'px': target_pos[0], 'py': target_pos[1],
+                'time': 10
+            })
+            self.player.attack(player_pos, target_pos, self.enemies)
 
     def update_game(self):
         dx = dy = 0
@@ -171,7 +172,7 @@ class GameView(QWidget):
 
 
         damage, hp, max_hp, speed = self.player.get_stats()
-        #self.hud.update_stats(hp, max_hp)
+        self.hud.update_stats(hp, max_hp)
 
         for enemy in self.enemies:
             enemy.move_towards(self.player_x, self.player_y)
@@ -311,7 +312,7 @@ class GameView(QWidget):
 
             elif atk_type == 'beam':
                 # Вычисляем конец луча до столкновения со стеной
-                end = Beam()._compute_wall_intersection(x, y, px, py)
+                end = Beam(Player)._compute_wall_intersection(x, y, px, py)
                 if end:
                     bx, by = end
                     painter.setPen(QColor(0, 255, 255))

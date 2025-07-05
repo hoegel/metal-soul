@@ -40,3 +40,18 @@ def load_enemies_from_json(path):
         size = entry.get("size", 20)
         enemies.append(Enemy(x, y, damage, hp, max_hp, speed, size))
     return enemies
+
+def apply_dot(damage=1, duration=3):
+    pass
+
+def apply_stun(duration=2):
+    pass
+
+def apply_slow(factor=0.67, duration=4):
+    pass
+
+def apply_chain_damage(damage=2):
+    pass
+
+def knockback(force=10):
+    pass
