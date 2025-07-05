@@ -1,3 +1,5 @@
+from core.weapon import Melee, Beam, Bomb
+
 class Player:
     def __init__(self):
         self.damage = 30
@@ -5,11 +7,20 @@ class Player:
         self.hp = 100
         self.speed = 4
 
-        self.attack_type = 1  # 1 - ближняя, 2 - луч, 3 - бомба
+        self.attack_type = 1
+        self.weapons = {
+            1: Melee(),
+            2: Beam(),
+            3: Bomb()
+        }
 
-    def set_attack_type(self, number):
-        if number in (1, 2, 3):
-            self.attack_type = number
+    def set_attack_type(self, atk_id):
+        if atk_id in self.weapons:
+            self.attack_type = atk_id
+
+    def attack(self, player_pos, target_pos, enemies):
+        weapon = self.weapons[self.attack_type]
+        weapon.attack(player_pos, target_pos, enemies)
 
     def get_stats(self):
         return self.damage, self.hp, self.max_hp, self.speed
