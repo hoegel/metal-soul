@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout
-from PySide6.QtGui import QPainter, QColor, QMouseEvent, QKeyEvent
+from PySide6.QtGui import QPainter, QColor, QMouseEvent, QKeyEvent, QPen
 from PySide6.QtCore import QTimer, Qt, QPoint, QRect, QRectF
 from ui.hud import HUD
 from core.player import Player
@@ -16,9 +16,9 @@ class GameView(QWidget):
 
         self.player = Player()
 
-        self.player_x = 100
-        self.player_y = 100
         self.player_size = 20
+        self.player_x = ROOM_SIZE[0] // 2 - self.player_size // 2
+        self.player_y = ROOM_SIZE[1] // 2 - self.player_size // 2
         self.speed = 4
         self.pressed_keys = set()
 
@@ -44,8 +44,10 @@ class GameView(QWidget):
 
         # self.enemies = load_enemies_from_json("resources/data/enemies.json")
 
+        self.floor = 0
         self.level = Level()
         self.current_room = self.level.get_room(*self.level.start_pos)
+        self.current_room.visited = True
         self.room_coords = self.level.start_pos
         self.load_room()
 
@@ -191,10 +193,30 @@ class GameView(QWidget):
         next_room = self.level.get_room(new_x, new_y)
 
         if next_room:
-            self.room_coords = (new_x, new_y)
-            self.current_room = next_room
-            self.player_x = ROOM_SIZE[0] // 2
-            self.player_y = ROOM_SIZE[1] // 2
+            if next_room.room_type == "next_level":
+                self.floor += 1
+                self.level = Level()  # Сгенерировать новый этаж
+                self.room_coords = self.level.start_pos
+                self.current_room = self.level.get_room(*self.room_coords)
+                self.player_x = ROOM_SIZE[0] // 2 - self.player_size // 2
+                self.player_y = ROOM_SIZE[1] // 2 - self.player_size // 2
+            else:
+                self.room_coords = (new_x, new_y)
+                self.current_room = next_room
+                # Расчёт позиции игрока у входа в новую комнату
+                if dx == 1:  # пришёл слева → появиться у левой двери
+                    self.player_x = 10
+                    self.player_y = ROOM_SIZE[1] // 2 - self.player_size // 2
+                elif dx == -1:  # пришёл справа → появиться у правой двери
+                    self.player_x = ROOM_SIZE[0] - 10 - self.player_size
+                    self.player_y = ROOM_SIZE[1] // 2 - self.player_size // 2
+                elif dy == 1:  # пришёл сверху → появиться у верхней двери
+                    self.player_y = 10
+                    self.player_x = ROOM_SIZE[0] // 2 - self.player_size // 2
+                elif dy == -1:  # пришёл снизу → появиться у нижней двери
+                    self.player_y = ROOM_SIZE[1] - 10 - self.player_size
+                    self.player_x = ROOM_SIZE[0] // 2 - self.player_size // 2
+            self.current_room.visited = True
             self.load_room()
 
     def paintEvent(self, event):
@@ -266,7 +288,7 @@ class GameView(QWidget):
 
 
         painter.setPen(QColor(255, 255, 255))
-        painter.drawText(20, 20, f"Room: {self.room_coords} ({self.current_room.room_type})")
+        painter.drawText(20, 20, f"Floor: {self.floor} Room: {self.room_coords} ({self.current_room.room_type})")
 
         for effect in self.attack_effects:
             atk_type = effect['type']
@@ -307,3 +329,31 @@ class GameView(QWidget):
 
             painter.setPen(QColor(255, 255, 255))
             painter.drawText(enemy.x, enemy.y - 5, f"{enemy.hp}/{enemy.max_hp}")
+
+        # Рисуем миникарту
+        minimap_scale = 8
+        minimap_offset_x = WINDOW_WIDTH - 100
+        minimap_offset_y = 100
+        room_size = 16
+
+        for (rx, ry), room in self.level.rooms.items():
+            color = QColor(100, 100, 100)
+            if room == self.current_room:
+                color = QColor(0, 255, 0)  # Текущая комната
+            elif room.visited:
+                color = QColor(200, 200, 200)  # Пройденные комнаты
+            elif room.room_type == "boss":
+                color = QColor(255, 0, 0)
+            elif room.room_type == "treasure":
+                color = QColor(255, 215, 0)
+            elif room.room_type == "next_level":
+                continue
+
+            painter.setBrush(color)
+            painter.setPen(QPen(Qt.black))
+            painter.drawRect(
+                minimap_offset_x + (rx - self.level.start_pos[0]) * room_size,
+                minimap_offset_y + (ry - self.level.start_pos[1]) * room_size,
+                room_size, room_size
+            )
+
