@@ -7,6 +7,7 @@ from config import *
 from core.enemy import load_enemies_from_json
 import math
 from core.weapon import *
+from core.level import Level
 
 class GameView(QWidget):
     def __init__(self, main_window):
@@ -41,15 +42,33 @@ class GameView(QWidget):
         for weapon in self.player.weapons.values():
             weapon.subscribe(self.on_enemies_hit)
 
-        self.enemies = load_enemies_from_json("resources/data/enemies.json")
+        # self.enemies = load_enemies_from_json("resources/data/enemies.json")
+
+        self.level = Level()
+        self.current_room = self.level.get_room(*self.level.start_pos)
+        self.room_coords = self.level.start_pos
+        self.load_room()
 
     def game_starts(self):
         self.timer.start(16)
+
+    def load_room(self):
+        self.enemies = []
+        room = self.current_room
+
+        if room.room_type == "fight" and not room.cleared:
+            self.enemies = load_enemies_from_json("resources/data/enemies.json")
+            room.enemies = self.enemies
+        elif room.room_type == "boss":
+            # load boss logic
+            ...
 
     def on_enemies_hit(self, enemies):
         for e in enemies:
             if e in self.enemies:
                 self.enemies.remove(e)
+        if not self.enemies:
+            self.current_room.cleared = True
 
 
     def keyPressEvent(self, event: QKeyEvent):
@@ -93,10 +112,61 @@ class GameView(QWidget):
         new_x = self.player_x + dx
         new_y = self.player_y + dy
 
-        if self.bounds[0] <= new_x <= self.bounds[2]:
+        door_width = 40
+        wall_thickness = BORDER_SIZE  # 10 по умолчанию
+
+        # Центр игрока
+        # cx = new_x + self.player_size // 2
+        # cy = new_y + self.player_size // 2
+        cx = new_x
+        cy = new_y
+
+        cx_room, cy_room = self.room_coords
+        neighbors = {
+            'up':    self.level.get_room(cx_room, cy_room - 1),
+            'down':  self.level.get_room(cx_room, cy_room + 1),
+            'left':  self.level.get_room(cx_room - 1, cy_room),
+            'right': self.level.get_room(cx_room + 1, cy_room)
+        }
+
+        # Стены с учётом дверей
+        blocked_x = False
+        blocked_y = False
+
+        # Верх
+        if new_y <= wall_thickness:
+            if not (neighbors['up'] and abs(cx - ROOM_SIZE[0] // 2) <= door_width // 2 and not self.enemies):
+                blocked_y = True
+        # Низ
+        if new_y + self.player_size >= ROOM_SIZE[1] - wall_thickness:
+            if not (neighbors['down'] and abs(cx - ROOM_SIZE[0] // 2) <= door_width // 2 and not self.enemies):
+                blocked_y = True
+        # Лево
+        if new_x <= wall_thickness:
+            if not (neighbors['left'] and abs(cy - ROOM_SIZE[1] // 2) <= door_width // 2 and not self.enemies):
+                blocked_x = True
+        # Право
+        if new_x + self.player_size >= ROOM_SIZE[0] - wall_thickness:
+            if not (neighbors['right'] and abs(cy - ROOM_SIZE[1] // 2) <= door_width // 2 and not self.enemies):
+                blocked_x = True
+
+        # Разрешённое движение
+        if not blocked_x:
             self.player_x = new_x
-        if self.bounds[1] <= new_y <= self.bounds[3]:
+        if not blocked_y:
             self.player_y = new_y
+
+        # Переход в соседнюю комнату
+        if self.player_y <= 0:
+            self.try_move_room(0, -1)
+        elif self.player_y + self.player_size >= ROOM_SIZE[1]:
+            self.try_move_room(0, 1)
+        elif self.player_x <= 0:
+            self.try_move_room(-1, 0)
+        elif self.player_x + self.player_size >= ROOM_SIZE[0]:
+            self.try_move_room(1, 0)
+
+
 
         damage, hp, max_hp, speed = self.player.get_stats()
         #self.hud.update_stats(hp, max_hp)
@@ -112,66 +182,20 @@ class GameView(QWidget):
 
         self.update()
 
-    # def resolve_collisions(self):
-    #     to_remove = set()
-    #     damaged_enemies = set()
+    def try_move_room(self, dx, dy):
+        if self.enemies:
+            return
 
-    #     for effect in self.attack_effects:
-    #         atk_type = effect['type']
-    #         x = effect['x']
-    #         y = effect['y']
-    #         px = effect['px']
-    #         py = effect['py']
+        new_x = self.room_coords[0] + dx
+        new_y = self.room_coords[1] + dy
+        next_room = self.level.get_room(new_x, new_y)
 
-    #         if atk_type == 'melee':
-    #             damage = 8
-    #             radius = 40
-    #             for enemy in self.enemies:
-    #                 if enemy in damaged_enemies:
-    #                     continue
-    #                 ex, ey, _, _ = enemy.rect()
-    #                 dist = ((ex - x) ** 2 + (ey - y) ** 2) ** 0.5
-    #                 if dist < radius:
-    #                     if enemy.take_damage(damage):
-    #                         to_remove.add(enemy)
-    #                     damaged_enemies.add(enemy)
-
-    #         elif atk_type == 'beam':
-    #             damage = 12
-    #             beam_threshold = 10  # расстояние до линии для попадания
-    #             dx = px - x
-    #             dy = py - y
-    #             length_squared = dx**2 + dy**2 if dx or dy else 1
-    #             for enemy in self.enemies:
-    #                 if enemy in damaged_enemies:
-    #                     continue
-    #                 ex, ey, _, _ = enemy.rect()
-
-    #                 # расстояние от врага до линии атаки
-    #                 t = max(0, min(1, ((ex - x) * dx + (ey - y) * dy) / length_squared))
-    #                 closest_x = x + t * dx
-    #                 closest_y = y + t * dy
-    #                 dist = ((closest_x - ex) ** 2 + (closest_y - ey) ** 2) ** 0.5
-
-    #                 if dist < beam_threshold:
-    #                     if enemy.take_damage(damage):
-    #                         to_remove.add(enemy)
-    #                     damaged_enemies.add(enemy)
-
-    #         elif atk_type == 'bomb':
-    #             damage = 18
-    #             radius = 50
-    #             for enemy in self.enemies:
-    #                 if enemy in damaged_enemies:
-    #                     continue
-    #                 ex, ey, _, _ = enemy.rect()
-    #                 dist = ((ex - px) ** 2 + (ey - py) ** 2) ** 0.5
-    #                 if dist < radius:
-    #                     if enemy.take_damage(damage):
-    #                         to_remove.add(enemy)
-    #                     damaged_enemies.add(enemy)
-
-    #     self.enemies = [e for e in self.enemies if e not in to_remove]
+        if next_room:
+            self.room_coords = (new_x, new_y)
+            self.current_room = next_room
+            self.player_x = ROOM_SIZE[0] // 2
+            self.player_y = ROOM_SIZE[1] // 2
+            self.load_room()
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -180,12 +204,69 @@ class GameView(QWidget):
         painter.setBrush(QColor(255, 100, 100))
         painter.drawEllipse(self.player_x, self.player_y, self.player_size, self.player_size)
 
+        cx, cy = self.room_coords
+        neighbors = {
+            'up':    self.level.get_room(cx, cy - 1),
+            'down':  self.level.get_room(cx, cy + 1),
+            'left':  self.level.get_room(cx - 1, cy),
+            'right': self.level.get_room(cx + 1, cy)
+        }
+
+        door_w, door_h = 40, BORDER_SIZE  # размеры двери
+
         painter.setBrush(QColor(100, 100, 100))
         painter.setPen(QColor(0, 0, 0, 0))
-        painter.drawRect(0, 0, ROOM_SIZE[0], 10)
-        painter.drawRect(0, 0, 10, ROOM_SIZE[1])
-        painter.drawRect(0, ROOM_SIZE[1] - 10, ROOM_SIZE[0], 10)
-        painter.drawRect(ROOM_SIZE[0] - 10, 0, 10, ROOM_SIZE[1])
+        if not neighbors['up']:
+            painter.drawRect(0, 0, ROOM_SIZE[0], BORDER_SIZE)  # обычная стена
+        else:
+            # левая часть
+            painter.drawRect(0, 0, ROOM_SIZE[0] // 2 - door_w // 2, BORDER_SIZE)
+            # правая часть
+            painter.drawRect(ROOM_SIZE[0] // 2 + door_w // 2, 0, ROOM_SIZE[0] // 2 - door_w // 2, BORDER_SIZE)
+
+        if not neighbors['down']:
+            painter.drawRect(0, ROOM_SIZE[1] - BORDER_SIZE, ROOM_SIZE[0], BORDER_SIZE)  # обычная стена
+        else:
+            # левая часть
+            painter.drawRect(0, ROOM_SIZE[1] - BORDER_SIZE, ROOM_SIZE[0] // 2 - door_w // 2, BORDER_SIZE)
+            # правая часть
+            painter.drawRect(ROOM_SIZE[0] // 2 + door_w // 2, ROOM_SIZE[1] - BORDER_SIZE, ROOM_SIZE[0] // 2 - door_w // 2, BORDER_SIZE)
+
+        if not neighbors['left']:
+            painter.drawRect(0, 0, BORDER_SIZE, ROOM_SIZE[1])  # обычная стена
+        else:
+            # верхняя часть
+            painter.drawRect(0, 0, BORDER_SIZE, ROOM_SIZE[1] // 2 - door_w // 2)
+            # нижняя часть
+            painter.drawRect(0, ROOM_SIZE[1] // 2 + door_w // 2, BORDER_SIZE, ROOM_SIZE[1] // 2 - door_w // 2)
+
+        if not neighbors['right']:
+            painter.drawRect(ROOM_SIZE[0] - BORDER_SIZE, 0, BORDER_SIZE, ROOM_SIZE[1])  # обычная стена
+        else:
+            # верхняя часть
+            painter.drawRect(ROOM_SIZE[0] - BORDER_SIZE, 0, BORDER_SIZE, ROOM_SIZE[1] // 2 - door_w // 2)
+            # нижняя часть
+            painter.drawRect(ROOM_SIZE[0] - BORDER_SIZE, ROOM_SIZE[1] // 2 + door_w // 2, BORDER_SIZE, ROOM_SIZE[1] // 2 - door_w // 2)
+
+
+        painter.setBrush(QColor(180, 180, 180))  # цвет двери
+
+        # Вверх
+        if neighbors['up']:
+            painter.drawRect(ROOM_SIZE[0] // 2 - door_w // 2, 0, door_w, door_h)
+        # Вниз
+        if neighbors['down']:
+            painter.drawRect(ROOM_SIZE[0] // 2 - door_w // 2, ROOM_SIZE[1] - door_h, door_w, door_h)
+        # Влево
+        if neighbors['left']:
+            painter.drawRect(0, ROOM_SIZE[1] // 2 - door_w // 2, door_h, door_w)
+        # Вправо
+        if neighbors['right']:
+            painter.drawRect(ROOM_SIZE[0] - door_h, ROOM_SIZE[1] // 2 - door_w // 2, door_h, door_w)
+
+
+        painter.setPen(QColor(255, 255, 255))
+        painter.drawText(20, 20, f"Room: {self.room_coords} ({self.current_room.room_type})")
 
         for effect in self.attack_effects:
             atk_type = effect['type']
