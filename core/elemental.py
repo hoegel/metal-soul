@@ -35,11 +35,12 @@ class Wah(Element):
         self.player.heal_percent(3)
 
 class Tremolo(Element):
-    def __init__(self):
+    def __init__(self, all_enemies):
         super().__init__("tremolo")
+        self.all_enemies = all_enemies
 
     def apply(self, enemy):
-        enemy.apply_chain_damage(damage=2)
+        enemy.apply_chain_damage(damage=2, all_enemies=self.all_enemies)
 
 class Distortion(Element):
     def __init__(self):

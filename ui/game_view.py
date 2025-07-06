@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout
-from PySide6.QtGui import QPainter, QColor, QMouseEvent, QKeyEvent, QPen
+from PySide6.QtGui import QPainter, QColor, QMouseEvent, QKeyEvent, QPen, QLinearGradient
 from PySide6.QtCore import QTimer, Qt, QPoint, QRect, QRectF
 from ui.hud import HUD
 from core.player import Player
@@ -8,6 +8,7 @@ from core.enemy import load_enemies_from_json
 import math
 from core.weapon import *
 from core.level import Level
+from core.elemental import *
 
 class GameView(QWidget):
     def __init__(self, main_window):
@@ -42,7 +43,7 @@ class GameView(QWidget):
         for weapon in self.player.weapons.values():
             weapon.subscribe(self.on_enemies_hit)
 
-        # self.enemies = load_enemies_from_json("resources/data/enemies.json")
+        self.enemies = []
 
         self.floor = 0
         self.level = Level()
@@ -51,15 +52,23 @@ class GameView(QWidget):
         self.room_coords = self.level.start_pos
         self.load_room()
 
+        # effect tests
+        self.player.weapons[1].add_effect(Overdrive())
+        self.player.weapons[1].add_effect(Tremolo(self.enemies))
+        self.player.weapons[2].add_effect(Delay())
+        self.player.weapons[2].add_effect(Fuzz())
+        self.player.weapons[3].add_effect(Wah(self.player))
+        self.player.weapons[3].add_effect(Distortion())
+
     def game_starts(self):
         self.timer.start(16)
 
     def load_room(self):
-        self.enemies = []
+        self.enemies.clear
         room = self.current_room
 
         if room.room_type == "fight" and not room.cleared:
-            self.enemies = load_enemies_from_json("resources/data/enemies.json")
+            self.enemies.extend(load_enemies_from_json("resources/data/enemies.json"))
             room.enemies = self.enemies
         elif room.room_type == "boss":
             # load boss logic
@@ -176,6 +185,8 @@ class GameView(QWidget):
 
         for enemy in self.enemies:
             enemy.move_towards(self.player_x, self.player_y)
+            if enemy.hp <= 0:
+                self.enemies.remove(enemy)
 
         # self.resolve_collisions()
 
@@ -291,6 +302,27 @@ class GameView(QWidget):
         painter.setPen(QColor(255, 255, 255))
         painter.drawText(20, 20, f"Floor: {self.floor} Room: {self.room_coords} ({self.current_room.room_type})")
 
+        # Отрисовка игрока с учетом эффектов
+        effect_colors = {
+            'delay': QColor(255, 100, 0),
+            'fuzz': QColor(150, 0, 255),
+            'overdrive': QColor(0, 200, 255),
+            'wah': QColor(0, 255, 0),
+            'tremolo': QColor(255, 255, 0),
+            'distortion': QColor(255, 0, 0),
+        }
+
+        # Соберем цвета эффектов текущего оружия
+        current_effects = self.player.weapon.effect
+        if current_effects:
+            gradient = QLinearGradient(self.player_x, self.player_y, self.player_x + self.player_size, self.player_y + self.player_size)
+            for i, eff in enumerate(current_effects):
+                color = effect_colors.get(eff.name, QColor(255, 255, 255, 180))
+                gradient.setColorAt(i / max(1, len(current_effects) - 1), color)
+            painter.setBrush(gradient)
+        else:
+            gradient = QColor(255, 255, 255, 180)
+
         for effect in self.attack_effects:
             atk_type = effect['type']
             x, y = effect['x'], effect['y']
@@ -305,7 +337,7 @@ class GameView(QWidget):
                 start_angle = int((angle - 45) * 16)
                 span_angle = int(90 * 16)
 
-                painter.setBrush(QColor(255, 255, 0, 180))
+                painter.setBrush(gradient)
                 painter.setPen(Qt.NoPen)
                 painter.drawPie(QRectF(x - 30, y - 30, 80, 80), start_angle, span_angle)
 
@@ -315,21 +347,41 @@ class GameView(QWidget):
                 end = Beam(Player)._compute_wall_intersection(x, y, px, py)
                 if end:
                     bx, by = end
-                    painter.setPen(QColor(0, 255, 255))
+                    if self.player.weapon.effect:
+                        painter.setPen(effect_colors.get(self.player.weapon.effect[-1].name, QColor(255, 255, 255, 180)))
+                    else:
+                        painter.setPen(QColor(255, 255, 255, 180))
                     painter.drawLine(x + 10, y + 10, bx, by)
 
             elif atk_type == 'bomb':
-                painter.setBrush(QColor(255, 0, 255, 160))
+                painter.setBrush(gradient)
                 painter.setPen(Qt.NoPen)
                 painter.drawEllipse(px - 25, py - 25, 50, 50)
 
 
         for enemy in self.enemies:
             painter.setBrush(QColor(200, 50, 50))
+            painter.setPen(Qt.NoPen)
             painter.drawEllipse(enemy.x, enemy.y, enemy.size, enemy.size)
+
+            # Эффекты врага (пример по dot/stun/slow)
+            outline_color = None
+            if enemy.dot["active"]:
+                outline_color = QColor(255, 100, 0)
+            elif enemy.stun["active"]:
+                outline_color = QColor(150, 0, 255)
+            elif enemy.slow["active"]:
+                outline_color = QColor(0, 200, 255)
+
+            if outline_color:
+                pen = QPen(outline_color, 3)
+                painter.setPen(pen)
+                painter.setBrush(Qt.NoBrush)
+                painter.drawEllipse(enemy.x - 3, enemy.y - 3, enemy.size + 6, enemy.size + 6)
 
             painter.setPen(QColor(255, 255, 255))
             painter.drawText(enemy.x, enemy.y - 5, f"{enemy.hp}/{enemy.max_hp}")
+
 
         # Рисуем миникарту
         minimap_scale = 8
