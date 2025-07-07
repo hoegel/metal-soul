@@ -9,6 +9,7 @@ import math
 from core.weapon import *
 from core.level import Level
 from core.elemental import *
+from core.projectile import Projectile
 
 class GameView(QWidget):
     def __init__(self, main_window):
@@ -59,6 +60,28 @@ class GameView(QWidget):
         self.player.weapons[2].add_effect(Fuzz())
         self.player.weapons[3].add_effect(Wah(self.player))
         self.player.weapons[3].add_effect(Distortion())
+
+        self.projectiles = []
+
+        # Игрок стреляет
+        proj = Projectile(
+            source="player", target_type="enemy",
+            x=self.player_x, y=self.player_y,
+            tx=100, ty=100,
+            damage=15, speed=7, range_=600,
+            color=QColor(255, 255, 0), radius=4
+        )
+        self.projectiles.append(proj)
+
+        # Враг стреляет
+        # proj = Projectile(
+        #     source="enemy", target_type="player",
+        #     x=enemy_x, y=enemy_y,
+        #     tx=player_x, ty=player_y,
+        #     damage=10, speed=4,
+        #     color=QColor(255, 0, 0), radius=5
+        # )
+
 
     def game_starts(self):
         self.timer.start(16)
@@ -193,6 +216,14 @@ class GameView(QWidget):
         for effect in self.attack_effects:
             effect['time'] -= 1
         self.attack_effects = [e for e in self.attack_effects if e['time'] > 0]
+
+        for proj in self.projectiles:
+            proj.update()
+            hits = proj.check_collision(self.enemies if proj.target_type == "enemy" else [self.player])
+            for h in hits:
+                h.take_damage(proj.damage)
+
+        self.projectiles = [p for p in self.projectiles if p.alive]
 
         self.update()
 
@@ -418,6 +449,8 @@ class GameView(QWidget):
             painter.setPen(QColor(255, 255, 255))
             painter.drawText(enemy.x, enemy.y - 5, f"{enemy.hp}/{enemy.max_hp}")
 
+        for proj in self.projectiles:
+            proj.draw(painter)
 
         # Рисуем миникарту
         minimap_scale = 8
