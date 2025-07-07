@@ -37,8 +37,8 @@ class HUD(QWidget):
         main_layout.addLayout(weapon_row)
         main_layout.addLayout(hp_row)
     
-    #def update_stats(self, hp, max_hp):
-    #    self.hp_label.setText(f"HP: {hp}/{max_hp}")
+    def update_stats(self, hp, max_hp):
+        self.hp_label.setText(f"HP: {hp}/{max_hp}")
     
     def update_chord(self, number):
         if(number == 1):

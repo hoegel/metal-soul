@@ -1,10 +1,21 @@
 from abc import ABC, abstractmethod
 from config import ROOM_SIZE
 import math
+import time
 
 class Weapon(ABC):
-    def __init__(self):
+    def __init__(self, player):
         self.observers = []
+        self.effect = []
+        self.last_attack_time = 0
+        self.cooldown = 1.0
+        self.player = player
+
+    def add_effect(self, effect):
+        if len(self.effect) < 3:
+            self.effect.append(effect)
+            return True
+        return False
 
     def subscribe(self, callback):
         self.observers.append(callback)
@@ -12,20 +23,37 @@ class Weapon(ABC):
     def notify(self, hit_enemies):
         for callback in self.observers:
             callback(hit_enemies)
+
+    def can_attack(self):
+        return (time.time() - self.last_attack_time) >= self.cooldown
+    
+    def reset_cooldown(self):
+        self.last_attack_time = time.time()
+
+    def get_stats(self):
+        return {
+            "cooldown": self.cooldown,
+            "effects": [e.name for e in self.effect]
+        }
     
     @abstractmethod
     def attack(self, player_pos, target_pos, enemies):
         pass
 
 class Melee(Weapon):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, player):
+        super().__init__(player)
         self.damage = 8
         self.radius = 40
-        self.tod = 5
         self.angle_range = math.pi / 2
+        self.cooldown = 0.3
 
     def attack(self, player_pos, target_pos, enemies):
+        if not self.can_attack():
+            return
+        
+        self.reset_cooldown()
+
         px, py = player_pos
         tx, ty = target_pos
 
@@ -50,6 +78,12 @@ class Melee(Weapon):
             if angle_diff <= self.angle_range:
                 if enemy.take_damage(self.damage):
                     hit.append(enemy)
+                elif self.effect:
+                    for eff in self.effect:
+                        if eff.name != "wah":
+                            eff.apply(enemy)
+                        else:
+                            eff.apply(self.player)
         
         self.notify(hit)
 
@@ -62,13 +96,18 @@ class Melee(Weapon):
         return angle
 
 class Beam(Weapon):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, player):
+        super().__init__(player)
         self.damage = 12
         self.threshold = 10
-        self.tod = 10
+        self.cooldown = 1.0
 
     def attack(self, player_pos, target_pos, enemies): 
+        if not self.can_attack():
+            return
+        
+        self.reset_cooldown()
+        
         px, py = player_pos
         tx, ty = target_pos
 
@@ -97,6 +136,12 @@ class Beam(Weapon):
             if dist < self.threshold:
                 if enemy.take_damage(self.damage):
                     hit.append(enemy)
+                elif self.effect:
+                    for eff in self.effect:
+                        if eff.name != "wah":
+                            eff.apply(enemy)
+                        else:
+                            eff.apply(self.player)
 
         self.notify(hit)
 
@@ -139,13 +184,18 @@ class Beam(Weapon):
         return bx, by
 
 class Bomb(Weapon):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, player):
+        super().__init__(player)
         self.damage = 18
         self.radius = 50
         self.tod = 10
 
     def attack(self, player_pos, target_pos, enemies):
+        if not self.can_attack():
+            return
+        
+        self.reset_cooldown()
+
         tx, ty = target_pos
         hit = []
 
@@ -155,5 +205,16 @@ class Bomb(Weapon):
             if dist < self.radius:
                 if enemy.take_damage(self.damage):
                     hit.append(enemy)
+                elif self.effect:
+                    for eff in self.effect:
+                        if eff.name != "wah":
+                            eff.apply(enemy)
+                        else:
+                            eff.apply(self.player)
+        px, py = player_pos
+        dist = math.hypot(px - tx, py - ty)
+        if dist < self.radius:
+            if self.player.take_damage(self.damage):
+                pass
 
         self.notify(hit)
