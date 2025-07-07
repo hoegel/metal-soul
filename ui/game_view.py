@@ -287,15 +287,51 @@ class GameView(QWidget):
 
         # Вверх
         if neighbors['up']:
+            match self.level.get_room(cx, cy - 1).room_type:
+                case "boss":
+                    painter.setBrush(QColor(255, 0, 0))
+                case "treasure":
+                    painter.setBrush(QColor(255, 215, 0))
+                case "next_level":
+                    painter.setBrush(QColor(255, 0, 255))
+                case _:
+                    painter.setBrush(QColor(180, 180, 180))
             painter.drawRect(ROOM_SIZE[0] // 2 - door_w // 2, 0, door_w, door_h)
         # Вниз
         if neighbors['down']:
+            match self.level.get_room(cx, cy + 1).room_type:
+                case "boss":
+                    painter.setBrush(QColor(255, 0, 0))
+                case "treasure":
+                    painter.setBrush(QColor(255, 215, 0))
+                case "next_level":
+                    painter.setBrush(QColor(255, 0, 255))
+                case _:
+                    painter.setBrush(QColor(180, 180, 180))
             painter.drawRect(ROOM_SIZE[0] // 2 - door_w // 2, ROOM_SIZE[1] - door_h, door_w, door_h)
         # Влево
         if neighbors['left']:
+            match self.level.get_room(cx - 1, cy).room_type:
+                case "boss":
+                    painter.setBrush(QColor(255, 0, 0))
+                case "treasure":
+                    painter.setBrush(QColor(255, 215, 0))
+                case "next_level":
+                    painter.setBrush(QColor(255, 0, 255))
+                case _:
+                    painter.setBrush(QColor(180, 180, 180))
             painter.drawRect(0, ROOM_SIZE[1] // 2 - door_w // 2, door_h, door_w)
         # Вправо
         if neighbors['right']:
+            match self.level.get_room(cx + 1, cy).room_type:
+                case "boss":
+                    painter.setBrush(QColor(255, 0, 0))
+                case "treasure":
+                    painter.setBrush(QColor(255, 215, 0))
+                case "next_level":
+                    painter.setBrush(QColor(255, 0, 255))
+                case _:
+                    painter.setBrush(QColor(180, 180, 180))
             painter.drawRect(ROOM_SIZE[0] - door_h, ROOM_SIZE[1] // 2 - door_w // 2, door_h, door_w)
 
 
@@ -393,12 +429,12 @@ class GameView(QWidget):
             color = QColor(100, 100, 100)
             if room == self.current_room:
                 color = QColor(0, 255, 0)  # Текущая комната
-            elif room.visited:
-                color = QColor(200, 200, 200)  # Пройденные комнаты
             elif room.room_type == "boss":
                 color = QColor(255, 0, 0)
             elif room.room_type == "treasure":
                 color = QColor(255, 215, 0)
+            elif room.visited:
+                color = QColor(200, 200, 200)  # Пройденные комнаты
             elif room.room_type == "next_level":
                 continue
 
@@ -409,4 +445,3 @@ class GameView(QWidget):
                 minimap_offset_y + (ry - self.level.start_pos[1]) * room_size,
                 room_size, room_size
             )
-
