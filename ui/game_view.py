@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout
 from PySide6.QtGui import QPainter, QColor, QMouseEvent, QKeyEvent, QPen, QLinearGradient
-from PySide6.QtCore import QTimer, Qt, QPoint, QRect, QRectF
+from PySide6.QtCore import QTimer, Qt, QPoint, QRect, QRectF, Signal
 from ui.hud import HUD
 from core.player import Player
 from config import *
@@ -10,6 +10,7 @@ from core.weapon import *
 from core.level import Level
 from core.elemental import *
 from core.projectile import Projectile
+from ui.menu_pause import PauseMenu
 
 class GameView(QWidget):
     def __init__(self, main_window):
@@ -60,6 +61,26 @@ class GameView(QWidget):
         self.player.weapons[2].add_effect(Fuzz())
         self.player.weapons[3].add_effect(Wah(self.player))
         self.player.weapons[3].add_effect(Distortion())
+        
+        #pause_menu
+        self.isPaused = False
+
+        self.pauseMenu = PauseMenu(self)
+        self.pauseMenu.setGeometry(100, 100, 200, 100)
+
+        self.pauseMenu.resumeRequested.connect(self.resume_game)
+        self.pauseMenu.exitRequested.connect(self.main_window.go_to_main_menu)
+        
+    def pause_game(self):
+        self.isPaused = True
+        self.pauseMenu.show()
+        self.pauseMenu.move(270, 200)
+        self.timer.stop()
+        
+    def resume_game(self):
+        self.isPaused = False
+        self.pauseMenu.hide()
+        self.timer.start()
 
         self.projectiles = []
 
@@ -84,6 +105,8 @@ class GameView(QWidget):
 
 
     def game_starts(self):
+        self.pauseMenu.hide()
+        self.isPaused = False
         self.timer.start(16)
 
     def load_room(self):
@@ -106,31 +129,41 @@ class GameView(QWidget):
 
 
     def keyPressEvent(self, event: QKeyEvent):
-        self.pressed_keys.add(event.key())
+        if event.key() == Qt.Key.Key_Escape:
+            if not self.isPaused:
+                self.pause_game()
+            else:
+                self.resume_game()
+        else:
+            super().keyPressEvent(event)
+        
+        if not self.isPaused:
+            self.pressed_keys.add(event.key())
 
-        if event.key() in (Qt.Key_1, Qt.Key_2, Qt.Key_3):
-            self.player.set_attack_type(int(event.text()))
-            self.hud.update_chord(int(event.text()))
+            if event.key() in (Qt.Key_1, Qt.Key_2, Qt.Key_3):
+                self.player.set_attack_type(int(event.text()))
+                self.hud.update_chord(int(event.text()))
 
     def keyReleaseEvent(self, event):
         self.pressed_keys.discard(event.key())
 
     def mousePressEvent(self, event: QMouseEvent):
-        if event.button() == Qt.MouseButton.LeftButton:
-            if QRect(BORDER_SIZE, BORDER_SIZE, ROOM_SIZE[0] - 2 * BORDER_SIZE, ROOM_SIZE[1] - 2 * BORDER_SIZE).contains(event.pos()):
-                self.perform_attack(event.pos()) #XXX
-        
-        if event.button() == Qt.MouseButton.RightButton:
-            if QRect(BORDER_SIZE, BORDER_SIZE, ROOM_SIZE[0] - 2 * BORDER_SIZE, ROOM_SIZE[1] - 2 * BORDER_SIZE).contains(event.pos()):
-                # Игрок стреляет
-                proj = Projectile(
-                    source="player", target_type="enemy",
-                    x=self.player_x + self.player_size/2, y=self.player_y + self.player_size/2,
-                    tx=event.pos().x(), ty=event.pos().y(),
-                    damage=15, speed=7, range_=600,
-                    color=QColor(255, 255, 0), radius=4
-                )
-                self.projectiles.append(proj)
+        if not self.isPaused:
+            if event.button() == Qt.MouseButton.LeftButton:
+                if QRect(BORDER_SIZE, BORDER_SIZE, ROOM_SIZE[0] - 2 * BORDER_SIZE, ROOM_SIZE[1] - 2 * BORDER_SIZE).contains(event.pos()):
+                    self.perform_attack(event.pos()) #XXX
+
+            if event.button() == Qt.MouseButton.RightButton:
+                if QRect(BORDER_SIZE, BORDER_SIZE, ROOM_SIZE[0] - 2 * BORDER_SIZE, ROOM_SIZE[1] - 2 * BORDER_SIZE).contains(event.pos()):
+                    # Игрок стреляет
+                    proj = Projectile(
+                        source="player", target_type="enemy",
+                        x=self.player_x + self.player_size/2, y=self.player_y + self.player_size/2,
+                        tx=event.pos().x(), ty=event.pos().y(),
+                        damage=15, speed=7, range_=600,
+                        color=QColor(255, 255, 0), radius=4
+                    )
+                    self.projectiles.append(proj)
 
     def perform_attack(self, mouse_pos):
         if self.player.weapon.can_attack():
