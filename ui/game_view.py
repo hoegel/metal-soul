@@ -4,8 +4,8 @@ from PySide6.QtCore import QTimer, Qt, QPoint, QRect, QRectF, Signal
 from ui.hud import HUD
 from core.player import Player
 from config import *
-from core.enemy import load_enemies_from_json
-import math
+from core.enemy import load_enemies_from_json, Enemy, ShooterEnemy, CrossShooterEnemy
+import math, os
 from core.weapon import *
 from core.level import Level
 from core.elemental import *
@@ -19,14 +19,14 @@ class GameView(QWidget):
 
         self.player = Player()
 
-        self.player_size = 20
-        self.player_x = ROOM_SIZE[0] // 2 - self.player_size // 2
-        self.player_y = ROOM_SIZE[1] // 2 - self.player_size // 2
-        self.speed = 4
+        self.player.size = 20
+        self.player.x = ROOM_SIZE[0] // 2 - self.player.size // 2
+        self.player.y = ROOM_SIZE[1] // 2 - self.player.size // 2
+        self.player.speed = 4
         self.pressed_keys = set()
 
-        self.bounds = [BORDER_SIZE, BORDER_SIZE, ROOM_SIZE[0] - BORDER_SIZE - self.player_size, ROOM_SIZE[1] - BORDER_SIZE - self.player_size]  # границы: left, top, right, bottom
-                                                                                                                                                # self.player_size for hitbox
+        self.bounds = [BORDER_SIZE, BORDER_SIZE, ROOM_SIZE[0] - BORDER_SIZE - self.player.size, ROOM_SIZE[1] - BORDER_SIZE - self.player.size]  # границы: left, top, right, bottom
+                                                                                                                                                # self.player.size for hitbox
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_game)
         self.timer.start(16)
@@ -94,7 +94,14 @@ class GameView(QWidget):
         room = self.current_room
 
         if room.room_type == "fight" and not room.cleared:
-            self.enemies.extend(load_enemies_from_json("resources/data/enemies.json"))
+            # room_id = f"floor{self.floor}_x{self.room_coords[0]}_y{self.room_coords[1]}"
+            room_id = f"floor{self.floor}_{(self.room_coords[0] + self.room_coords[1]) % 4}"
+            path = f"resources/data/enemies/{room_id}.json"
+            if os.path.exists(path):
+                self.enemies.extend(load_enemies_from_json(path))
+            else:
+                print(path)
+                self.enemies.extend(load_enemies_from_json("resources/data/enemies.json"))
             room.enemies = self.enemies
         elif room.room_type == "boss":
             # load boss logic
@@ -138,7 +145,7 @@ class GameView(QWidget):
                     # Игрок стреляет
                     proj = Projectile(
                         source="player", target_type="enemy",
-                        x=self.player_x + self.player_size/2, y=self.player_y + self.player_size/2,
+                        x=self.player.x + self.player.size/2, y=self.player.y + self.player.size/2,
                         tx=event.pos().x(), ty=event.pos().y(),
                         damage=15, speed=7, range_=600,
                         color=QColor(255, 255, 0), radius=4
@@ -147,7 +154,7 @@ class GameView(QWidget):
 
     def perform_attack(self, mouse_pos):
         if self.player.weapon.can_attack():
-            player_pos = (self.player_x, self.player_y) #XXX
+            player_pos = (self.player.x, self.player.y) #XXX
             target_pos = (mouse_pos.x(), mouse_pos.y())
 
             self.attack_effects.append({
@@ -169,15 +176,15 @@ class GameView(QWidget):
         if Qt.Key_D in self.pressed_keys:
             dx += self.player.speed
 
-        new_x = self.player_x + dx
-        new_y = self.player_y + dy
+        new_x = self.player.x + dx
+        new_y = self.player.y + dy
 
         door_width = 40
         wall_thickness = BORDER_SIZE  # 10 по умолчанию
 
         # Центр игрока
-        # cx = new_x + self.player_size // 2
-        # cy = new_y + self.player_size // 2
+        # cx = new_x + self.player.size // 2
+        # cy = new_y + self.player.size // 2
         cx = new_x
         cy = new_y
 
@@ -198,7 +205,7 @@ class GameView(QWidget):
             if not (neighbors['up'] and abs(cx - ROOM_SIZE[0] // 2) <= door_width // 2 and not self.enemies):
                 blocked_y = True
         # Низ
-        if new_y + self.player_size >= ROOM_SIZE[1] - wall_thickness:
+        if new_y + self.player.size >= ROOM_SIZE[1] - wall_thickness:
             if not (neighbors['down'] and abs(cx - ROOM_SIZE[0] // 2) <= door_width // 2 and not self.enemies):
                 blocked_y = True
         # Лево
@@ -206,35 +213,38 @@ class GameView(QWidget):
             if not (neighbors['left'] and abs(cy - ROOM_SIZE[1] // 2) <= door_width // 2 and not self.enemies):
                 blocked_x = True
         # Право
-        if new_x + self.player_size >= ROOM_SIZE[0] - wall_thickness:
+        if new_x + self.player.size >= ROOM_SIZE[0] - wall_thickness:
             if not (neighbors['right'] and abs(cy - ROOM_SIZE[1] // 2) <= door_width // 2 and not self.enemies):
                 blocked_x = True
 
         # Разрешённое движение
         if not blocked_x:
-            self.player_x = new_x
+            self.player.x = new_x
         if not blocked_y:
-            self.player_y = new_y
+            self.player.y = new_y
 
         # Переход в соседнюю комнату
-        if self.player_y <= 0:
+        if self.player.y <= 0:
             self.try_move_room(0, -1)
-        elif self.player_y + self.player_size >= ROOM_SIZE[1]:
+        elif self.player.y + self.player.size >= ROOM_SIZE[1]:
             self.try_move_room(0, 1)
-        elif self.player_x <= 0:
+        elif self.player.x <= 0:
             self.try_move_room(-1, 0)
-        elif self.player_x + self.player_size >= ROOM_SIZE[0]:
+        elif self.player.x + self.player.size >= ROOM_SIZE[0]:
             self.try_move_room(1, 0)
 
 
 
         damage, hp, max_hp, speed = self.player.get_stats()
         self.hud.update_stats(hp, max_hp)
+        self.player.update_invincibility()
 
         for enemy in self.enemies:
-            enemy.move_towards(self.player_x, self.player_y)
+            enemy.update(self.player.x, self.player.y, self.projectiles)
             if enemy.hp <= 0:
                 self.enemies.remove(enemy)
+            elif enemy.check_contact_with_player(self.player.x, self.player.y, self.player.size):
+                self.player.take_damage(enemy.damage)
 
         # self.resolve_collisions()
 
@@ -266,24 +276,24 @@ class GameView(QWidget):
                 self.level = Level()  # Сгенерировать новый этаж
                 self.room_coords = self.level.start_pos
                 self.current_room = self.level.get_room(*self.room_coords)
-                self.player_x = ROOM_SIZE[0] // 2 - self.player_size // 2
-                self.player_y = ROOM_SIZE[1] // 2 - self.player_size // 2
+                self.player.x = ROOM_SIZE[0] // 2 - self.player.size // 2
+                self.player.y = ROOM_SIZE[1] // 2 - self.player.size // 2
             else:
                 self.room_coords = (new_x, new_y)
                 self.current_room = next_room
                 # Расчёт позиции игрока у входа в новую комнату
                 if dx == 1:  # пришёл слева → появиться у левой двери
-                    self.player_x = 10
-                    self.player_y = ROOM_SIZE[1] // 2 - self.player_size // 2
+                    self.player.x = 10
+                    self.player.y = ROOM_SIZE[1] // 2 - self.player.size // 2
                 elif dx == -1:  # пришёл справа → появиться у правой двери
-                    self.player_x = ROOM_SIZE[0] - 10 - self.player_size
-                    self.player_y = ROOM_SIZE[1] // 2 - self.player_size // 2
+                    self.player.x = ROOM_SIZE[0] - 10 - self.player.size
+                    self.player.y = ROOM_SIZE[1] // 2 - self.player.size // 2
                 elif dy == 1:  # пришёл сверху → появиться у верхней двери
-                    self.player_y = 10
-                    self.player_x = ROOM_SIZE[0] // 2 - self.player_size // 2
+                    self.player.y = 10
+                    self.player.x = ROOM_SIZE[0] // 2 - self.player.size // 2
                 elif dy == -1:  # пришёл снизу → появиться у нижней двери
-                    self.player_y = ROOM_SIZE[1] - 10 - self.player_size
-                    self.player_x = ROOM_SIZE[0] // 2 - self.player_size // 2
+                    self.player.y = ROOM_SIZE[1] - 10 - self.player.size
+                    self.player.x = ROOM_SIZE[0] // 2 - self.player.size // 2
             self.current_room.visited = True
             self.load_room()
 
@@ -292,7 +302,9 @@ class GameView(QWidget):
         painter.fillRect(self.rect(), QColor(30, 30, 30))
 
         painter.setBrush(QColor(255, 100, 100))
-        painter.drawEllipse(self.player_x, self.player_y, self.player_size, self.player_size)
+        if self.player.invincible:
+            painter.setBrush(QColor(255, 100, 100, 100))
+        painter.drawEllipse(self.player.x, self.player.y, self.player.size, self.player.size)
 
         cx, cy = self.room_coords
         neighbors = {
@@ -407,7 +419,7 @@ class GameView(QWidget):
         # Соберем цвета эффектов текущего оружия
         current_effects = self.player.weapon.effect
         if current_effects:
-            gradient = QLinearGradient(self.player_x, self.player_y, self.player_x + self.player_size, self.player_y + self.player_size)
+            gradient = QLinearGradient(self.player.x, self.player.y, self.player.x + self.player.size, self.player.y + self.player.size)
             for i, eff in enumerate(current_effects):
                 color = effect_colors.get(eff.name, QColor(255, 255, 255, 180))
                 gradient.setColorAt(i / max(1, len(current_effects) - 1), color)
