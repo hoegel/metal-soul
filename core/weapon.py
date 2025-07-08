@@ -65,6 +65,8 @@ class Melee(Weapon):
 
         for enemy in enemies:
             ex, ey, esize, _ = enemy.rect()
+            ex += esize / 2
+            ey += esize / 2
             vec_x = ex - px
             vec_y = ey - py
             dist = math.hypot(vec_x, vec_y)
@@ -125,7 +127,9 @@ class Beam(Weapon):
         len_sq = dx ** 2 + dy ** 2 if dx or dy else 1
 
         for enemy in enemies:
-            ex, ey, _, _ = enemy.rect()
+            ex, ey, esize, _ = enemy.rect()
+            ex += esize / 2
+            ey += esize / 2
 
             # проекция точки врага на луч
             t = max(0, min(1, ((ex - px) * dx + (ey - py) * dy) / len_sq))
@@ -133,7 +137,7 @@ class Beam(Weapon):
             closest_y = py + t * dy
 
             dist = math.hypot(closest_x - ex, closest_y - ey)
-            if dist < self.threshold:
+            if dist < self.threshold + esize:
                 if enemy.take_damage(self.damage):
                     hit.append(enemy)
                 elif self.effect:
@@ -200,9 +204,11 @@ class Bomb(Weapon):
         hit = []
 
         for enemy in enemies:
-            ex, ey, _, _ = enemy.rect()
+            ex, ey, esize, _ = enemy.rect()
+            ex += esize / 2
+            ey += esize / 2
             dist = math.hypot(ex - tx, ey - ty)
-            if dist < self.radius:
+            if dist < self.radius + esize:
                 if enemy.take_damage(self.damage):
                     hit.append(enemy)
                 elif self.effect:
