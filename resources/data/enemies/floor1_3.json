@@ -1,0 +1,16 @@
+{
+  "enemies": [
+    {"type": "base", "x": 150, "y": 150, "damage": 7, "hp": 30, "max_hp": 30, "speed": 1.2, "size": 20},
+    {"type": "base", "x": 220, "y": 180, "damage": 8, "hp": 34, "max_hp": 34, "speed": 1.3, "size": 20},
+    {"type": "base", "x": 280, "y": 240, "damage": 10, "hp": 36, "max_hp": 36, "speed": 1.0, "size": 21},
+    {"type": "base", "x": 340, "y": 300, "damage": 10, "hp": 40, "max_hp": 40, "speed": 1.1, "size": 22},
+    {"type": "base", "x": 400, "y": 360, "damage": 9, "hp": 38, "max_hp": 38, "speed": 1.2, "size": 21},
+    {"type": "base", "x": 460, "y": 420, "damage": 9, "hp": 39, "max_hp": 39, "speed": 1.2, "size": 22},
+    {"type": "shooter", "x": 520, "y": 480, "damage": 6, "hp": 28, "max_hp": 28, "speed": 0.9, "size": 23, "cooldown": 95},
+    {"type": "cross_shooter", "x": 580, "y": 540, "damage": 5, "hp": 50, "max_hp": 50, "speed": 0.5, "size": 26, "cooldown": 120},
+    {"type": "shooter", "x": 250, "y": 450, "damage": 7, "hp": 32, "max_hp": 32, "speed": 1.0, "size": 23, "cooldown": 90},
+    {"type": "cross_shooter", "x": 100, "y": 400, "damage": 6, "hp": 48, "max_hp": 48, "speed": 0.6, "size": 26, "cooldown": 115},
+    {"type": "base", "x": 180, "y": 370, "damage": 8, "hp": 35, "max_hp": 35, "speed": 1.1, "size": 20},
+    {"type": "base", "x": 300, "y": 340, "damage": 9, "hp": 37, "max_hp": 37, "speed": 1.0, "size": 21}
+  ]
+}
