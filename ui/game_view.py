@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout
-from PySide6.QtGui import QPainter, QColor, QMouseEvent, QKeyEvent, QPen, QLinearGradient
+from PySide6.QtGui import QPainter, QColor, QMouseEvent, QKeyEvent, QPen, QLinearGradient, QPixmap
 from PySide6.QtCore import QTimer, Qt, QPoint, QRect, QRectF, Signal
 from ui.hud import HUD
 from core.player import Player
@@ -11,10 +11,15 @@ from core.level import Level
 from core.elemental import *
 from ui.menu_pause import PauseMenu
 
+import os
+print(os.path.exists("resources/images/backgrounds/level_background1.png"))
+
 class GameView(QWidget):
     def __init__(self, main_window):
         super().__init__()
         self.main_window = main_window
+        
+        self.background_pixmap = QPixmap("resources/images/backgrounds/level_background1.png")
 
         self.player = Player()
 
@@ -211,8 +216,6 @@ class GameView(QWidget):
         elif self.player_x + self.player_size >= ROOM_SIZE[0]:
             self.try_move_room(1, 0)
 
-
-
         damage, hp, max_hp, speed = self.player.get_stats()
         self.hud.update_stats(hp, max_hp)
 
@@ -266,7 +269,12 @@ class GameView(QWidget):
 
     def paintEvent(self, event):
         painter = QPainter(self)
-        painter.fillRect(self.rect(), QColor(30, 30, 30))
+        
+        if not self.background_pixmap.isNull():
+            scaled_pixmap = self.background_pixmap.scaled(600, 600, Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
+            painter.drawPixmap(0, 0, scaled_pixmap)
+        else:
+            painter.fillRect(QRect(0, 0, 600, 600), Qt.lightGray)
 
         painter.setBrush(QColor(255, 100, 100))
         painter.drawEllipse(self.player_x, self.player_y, self.player_size, self.player_size)
@@ -478,3 +486,4 @@ class GameView(QWidget):
                 minimap_offset_y + (ry - self.level.start_pos[1]) * room_size,
                 room_size, room_size
             )
+        painter.end
