@@ -13,19 +13,27 @@ class MainWindow(QMainWindow):
         self.stack = QStackedWidget()
         self.setCentralWidget(self.stack)
 
-        self.menu = MainMenu(self)
+        self.main_menu = MainMenu(self)
+
+        self.stack.addWidget(self.main_menu)
+
+        self.stack.setCurrentWidget(self.main_menu)
+        
+        self.isStarted = False
+
+    def new_game(self):
+        self.isStarted = True
+        self.main_menu.continue_button.setEnabled(True)
+        self.main_menu.set_button_style(self.main_menu.continue_button)
         self.game = GameView(self)
-        self.pause = PauseMenu(self)
-
-        self.stack.addWidget(self.menu)
         self.stack.addWidget(self.game)
-        self.stack.addWidget(self.pause)
-
-        self.stack.setCurrentWidget(self.menu)
-
-    def start_game(self):
         self.stack.setCurrentWidget(self.game)
         self.game.game_starts()
         
+    def continue_game(self):
+        if self.isStarted:
+            self.stack.setCurrentWidget(self.game)
+            self.game.game_starts()
+        
     def go_to_main_menu(self):
-        self.stack.setCurrentWidget(self.menu)
+        self.stack.setCurrentWidget(self.main_menu)

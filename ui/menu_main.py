@@ -16,54 +16,62 @@ class MainMenu(QWidget):
         title.setStyleSheet("color: #ffffff; margin-bottom: 20px;")
         layout.addWidget(title)
 
-        start_button = QPushButton("Start game")
-        start_button.setCursor(Qt.CursorShape.PointingHandCursor)
-        start_button.setFixedHeight(40)
-        start_button.setStyleSheet("""
-            QPushButton {
-                background-color: #7289da;
-                border: none;
-                border-radius: 8px;
-                color: white;
-                font-size: 16px;
-                font-weight: bold;
-                padding: 8px 15px;
-            }
-            QPushButton:hover {
-                background-color: #5b6eae;
-            }
-            QPushButton:pressed {
-                background-color: #4a5a8e;
-            }
-        """)
-        start_button.clicked.connect(self.main_window.start_game)
-        layout.addWidget(start_button)
+        self.continue_button = QPushButton("Продолжить")
+        self.new_game_button = QPushButton("Новая игра")
+        self.exit_button = QPushButton("Выйти из игры")
+        for button in (self.continue_button, self.new_game_button, self.exit_button):  
+            self.set_button_style(button)
+            layout.addWidget(button)
+        self.continue_button.clicked.connect(self.main_window.continue_game)
+        self.new_game_button.clicked.connect(self.main_window.new_game)
+        self.exit_button.clicked.connect(self.close_app)
 
-        exit_button = QPushButton("Exit")
-        exit_button.setCursor(Qt.CursorShape.PointingHandCursor)
-        exit_button.setFixedHeight(40)
-        exit_button.setStyleSheet("""
-            QPushButton {
-                background-color: #7289da;
-                border: none;
-                border-radius: 8px;
-                color: white;
-                font-size: 16px;
-                font-weight: bold;
-                padding: 8px 15px;
-            }
-            QPushButton:hover {
-                background-color: #5b6eae;
-            }
-            QPushButton:pressed {
-                background-color: #4a5a8e;
-            }
-        """)
-        exit_button.clicked.connect(self.close_app)
-        layout.addWidget(exit_button)
-
+        self.continue_button.setEnabled(False)
+        self.set_disabled_button_style(self.continue_button)
         self.setLayout(layout)
 
     def close_app(self):
         from PySide6.QtWidgets import QApplication
         QApplication.quit()
+        
+    def set_button_style(self, button):
+        button.setCursor(Qt.CursorShape.PointingHandCursor)
+        button.setFixedHeight(40)
+        button.setStyleSheet("""
+        QPushButton {
+            background-color: #7289da;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 8px 15px;
+        }
+        QPushButton:hover {
+            background-color: #5b6eae;
+        }
+        QPushButton:pressed {
+            background-color: #4a5a8e;
+        }
+    """)
+        
+    def set_disabled_button_style(self, button):
+        button.setCursor(Qt.CursorShape.PointingHandCursor)
+        button.setFixedHeight(40)
+        button.setStyleSheet("""
+        QPushButton {
+            background-color: #a0a0a0;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 8px 15px;
+        }
+        QPushButton:hover {
+            background-color: #5b6eae;
+        }
+        QPushButton:pressed {
+            background-color: #4a5a8e;
+        }
+    """)
