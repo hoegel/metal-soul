@@ -9,6 +9,7 @@ import math
 from core.weapon import *
 from core.level import Level
 from core.elemental import *
+from core.projectile import Projectile
 from ui.menu_pause import PauseMenu
 
 class GameView(QWidget):
@@ -81,6 +82,28 @@ class GameView(QWidget):
         self.pauseMenu.hide()
         self.timer.start()
 
+        self.projectiles = []
+
+        # Игрок стреляет
+        # proj = Projectile(
+        #     source="player", target_type="enemy",
+        #     x=self.player_x, y=self.player_y,
+        #     tx=100, ty=100,
+        #     damage=15, speed=7, range_=600,
+        #     color=QColor(255, 255, 0), radius=4
+        # )
+        # self.projectiles.append(proj)
+
+        # Враг стреляет
+        # proj = Projectile(
+        #     source="enemy", target_type="player",
+        #     x=enemy_x, y=enemy_y,
+        #     tx=player_x, ty=player_y,
+        #     damage=10, speed=4,
+        #     color=QColor(255, 0, 0), radius=5
+        # )
+
+
     def game_starts(self):
         self.pauseMenu.hide()
         self.isPaused = False
@@ -129,6 +152,18 @@ class GameView(QWidget):
             if event.button() == Qt.MouseButton.LeftButton:
                 if QRect(BORDER_SIZE, BORDER_SIZE, ROOM_SIZE[0] - 2 * BORDER_SIZE, ROOM_SIZE[1] - 2 * BORDER_SIZE).contains(event.pos()):
                     self.perform_attack(event.pos()) #XXX
+
+            if event.button() == Qt.MouseButton.RightButton:
+                if QRect(BORDER_SIZE, BORDER_SIZE, ROOM_SIZE[0] - 2 * BORDER_SIZE, ROOM_SIZE[1] - 2 * BORDER_SIZE).contains(event.pos()):
+                    # Игрок стреляет
+                    proj = Projectile(
+                        source="player", target_type="enemy",
+                        x=self.player_x + self.player_size/2, y=self.player_y + self.player_size/2,
+                        tx=event.pos().x(), ty=event.pos().y(),
+                        damage=15, speed=7, range_=600,
+                        color=QColor(255, 255, 0), radius=4
+                    )
+                    self.projectiles.append(proj)
 
     def perform_attack(self, mouse_pos):
         if self.player.weapon.can_attack():
@@ -226,6 +261,14 @@ class GameView(QWidget):
         for effect in self.attack_effects:
             effect['time'] -= 1
         self.attack_effects = [e for e in self.attack_effects if e['time'] > 0]
+
+        for proj in self.projectiles:
+            proj.update()
+            hits = proj.check_collision(self.enemies if proj.target_type == "enemy" else [self.player])
+            for h in hits:
+                h.take_damage(proj.damage)
+
+        self.projectiles = [p for p in self.projectiles if p.alive]
 
         self.update()
 
@@ -451,6 +494,8 @@ class GameView(QWidget):
             painter.setPen(QColor(255, 255, 255))
             painter.drawText(enemy.x, enemy.y - 5, f"{enemy.hp}/{enemy.max_hp}")
 
+        for proj in self.projectiles:
+            proj.draw(painter)
 
         # Рисуем миникарту
         minimap_scale = 8
