@@ -61,6 +61,8 @@ class GameView(QWidget):
         self.player.weapons[2].add_effect(Fuzz())
         self.player.weapons[3].add_effect(Wah(self.player))
         self.player.weapons[3].add_effect(Distortion())
+
+        self.projectiles = []
         
         #pause_menu
         self.isPaused = False
@@ -81,28 +83,6 @@ class GameView(QWidget):
         self.isPaused = False
         self.pauseMenu.hide()
         self.timer.start()
-
-        self.projectiles = []
-
-        # Игрок стреляет
-        # proj = Projectile(
-        #     source="player", target_type="enemy",
-        #     x=self.player_x, y=self.player_y,
-        #     tx=100, ty=100,
-        #     damage=15, speed=7, range_=600,
-        #     color=QColor(255, 255, 0), radius=4
-        # )
-        # self.projectiles.append(proj)
-
-        # Враг стреляет
-        # proj = Projectile(
-        #     source="enemy", target_type="player",
-        #     x=enemy_x, y=enemy_y,
-        #     tx=player_x, ty=player_y,
-        #     damage=10, speed=4,
-        #     color=QColor(255, 0, 0), radius=5
-        # )
-
 
     def game_starts(self):
         self.pauseMenu.hide()
