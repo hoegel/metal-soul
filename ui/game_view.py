@@ -64,14 +64,14 @@ class GameView(QWidget):
         self.projectiles = []
 
         # Игрок стреляет
-        proj = Projectile(
-            source="player", target_type="enemy",
-            x=self.player_x, y=self.player_y,
-            tx=100, ty=100,
-            damage=15, speed=7, range_=600,
-            color=QColor(255, 255, 0), radius=4
-        )
-        self.projectiles.append(proj)
+        # proj = Projectile(
+        #     source="player", target_type="enemy",
+        #     x=self.player_x, y=self.player_y,
+        #     tx=100, ty=100,
+        #     damage=15, speed=7, range_=600,
+        #     color=QColor(255, 255, 0), radius=4
+        # )
+        # self.projectiles.append(proj)
 
         # Враг стреляет
         # proj = Projectile(
@@ -119,6 +119,18 @@ class GameView(QWidget):
         if event.button() == Qt.MouseButton.LeftButton:
             if QRect(BORDER_SIZE, BORDER_SIZE, ROOM_SIZE[0] - 2 * BORDER_SIZE, ROOM_SIZE[1] - 2 * BORDER_SIZE).contains(event.pos()):
                 self.perform_attack(event.pos()) #XXX
+        
+        if event.button() == Qt.MouseButton.RightButton:
+            if QRect(BORDER_SIZE, BORDER_SIZE, ROOM_SIZE[0] - 2 * BORDER_SIZE, ROOM_SIZE[1] - 2 * BORDER_SIZE).contains(event.pos()):
+                # Игрок стреляет
+                proj = Projectile(
+                    source="player", target_type="enemy",
+                    x=self.player_x + self.player_size/2, y=self.player_y + self.player_size/2,
+                    tx=event.pos().x(), ty=event.pos().y(),
+                    damage=15, speed=7, range_=600,
+                    color=QColor(255, 255, 0), radius=4
+                )
+                self.projectiles.append(proj)
 
     def perform_attack(self, mouse_pos):
         if self.player.weapon.can_attack():
