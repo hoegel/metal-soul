@@ -1,11 +1,3 @@
-/* Основное меню паузы */
-QWidget#pause_menu {{
-    background-color: #3c3ca7;
-    border: 4px solid #3f1875;
-    border-radius: 15px;
-}}
-
-/* Заголовок */
 QLabel#pause_title {{
     color: #ffd4d4d4;
     font-family: monospace;
@@ -14,7 +6,6 @@ QLabel#pause_title {{
     margin-bottom: 20px;
 }}
 
-/* Кнопки */
 QPushButton#pause_button {{
     background-color: #4d1e90;
     border: 4px solid #3f1875;
