@@ -332,11 +332,11 @@ class GameView(QWidget):
         if not self.player.enemies:
             if not self.current_room.cleared:
                 if self.current_room.room_type == "fight":
-                    if random.random() < 1:  # 15%
+                    if random.random() < 0.15:  # 15%
                         if self.player.heal_fragments.add():
                             print("🎶 Найдена хилочка!")
                 elif self.current_room.room_type == "boss":
-                    if random.random() < 1:  # 50%
+                    if random.random() < 0.5:  # 50%
                         if self.player.heal_fragments.add():
                             print("🎶 Найдена хилочка после босса!")
                 self.current_room.cleared = True
