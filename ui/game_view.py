@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QMessageBox
-from PySide6.QtGui import QPainter, QColor, QMouseEvent, QKeyEvent, QPen, QLinearGradient
+from PySide6.QtGui import QPainter, QColor, QMouseEvent, QKeyEvent, QPen, QLinearGradient, QPixmap
 from PySide6.QtCore import QTimer, Qt, QPoint, QRect, QRectF, Signal
 import math, os, random
 from config import *
@@ -323,13 +323,13 @@ class GameView(QWidget):
             self.player.y = new_y
 
         # Переход в соседнюю комнату
-        if self.player_y <= 70:
+        if self.player.y <= 70:
             self.try_move_room(0, -1)
-        elif self.player_y + self.player_size >= FIELD_SIZE[1]:
+        elif self.player.y + self.player.size >= FIELD_SIZE[1]:
             self.try_move_room(0, 1)
-        elif self.player_x <= 70:
+        elif self.player.x <= 70:
             self.try_move_room(-1, 0)
-        elif self.player_x + self.player_size >= FIELD_SIZE[0]:
+        elif self.player.x + self.player.size >= FIELD_SIZE[0]:
             self.try_move_room(1, 0)
 
         damage, hp, max_hp, speed = self.player.get_stats()
@@ -406,17 +406,17 @@ class GameView(QWidget):
                 self.current_room = next_room
                 # Расчёт позиции игрока у входа в новую комнату
                 if dx == 1:  # пришёл слева → появиться у левой двери
-                    self.player_x = 70
-                    self.player_y = ROOM_SIZE[1] // 2 - self.player_size // 2
+                    self.player.x = 70
+                    self.player.y = ROOM_SIZE[1] // 2 - self.player.size // 2
                 elif dx == -1:  # пришёл справа → появиться у правой двери
-                    self.player_x = ROOM_SIZE[0] - 70 - self.player_size
-                    self.player_y = ROOM_SIZE[1] // 2 - self.player_size // 2
+                    self.player.x = ROOM_SIZE[0] - 70 - self.player.size
+                    self.player.y = ROOM_SIZE[1] // 2 - self.player.size // 2
                 elif dy == 1:  # пришёл сверху → появиться у верхней двери
-                    self.player_y = 70
-                    self.player_x = ROOM_SIZE[0] // 2 - self.player_size // 2
+                    self.player.y = 70
+                    self.player.x = ROOM_SIZE[0] // 2 - self.player.size // 2
                 elif dy == -1:  # пришёл снизу → появиться у нижней двери
-                    self.player_y = ROOM_SIZE[1] - 70 - self.player_size
-                    self.player_x = ROOM_SIZE[0] // 2 - self.player_size // 2
+                    self.player.y = ROOM_SIZE[1] - 70 - self.player.size
+                    self.player.x = ROOM_SIZE[0] // 2 - self.player.size // 2
                     
             self.current_room.visited = True
             self.load_room()
