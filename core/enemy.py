@@ -2,6 +2,7 @@ import json
 import random
 import math
 import time
+from config import *
 from PySide6.QtGui import QColor
 from core.projectile import Projectile
 
@@ -32,8 +33,8 @@ class Enemy:
         if self.stun["active"]:
             return
         
-        dx = target_x - self.x
-        dy = target_y - self.y
+        dx = target_x - (self.x + self.size // 2)
+        dy = target_y - (self.y + self.size // 2)
         dist = math.hypot(dx, dy)
         if dist == 0:
             return
@@ -47,6 +48,10 @@ class Enemy:
         speed = self.speed
         self.x += speed * dx / dist
         self.y += speed * dy / dist
+        self.x = max(self.x, BORDER_SIZE)
+        self.x = min(self.x, ROOM_SIZE[0] - BORDER_SIZE - self.size)
+        self.y = max(self.y, BORDER_SIZE)
+        self.y = min(self.y, ROOM_SIZE[1] - BORDER_SIZE - self.size)
 
     def update_effects(self):
         # DOT

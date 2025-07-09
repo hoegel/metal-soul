@@ -41,10 +41,10 @@ class BossShooter(BossEnemy):
         
         self.attack_timer -= 1
         if self.attack_timer <= 0:
-            for angle in range(0, 360, 30):
+            for angle in range(0, 360, 20):
                 rad = math.radians(angle)
-                tx = self.x + math.cos(rad) * 100
-                ty = self.y + math.sin(rad) * 100
+                tx = self.x + self.size / 2 + math.cos(rad) * 100
+                ty = self.y + self.size / 2 + math.sin(rad) * 100
                 projectiles.append(Projectile("enemy", "player", self.x + self.size / 2, self.y + self.size / 2, tx, ty, 8, 3, 600, QColor(200, 0, 200), 6))
             self.attack_timer = 180
 
@@ -61,12 +61,16 @@ class BossCharger(BossEnemy):
             return
 
         if self.charging:
-            dx = self.charge_target[0] - self.x
-            dy = self.charge_target[1] - self.y
+            dx = self.charge_target[0] - (self.x + self.size // 2)
+            dy = self.charge_target[1] - (self.y + self.size // 2)
             dist = math.hypot(dx, dy)
-            if dist > 10:
+            if dist > self.size // 2:
                 self.x += dx / dist * self.speed * 2
                 self.y += dy / dist * self.speed * 2
+                self.x = max(self.x, BORDER_SIZE)
+                self.x = min(self.x, ROOM_SIZE[0] - BORDER_SIZE - self.size)
+                self.y = max(self.y, BORDER_SIZE)
+                self.y = min(self.y, ROOM_SIZE[1] - BORDER_SIZE - self.size)
             else:
                 self.charging = False
                 self.charge_cooldown = 240
@@ -90,9 +94,21 @@ class BossSpawner(BossEnemy):
         self.spawn_timer -= 1
         if self.spawn_timer <= 0:
             for _ in range(2):
-                spawn_x = self.x + random.randint(-40, 40)
-                spawn_y = self.y + random.randint(-40, 40)
+                spawn_x = self.x + random.randint(-60, 60)
+                spawn_y = self.y + random.randint(-60, 60)
+                spawn_x = max(spawn_x, BORDER_SIZE)
+                spawn_x = min(spawn_x, ROOM_SIZE[0] - BORDER_SIZE - 18)
+                spawn_y = max(spawn_y, BORDER_SIZE)
+                spawn_y = min(spawn_y, ROOM_SIZE[1] - BORDER_SIZE - 18)
                 enemies.append(Enemy(spawn_x, spawn_y, 5, 15, 15, 1.0, 18))
+            for _ in range(2):
+                spawn_x = self.x + random.randint(-60, 60)
+                spawn_y = self.y + random.randint(-60, 60)
+                spawn_x = max(spawn_x, BORDER_SIZE)
+                spawn_x = min(spawn_x, ROOM_SIZE[0] - BORDER_SIZE - 18)
+                spawn_y = max(spawn_y, BORDER_SIZE)
+                spawn_y = min(spawn_y, ROOM_SIZE[1] - BORDER_SIZE - 18)
+                enemies.append(ShooterEnemy(spawn_x, spawn_y, 80, 5, 15, 15, 1.0, 18))
             self.spawn_timer = 300
 
         self.move_towards(player_x, player_y)

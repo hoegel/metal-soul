@@ -98,6 +98,7 @@ class GameView(QWidget):
 
     def load_room(self):
         self.player.enemies.clear()
+        self.projectiles.clear()
         room = self.current_room
 
         if room.room_type == "fight" and not room.cleared:
@@ -111,7 +112,7 @@ class GameView(QWidget):
                 print(path)
                 self.player.enemies.extend(load_enemies_from_json("resources/data/enemies.json"))
             room.enemies = self.player.enemies
-        elif room.room_type == "boss":
+        elif room.room_type == "boss" and not room.cleared:
             self.current_room.artifact = None
             match self.floor:
                 case 0:
@@ -192,8 +193,13 @@ class GameView(QWidget):
                         for i, eff_class in enumerate(self.effect_choices):
                             rect = QRect(100 + i*140, 100, 120, 40)
                             if rect.contains(event.pos()):
-                                effect_instance = eff_class()
                                 weapon = self.player.weapon
+                                if issubclass(eff_class, Tremolo):
+                                    effect_instance = eff_class(self.player.enemies)
+                                elif issubclass(eff_class, Wah):
+                                    effect_instance = eff_class(self.player)
+                                else:
+                                    effect_instance = eff_class()
                                 if weapon.add_effect(effect_instance):
                                     print(f"Effect {eff_class.__name__} added to current weapon")
                                 else:
@@ -290,11 +296,13 @@ class GameView(QWidget):
 
         for enemy in self.player.enemies:
             if isinstance(enemy, BossSpawner):
-                enemy.update(self.player.x, self.player.y, self.player.enemies)
+                enemy.update(self.player.x + self.player.size // 2, self.player.y + self.player.size // 2, self.player.enemies)
             else:
-                enemy.update(self.player.x, self.player.y, self.projectiles)
+                enemy.update(self.player.x + self.player.size // 2, self.player.y + self.player.size // 2, self.projectiles)
             if enemy.hp <= 0:
                 self.player.enemies.remove(enemy)
+                if not self.player.enemies:
+                    self.current_room.cleared = True
             elif enemy.check_contact_with_player(self.player.x, self.player.y, self.player.size):
                 self.player.take_damage(enemy.damage)
 
