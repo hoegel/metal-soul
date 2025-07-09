@@ -7,6 +7,6 @@
     {"type": "base", "x": 200, "y": 350, "damage": 10, "hp": 40, "max_hp": 40, "speed": 1.2, "size": 20},
     {"type": "base", "x": 270, "y": 270, "damage": 11, "hp": 35, "max_hp": 35, "speed": 1.3, "size": 20},
     {"type": "base", "x": 420, "y": 220, "damage": 9, "hp": 38, "max_hp": 38, "speed": 1.1, "size": 22},
-    {"type": "base", "x": 600, "y": 380, "damage": 10, "hp": 42, "max_hp": 42, "speed": 1.0, "size": 21}
+    {"type": "base", "x": 560, "y": 380, "damage": 10, "hp": 42, "max_hp": 42, "speed": 1.0, "size": 21}
   ]
 }
