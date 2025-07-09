@@ -34,9 +34,9 @@ class HUD(QWidget):
         self.hp_label.setStyleSheet("""
             color: red;
             font-size: 16px;
-            font-family: monospace;
+            font-family: monospace;                               
         """)
-        self.hp_label.setAlignment(Qt.AlignRight)
+        self.hp_label.setAlignment(Qt.AlignCenter)
         self.hp_label.setMinimumWidth(100) 
 
         self.hp_bar = QProgressBar()
@@ -48,7 +48,7 @@ class HUD(QWidget):
             QProgressBar {
                 border: 1px solid #000;
                 background-color: #444;
-                height: 10px;
+                height: 40px;
             }
             QProgressBar::chunk {
                 background-color: red;
@@ -69,17 +69,17 @@ class HUD(QWidget):
         percent = hp / max_hp if max_hp > 0 else 0
 
         if percent > 0.7:
-            color = "green"
+            color = "#579a33"
         elif percent > 0.3:
-            color = "yellow"
+            color = "#ffea00"
         else:
-            color = "red"
+            color = "#ee1c25"
 
         self.hp_bar.setStyleSheet(f"""
             QProgressBar {{
                 border: 1px solid #000;
                 background-color: #444;
-                height: 10px;
+                height: 40px;
             }}
             QProgressBar::chunk {{
                 background-color: {color};
