@@ -1,6 +1,7 @@
 from core.weapon import Melee, Beam, Bomb
 from core.shield import Shield
 from core.dash import DodgeRoll
+from core.ultimate import Ultimate
 
 class Player:
     def __init__(self):
@@ -24,6 +25,9 @@ class Player:
 
         self.shield = Shield()
         self.dodge = DodgeRoll()
+
+        self.ultimate = Ultimate()
+        self.ult_active_multiplier = 1
 
         self.enemies = []
 
@@ -52,6 +56,10 @@ class Player:
         self.weapon.attack(player_pos, target_pos, enemies)
 
     def get_stats(self):
+        if self.ultimate.is_active():
+            self.ult_active_multiplier = 2
+        else:
+            self.ult_active_multiplier = 1
         return self.damage, self.hp, self.max_hp, self.speed
     
     def take_damage(self, damage):

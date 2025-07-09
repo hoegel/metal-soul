@@ -75,7 +75,7 @@ class Melee(Weapon):
                 continue
 
             if dist < self.radius // 4:
-                if enemy.take_damage(self.damage):
+                if enemy.take_damage(self.damage * self.player.ult_active_multiplier):
                     hit.append(enemy)
                 elif self.effect:
                     for eff in self.effect:
@@ -89,7 +89,7 @@ class Melee(Weapon):
                 angle_diff = abs(self.normalize_angle(angle_to_enemy - main_angle))
 
                 if angle_diff <= self.angle_range:
-                    if enemy.take_damage(self.damage):
+                    if enemy.take_damage(self.damage * self.player.ult_active_multiplier):
                         hit.append(enemy)
                     elif self.effect:
                         for eff in self.effect:
@@ -149,7 +149,7 @@ class Beam(Weapon):
 
             dist = math.hypot(closest_x - ex, closest_y - ey)
             if dist < self.radius + esize:
-                if enemy.take_damage(self.damage):
+                if enemy.take_damage(self.damage * self.player.ult_active_multiplier):
                     hit.append(enemy)
                 elif self.effect:
                     for eff in self.effect:
@@ -220,7 +220,7 @@ class Bomb(Weapon):
             ey += esize / 2
             dist = math.hypot(ex - tx, ey - ty)
             if dist < self.radius + esize:
-                if enemy.take_damage(self.damage):
+                if enemy.take_damage(self.damage * self.player.ult_active_multiplier):
                     hit.append(enemy)
                 elif self.effect:
                     for eff in self.effect:
@@ -231,7 +231,7 @@ class Bomb(Weapon):
         px, py = player_pos
         dist = math.hypot(px - tx, py - ty)
         if dist < self.radius:
-            if self.player.take_damage(self.damage):
+            if self.player.take_damage(self.damage * self.player.ult_active_multiplier):
                 pass
 
         self.notify(hit)

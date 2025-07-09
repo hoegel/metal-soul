@@ -176,6 +176,13 @@ class GameView(QWidget):
                     self.current_room.artifact = None
                     self.current_room.cleared = True
 
+            if event.key() == Qt.Key_Q:
+                if self.player.ultimate.activate():
+                    # self.music.play()
+                    print("ULTIMATE ACTIVATED!")
+                else:
+                    print(f"Ульта на перезарядке: {self.player.ultimate.remaining_cooldown()} сек")
+
 
             if event.key() in (Qt.Key_1, Qt.Key_2, Qt.Key_3):
                 self.player.set_attack_type(int(event.text()))
@@ -228,18 +235,21 @@ class GameView(QWidget):
 
     def update_game(self):
         self.player.update()
+        _, hp, max_hp, _ = self.player.get_stats()
+        # if not self.player.ultimate.is_active():
+        #     self.music.stop()
         if self.player.is_dodging():
             new_x, new_y = self.player.get_position()
         else:
             dx = dy = 0
             if Qt.Key_W in self.pressed_keys:
-                dy -= self.player.speed
+                dy -= self.player.speed * self.player.ult_active_multiplier
             if Qt.Key_S in self.pressed_keys:
-                dy += self.player.speed
+                dy += self.player.speed * self.player.ult_active_multiplier
             if Qt.Key_A in self.pressed_keys:
-                dx -= self.player.speed
+                dx -= self.player.speed * self.player.ult_active_multiplier
             if Qt.Key_D in self.pressed_keys:
-                dx += self.player.speed
+                dx += self.player.speed * self.player.ult_active_multiplier
 
             new_x = self.player.x + dx
             new_y = self.player.y + dy
@@ -297,7 +307,6 @@ class GameView(QWidget):
 
 
 
-        damage, hp, max_hp, speed = self.player.get_stats()
         self.hud.update_stats(hp, max_hp)
         self.player.update_invincibility()
 
@@ -347,6 +356,8 @@ class GameView(QWidget):
 
         if next_room:
             if next_room.room_type == "next_level":
+                if self.current_room.room_type != "boss":
+                    return
                 self.floor += 1
                 self.level = Level()  # Сгенерировать новый этаж
                 self.room_coords = self.level.start_pos
@@ -616,3 +627,8 @@ class GameView(QWidget):
                 minimap_offset_y + (ry - self.level.start_pos[1]) * room_size,
                 room_size, room_size
             )
+
+        if self.player.ultimate.is_active():
+            painter.setOpacity(0.25)
+            painter.fillRect(QRect(0, 0, *ROOM_SIZE), QColor(255, 0, 0))  # красный фильтр
+            painter.setOpacity(1.0)
