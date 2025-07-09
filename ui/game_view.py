@@ -24,6 +24,10 @@ class GameView(QWidget):
         self.doors_down = QPixmap("resources/images/backgrounds/doors_down.png")
         self.doors_right = QPixmap("resources/images/backgrounds/doors_right.png")
         self.doors_left = QPixmap("resources/images/backgrounds/doors_left.png")
+        self.doors_up_boss = QPixmap("resources/images/backgrounds/doors_up_boss.png")
+        self.doors_down_boss = QPixmap("resources/images/backgrounds/doors_down_boss.png")
+        self.doors_right_boss = QPixmap("resources/images/backgrounds/doors_right_boss.png")
+        self.doors_left_boss = QPixmap("resources/images/backgrounds/doors_left_boss.png")
 
         self.player = Player()
 
@@ -299,7 +303,7 @@ class GameView(QWidget):
         if neighbors['up']:
             match self.level.get_room(cx, cy - 1).room_type:
                 case "boss":
-                    painter.setBrush(self.doors_up)
+                    painter.setBrush(self.doors_up_boss)
                 case "treasure":
                     painter.setBrush(self.doors_up)
                 case "next_level":
@@ -311,7 +315,7 @@ class GameView(QWidget):
         if neighbors['down']:
             match self.level.get_room(cx, cy + 1).room_type:
                 case "boss":
-                    painter.setBrush(self.doors_down)
+                    painter.setBrush(self.doors_down_boss)
                 case "treasure":
                     painter.setBrush(self.doors_down)
                 case "next_level":
@@ -323,7 +327,7 @@ class GameView(QWidget):
         if neighbors['left']:
             match self.level.get_room(cx - 1, cy).room_type:
                 case "boss":
-                    painter.setBrush(self.doors_left)
+                    painter.setBrush(self.doors_left_boss)
                 case "treasure":
                     painter.setBrush(self.doors_left)
                 case "next_level":
@@ -335,7 +339,7 @@ class GameView(QWidget):
         if neighbors['right']:
             match self.level.get_room(cx + 1, cy).room_type:
                 case "boss":
-                    painter.setBrush(self.doors_right)
+                    painter.setBrush(self.doors_right_boss)
                 case "treasure":
                     painter.setBrush(self.doors_right)
                 case "next_level":
