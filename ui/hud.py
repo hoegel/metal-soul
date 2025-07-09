@@ -31,7 +31,13 @@ class HUD(QWidget):
 
         # Жизнь
         self.hp_label = QLabel("HP: 100/100")
-        self.hp_label.setStyleSheet("color: red; font-size: 16px;")
+        self.hp_label.setStyleSheet("""
+            color: red;
+            font-size: 16px;
+            font-family: monospace;
+        """)
+        self.hp_label.setAlignment(Qt.AlignRight)
+        self.hp_label.setMinimumWidth(100) 
 
         self.hp_bar = QProgressBar()
         self.hp_bar.setMinimum(0)
