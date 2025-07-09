@@ -50,15 +50,14 @@ class Level:
         if candidates:
             bx, by = candidates.pop()
             self.rooms[(bx, by)] = Room(bx, by, "boss")
+            next_level_flag = False
             for dx, dy in directions:
                 nx, ny = bx + dx, by + dy
                 if (nx, ny) in candidates:
                     candidates.remove((nx, ny))
-            for dx, dy in directions:
-                nx, ny = bx + dx, by + dy
-                if (nx, ny) not in self.rooms:
+                elif (nx, ny) not in self.rooms and not next_level_flag:
                     self.rooms[(nx, ny)] = Room(nx, ny, "next_level")
-                    break
+                    next_level_flag = True
 
         # 4. Создаём до 3 комнат-сокровищниц
         for _ in range(3):
