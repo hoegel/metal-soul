@@ -138,6 +138,10 @@ class ShooterEnemy(Enemy):
 
     def update(self, player_x, player_y, projectiles):
         super().update(player_x, player_y, projectiles)
+
+        if self.stun["active"]:
+            return
+
         if self.shoot_timer > 0:
             self.shoot_timer -= 1
         else:
@@ -159,6 +163,10 @@ class CrossShooterEnemy(Enemy):
 
     def update(self, player_x, player_y, projectiles):
         self.update_effects()
+
+        if self.stun["active"]:
+            return
+
         self.move_randomly()
         if self.shoot_timer > 0:
             self.shoot_timer -= 1

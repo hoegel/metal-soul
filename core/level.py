@@ -53,11 +53,15 @@ class Level:
             next_level_flag = False
             for dx, dy in directions:
                 nx, ny = bx + dx, by + dy
-                if (nx, ny) in candidates:
-                    candidates.remove((nx, ny))
-                elif (nx, ny) not in self.rooms and not next_level_flag:
+                if (nx, ny) not in candidates and (nx, ny) not in self.rooms and not next_level_flag:
                     self.rooms[(nx, ny)] = Room(nx, ny, "next_level")
                     next_level_flag = True
+                    for dx, dy in directions:
+                        nnx, nny = nx + dx, ny + dy
+                        if (nnx, nny) in candidates:
+                            candidates.remove((nnx, nny))
+                if (nx, ny) in candidates:
+                    candidates.remove((nx, ny))
 
         # 4. Создаём до 3 комнат-сокровищниц
         for _ in range(3):
