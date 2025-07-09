@@ -37,7 +37,7 @@ class HUD(QWidget):
         self.hp_bar.setMinimum(0)
         self.hp_bar.setMaximum(100)
         self.hp_bar.setValue(100)
-        self.hp_bar.setTextVisible(False)  # убрать надпись "100%"
+        self.hp_bar.setTextVisible(False)
         self.hp_bar.setStyleSheet("""
             QProgressBar {
                 border: 1px solid #000;
@@ -59,6 +59,26 @@ class HUD(QWidget):
         self.hp_label.setText(f"HP: {hp}/{max_hp}")
         self.hp_bar.setMaximum(max_hp)
         self.hp_bar.setValue(hp)
+
+        percent = hp / max_hp if max_hp > 0 else 0
+
+        if percent > 0.7:
+            color = "green"
+        elif percent > 0.3:
+            color = "yellow"
+        else:
+            color = "red"
+
+        self.hp_bar.setStyleSheet(f"""
+            QProgressBar {{
+                border: 1px solid #000;
+                background-color: #444;
+                height: 10px;
+            }}
+            QProgressBar::chunk {{
+                background-color: {color};
+            }}
+        """)
     
     def update_chord(self, number):
         if(number == 1):
