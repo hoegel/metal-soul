@@ -3,13 +3,13 @@ from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout, QProgre
 from PySide6.QtCore import Qt
 from config import *
 from resources.colors import *
+from utils.styles_loader import update_style_property
 
 class HUD(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setFixedHeight(WINDOW_HEIGHT - ROOM_SIZE[0])
         self.setFixedWidth(WINDOW_WIDTH)
-        #self.setStyleSheet("background-color: rgba(0, 0, 0, 180);")
 
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(10, 5, 10, 5)
@@ -25,11 +25,7 @@ class HUD(QWidget):
         self.power_chord_label.setObjectName("power_chord_label")
         self.major_chord_label.setObjectName("major_chord_label")
         self.minor_chord_label.setObjectName("minor_chord_label")
-
-        # self.power_chord_label.setStyleSheet(f"background-color: {CHOSEN_WEAPON_COLOR}; font-size: 16px;")
-        # self.major_chord_label.setStyleSheet(f"background-color: {NOT_CHOSEN_WEAPON_COLOR}; font-size: 16px;")
-        # self.minor_chord_label.setStyleSheet(f"background-color: {NOT_CHOSEN_WEAPON_COLOR}; font-size: 16px;")
-            
+   
         weapon_row.addWidget(self.power_chord_label)
         weapon_row.addWidget(self.major_chord_label)
         weapon_row.addWidget(self.minor_chord_label)
@@ -41,21 +37,6 @@ class HUD(QWidget):
         self.hp_bar.setValue(100)
         self.hp_bar.setTextVisible(True)
         self.hp_bar.setAlignment(Qt.AlignCenter)
-        self.hp_bar.setStyleSheet("""
-            QProgressBar {
-                border: 1px solid #000;
-                background-color: #444;
-                height: 40px;
-                text-align: center;
-                color: white;
-                font-size: 15px;
-                font-family: monospace;
-                font-weight: bold;
-            }
-            QProgressBar::chunk {
-                background-color: red;
-            }
-        """)
 
         hp_row.addWidget(self.hp_bar) 
 
@@ -77,32 +58,20 @@ class HUD(QWidget):
             color = LOW_HP_BAR
 
         self.hp_bar.setStyleSheet(f"""
-            QProgressBar {{
-                border: 1px solid #000;
-                background-color: #444;
-                height: 40px;
-                text-align: center;
-                color: white;
-                font-size: 15px;
-                font-family: monospace;
-                font-weight: bold;
-            }}
             QProgressBar::chunk {{
                 background-color: {color};
             }}
         """)
     
     def update_chord(self, number):
-        if(number == 1):
-            self.power_chord_label.setStyleSheet(f"background-color: {CHOSEN_WEAPON_COLOR}; font-size: 16px;")
-            self.major_chord_label.setStyleSheet(f"background-color: {NOT_CHOSEN_WEAPON_COLOR}; font-size: 16px;")
-            self.minor_chord_label.setStyleSheet(f"background-color: {NOT_CHOSEN_WEAPON_COLOR}; font-size: 16px;")
-        elif(number == 2):
-            self.power_chord_label.setStyleSheet(f"background-color: {NOT_CHOSEN_WEAPON_COLOR}; font-size: 16px;")
-            self.major_chord_label.setStyleSheet(f"background-color: {CHOSEN_WEAPON_COLOR}; font-size: 16px;")
-            self.minor_chord_label.setStyleSheet(f"background-color: {NOT_CHOSEN_WEAPON_COLOR}; font-size: 16px;")
-        elif(number == 3):
-            self.power_chord_label.setStyleSheet(f"background-color: {NOT_CHOSEN_WEAPON_COLOR}; font-size: 16px;")
-            self.major_chord_label.setStyleSheet(f"background-color: {NOT_CHOSEN_WEAPON_COLOR}; font-size: 16px;")
-            self.minor_chord_label.setStyleSheet(f"background-color: {CHOSEN_WEAPON_COLOR}; font-size: 16px;")
+        update_style_property(self.power_chord_label, "background-color", str(NOT_CHOSEN_WEAPON_COLOR))
+        update_style_property(self.major_chord_label, "background-color", str(NOT_CHOSEN_WEAPON_COLOR))
+        update_style_property(self.minor_chord_label, "background-color", str(NOT_CHOSEN_WEAPON_COLOR))
+        match number:
+            case 1:
+                update_style_property(self.power_chord_label, "background-color", str(CHOSEN_WEAPON_COLOR))
+            case 2:
+                update_style_property(self.major_chord_label, "background-color", str(CHOSEN_WEAPON_COLOR))
+            case 3:
+                update_style_property(self.minor_chord_label, "background-color", str(CHOSEN_WEAPON_COLOR))
 

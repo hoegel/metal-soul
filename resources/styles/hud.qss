@@ -1,23 +1,22 @@
-HUD {
+HUD {{
     background-color: rgba(0, 0, 0, 180);
-}
+}}
 
 QLabel#power_chord_label,
 QLabel#major_chord_label,
-QLabel#minor_chord_label {
+QLabel#minor_chord_label {{
     font-size: 16px;
-    /*padding: 2px 4px;*/
-}
+}}
 
-QLabel#power_chord_label {
-    background-color: #00FF00; /* выбранный */
-}
+QLabel#power_chord_label {{
+    background-color: {CHOSEN_WEAPON_COLOR};
+}}
 QLabel#major_chord_label,
-QLabel#minor_chord_label {
-    background-color: #555555; /* не выбранные */
-}
+QLabel#minor_chord_label {{
+    background-color: {NOT_CHOSEN_WEAPON_COLOR};
+}}
 
-QProgressBar {
+QProgressBar {{
     border: 1px solid #000;
     background-color: #444;
     height: 40px;
@@ -26,7 +25,7 @@ QProgressBar {
     font-size: 15px;
     font-family: monospace;
     font-weight: bold;
-}
-QProgressBar::chunk {
-    background-color: red;
-}
+}}
+QProgressBar::chunk {{
+    background-color: {GOOD_HP_BAR};
+}}
