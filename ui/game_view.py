@@ -11,6 +11,7 @@ from core.level import Level
 from core.elemental import *
 from core.projectile import Projectile
 from ui.menu_pause import PauseMenu
+from core.artifact_pool import get_random_artifact, create_artifact_pool
 
 class GameView(QWidget):
     def __init__(self, main_window):
@@ -45,7 +46,7 @@ class GameView(QWidget):
         for weapon in self.player.weapons.values():
             weapon.subscribe(self.on_enemies_hit)
 
-        self.enemies = []
+        self.player.enemies = []
 
         self.floor = 0
         self.level = Level()
@@ -55,14 +56,18 @@ class GameView(QWidget):
         self.load_room()
 
         # effect tests
-        self.player.weapons[1].add_effect(Overdrive())
-        self.player.weapons[1].add_effect(Tremolo(self.enemies))
-        self.player.weapons[2].add_effect(Delay())
-        self.player.weapons[2].add_effect(Fuzz())
-        self.player.weapons[3].add_effect(Wah(self.player))
-        self.player.weapons[3].add_effect(Distortion())
+        # self.player.weapons[1].add_effect(Overdrive())
+        # self.player.weapons[1].add_effect(Tremolo(self.player.enemies))
+        # self.player.weapons[2].add_effect(Delay())
+        # self.player.weapons[2].add_effect(Fuzz())
+        # self.player.weapons[3].add_effect(Wah(self.player))
+        # self.player.weapons[3].add_effect(Distortion())
 
         self.projectiles = []
+
+        self.current_room.artifact = None
+        self.artifact_pos = QPoint(ROOM_SIZE[0]//2 - 10, ROOM_SIZE[1]//2 - 10)
+        create_artifact_pool()
         
         #pause_menu
         self.isPaused = False
@@ -90,28 +95,31 @@ class GameView(QWidget):
         self.timer.start(16)
 
     def load_room(self):
-        self.enemies.clear
+        self.player.enemies.clear()
         room = self.current_room
 
         if room.room_type == "fight" and not room.cleared:
+            self.current_room.artifact = None
             # room_id = f"floor{self.floor}_x{self.room_coords[0]}_y{self.room_coords[1]}"
             room_id = f"floor{self.floor}_{(self.room_coords[0] + self.room_coords[1]) % 4}"
             path = f"resources/data/enemies/{room_id}.json"
             if os.path.exists(path):
-                self.enemies.extend(load_enemies_from_json(path))
+                self.player.enemies.extend(load_enemies_from_json(path))
             else:
                 print(path)
-                self.enemies.extend(load_enemies_from_json("resources/data/enemies.json"))
-            room.enemies = self.enemies
+                self.player.enemies.extend(load_enemies_from_json("resources/data/enemies.json"))
+            room.enemies = self.player.enemies
         elif room.room_type == "boss":
             # load boss logic
             ...
+        elif room.room_type == "treasure" and not room.cleared and self.current_room.artifact == None:
+            self.current_room.artifact = get_random_artifact()
 
     def on_enemies_hit(self, enemies):
         for e in enemies:
-            if e in self.enemies:
-                self.enemies.remove(e)
-        if not self.enemies:
+            if e in self.player.enemies:
+                self.player.enemies.remove(e)
+        if not self.player.enemies:
             self.current_room.cleared = True
 
 
@@ -126,6 +134,15 @@ class GameView(QWidget):
         
         if not self.isPaused:
             self.pressed_keys.add(event.key())
+
+            if event.key() == Qt.Key_E and self.current_room.artifact:
+                # Подбор артефакта, если рядом
+                dist = math.hypot(self.player.x - self.artifact_pos.x(), self.player.y - self.artifact_pos.y())
+                if dist < 40:
+                    self.current_room.artifact.apply(self.player)
+                    print(f"Picked up: {self.current_room.artifact.name}")
+                    self.current_room.artifact = None
+                    self.current_room.cleared = True
 
             if event.key() in (Qt.Key_1, Qt.Key_2, Qt.Key_3):
                 self.player.set_attack_type(int(event.text()))
@@ -163,7 +180,7 @@ class GameView(QWidget):
                 'px': target_pos[0], 'py': target_pos[1],
                 'time': 10
             })
-            self.player.attack(player_pos, target_pos, self.enemies)
+            self.player.attack(player_pos, target_pos, self.player.enemies)
 
     def update_game(self):
         dx = dy = 0
@@ -202,19 +219,19 @@ class GameView(QWidget):
 
         # Верх
         if new_y <= wall_thickness:
-            if not (neighbors['up'] and abs(cx - ROOM_SIZE[0] // 2) <= door_width // 2 and not self.enemies):
+            if not (neighbors['up'] and abs(cx - ROOM_SIZE[0] // 2) <= door_width // 2 and not self.player.enemies):
                 blocked_y = True
         # Низ
         if new_y + self.player.size >= ROOM_SIZE[1] - wall_thickness:
-            if not (neighbors['down'] and abs(cx - ROOM_SIZE[0] // 2) <= door_width // 2 and not self.enemies):
+            if not (neighbors['down'] and abs(cx - ROOM_SIZE[0] // 2) <= door_width // 2 and not self.player.enemies):
                 blocked_y = True
         # Лево
         if new_x <= wall_thickness:
-            if not (neighbors['left'] and abs(cy - ROOM_SIZE[1] // 2) <= door_width // 2 and not self.enemies):
+            if not (neighbors['left'] and abs(cy - ROOM_SIZE[1] // 2) <= door_width // 2 and not self.player.enemies):
                 blocked_x = True
         # Право
         if new_x + self.player.size >= ROOM_SIZE[0] - wall_thickness:
-            if not (neighbors['right'] and abs(cy - ROOM_SIZE[1] // 2) <= door_width // 2 and not self.enemies):
+            if not (neighbors['right'] and abs(cy - ROOM_SIZE[1] // 2) <= door_width // 2 and not self.player.enemies):
                 blocked_x = True
 
         # Разрешённое движение
@@ -239,10 +256,10 @@ class GameView(QWidget):
         self.hud.update_stats(hp, max_hp)
         self.player.update_invincibility()
 
-        for enemy in self.enemies:
+        for enemy in self.player.enemies:
             enemy.update(self.player.x, self.player.y, self.projectiles)
             if enemy.hp <= 0:
-                self.enemies.remove(enemy)
+                self.player.enemies.remove(enemy)
             elif enemy.check_contact_with_player(self.player.x, self.player.y, self.player.size):
                 self.player.take_damage(enemy.damage)
 
@@ -254,7 +271,7 @@ class GameView(QWidget):
 
         for proj in self.projectiles:
             proj.update()
-            hits = proj.check_collision(self.enemies if proj.target_type == "enemy" else [self.player])
+            hits = proj.check_collision(self.player.enemies if proj.target_type == "enemy" else [self.player])
             for h in hits:
                 h.take_damage(proj.damage)
 
@@ -263,7 +280,7 @@ class GameView(QWidget):
         self.update()
 
     def try_move_room(self, dx, dy):
-        if self.enemies:
+        if self.player.enemies:
             return
 
         new_x = self.room_coords[0] + dx
@@ -443,7 +460,7 @@ class GameView(QWidget):
 
                 painter.setBrush(gradient)
                 painter.setPen(Qt.NoPen)
-                painter.drawPie(QRectF(x - 30, y - 30, 80, 80), start_angle, span_angle)
+                painter.drawPie(QRectF(x - self.player.weapon.radius + 10, y - self.player.weapon.radius + 10, self.player.weapon.radius * 2, self.player.weapon.radius * 2), start_angle, span_angle)
 
 
             elif atk_type == 'beam':
@@ -452,18 +469,18 @@ class GameView(QWidget):
                 if end:
                     bx, by = end
                     if self.player.weapon.effect:
-                        painter.setPen(effect_colors.get(self.player.weapon.effect[-1].name, QColor(255, 255, 255, 180)))
+                        painter.setPen(QPen(effect_colors.get(self.player.weapon.effect[-1].name, QColor(255, 255, 255, 180)), self.player.weapon.radius * 2))
                     else:
-                        painter.setPen(QColor(255, 255, 255, 180))
+                        painter.setPen(QPen(QColor(255, 255, 255, 180), self.player.weapon.radius * 2))
                     painter.drawLine(x + 10, y + 10, bx, by)
 
             elif atk_type == 'bomb':
                 painter.setBrush(gradient)
                 painter.setPen(Qt.NoPen)
-                painter.drawEllipse(px - 25, py - 25, 50, 50)
+                painter.drawEllipse(px - self.player.weapon.radius, py - self.player.weapon.radius, self.player.weapon.radius * 2, self.player.weapon.radius * 2)
 
 
-        for enemy in self.enemies:
+        for enemy in self.player.enemies:
             painter.setBrush(QColor(200, 50, 50))
             painter.setPen(Qt.NoPen)
             painter.drawEllipse(enemy.x, enemy.y, enemy.size, enemy.size)
@@ -488,6 +505,14 @@ class GameView(QWidget):
 
         for proj in self.projectiles:
             proj.draw(painter)
+
+        if self.current_room.artifact:
+            painter.setBrush(QColor(100, 255, 100))
+            painter.setPen(QColor(255, 255, 255))
+            x, y = self.artifact_pos.x(), self.artifact_pos.y()
+            painter.drawEllipse(x, y, 20, 20)
+            painter.drawText(x - 10, y - 10, self.current_room.artifact.name)
+            painter.drawText(40, 40, self.current_room.artifact.description)
 
         # Рисуем миникарту
         minimap_scale = 8

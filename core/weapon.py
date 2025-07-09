@@ -101,7 +101,7 @@ class Beam(Weapon):
     def __init__(self, player):
         super().__init__(player)
         self.damage = 12
-        self.threshold = 10
+        self.radius = 10
         self.cooldown = 1.0
 
     def attack(self, player_pos, target_pos, enemies): 
@@ -137,7 +137,7 @@ class Beam(Weapon):
             closest_y = py + t * dy
 
             dist = math.hypot(closest_x - ex, closest_y - ey)
-            if dist < self.threshold + esize:
+            if dist < self.radius + esize:
                 if enemy.take_damage(self.damage):
                     hit.append(enemy)
                 elif self.effect:
