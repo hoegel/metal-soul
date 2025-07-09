@@ -20,7 +20,10 @@ class GameView(QWidget):
         self.main_window = main_window
         
         self.background_pixmap = QPixmap("resources/images/backgrounds/level_background1.png")
-        self.doors = QPixmap("resources/images/backgrounds/doors.png")
+        self.doors_up = QPixmap("resources/images/backgrounds/doors_up.png")
+        self.doors_down = QPixmap("resources/images/backgrounds/doors_down.png")
+        self.doors_right = QPixmap("resources/images/backgrounds/doors_right.png")
+        self.doors_left = QPixmap("resources/images/backgrounds/doors_left.png")
 
         self.player = Player()
 
@@ -290,56 +293,55 @@ class GameView(QWidget):
 
         door_w, door_h = 100, BORDER_SIZE  # размеры двери
 
-        painter.setBrush(self.doors)  # цвет двери
-        painter.setPen(QColor(0, 0, 0))
+        painter.setPen(QColor(0, 0, 0, 0))
 
         # Вверх
         if neighbors['up']:
             match self.level.get_room(cx, cy - 1).room_type:
                 case "boss":
-                    painter.setBrush(self.doors)
+                    painter.setBrush(self.doors_up)
                 case "treasure":
-                    painter.setBrush(self.doors)
+                    painter.setBrush(self.doors_up)
                 case "next_level":
-                    painter.setBrush(self.doors)
+                    painter.setBrush(self.doors_up)
                 case _:
-                    painter.setBrush(self.doors)
+                    painter.setBrush(self.doors_up)
             painter.drawRect(ROOM_SIZE[0] // 2 - door_w // 2, 0, door_w, door_h)
         # Вниз
         if neighbors['down']:
             match self.level.get_room(cx, cy + 1).room_type:
                 case "boss":
-                    painter.setBrush(self.doors)
+                    painter.setBrush(self.doors_down)
                 case "treasure":
-                    painter.setBrush(self.doors)
+                    painter.setBrush(self.doors_down)
                 case "next_level":
-                    painter.setBrush(self.doors)
+                    painter.setBrush(self.doors_down)
                 case _:
-                    painter.setBrush(self.doors)
+                    painter.setBrush(self.doors_down)
             painter.drawRect(ROOM_SIZE[0] // 2 - door_w // 2, ROOM_SIZE[1] - door_h, door_w, door_h)
         # Влево
         if neighbors['left']:
             match self.level.get_room(cx - 1, cy).room_type:
                 case "boss":
-                    painter.setBrush(self.doors)
+                    painter.setBrush(self.doors_left)
                 case "treasure":
-                    painter.setBrush(self.doors)
+                    painter.setBrush(self.doors_left)
                 case "next_level":
-                    painter.setBrush(self.doors)
+                    painter.setBrush(self.doors_left)
                 case _:
-                    painter.setBrush(self.doors)
+                    painter.setBrush(self.doors_left)
             painter.drawRect(0, ROOM_SIZE[1] // 2 - door_w // 2, door_h, door_w)
         # Вправо
         if neighbors['right']:
             match self.level.get_room(cx + 1, cy).room_type:
                 case "boss":
-                    painter.setBrush(self.doors)
+                    painter.setBrush(self.doors_right)
                 case "treasure":
-                    painter.setBrush(self.doors)
+                    painter.setBrush(self.doors_right)
                 case "next_level":
-                    painter.setBrush(self.doors)
+                    painter.setBrush(self.doors_right)
                 case _:
-                    painter.setBrush(self.doors)
+                    painter.setBrush(self.doors_right)
             painter.drawRect(ROOM_SIZE[0] - door_h, ROOM_SIZE[1] // 2 - door_w // 2, door_h, door_w)
 
 
