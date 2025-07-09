@@ -65,6 +65,8 @@ class Melee(Weapon):
 
         for enemy in enemies:
             ex, ey, esize, _ = enemy.rect()
+            ex += esize / 2
+            ey += esize / 2
             vec_x = ex - px
             vec_y = ey - py
             dist = math.hypot(vec_x, vec_y)
@@ -72,11 +74,8 @@ class Melee(Weapon):
             if dist > self.radius + esize:
                 continue
 
-            angle_to_enemy = math.atan2(vec_y, vec_x)
-            angle_diff = abs(self.normalize_angle(angle_to_enemy - main_angle))
-
-            if angle_diff <= self.angle_range:
-                if enemy.take_damage(self.damage):
+            if dist < self.radius // 4:
+                if enemy.take_damage(self.damage * self.player.ult_active_multiplier):
                     hit.append(enemy)
                 elif self.effect:
                     for eff in self.effect:
@@ -84,6 +83,20 @@ class Melee(Weapon):
                             eff.apply(enemy)
                         else:
                             eff.apply(self.player)
+
+            else:
+                angle_to_enemy = math.atan2(vec_y, vec_x)
+                angle_diff = abs(self.normalize_angle(angle_to_enemy - main_angle))
+
+                if angle_diff <= self.angle_range:
+                    if enemy.take_damage(self.damage * self.player.ult_active_multiplier):
+                        hit.append(enemy)
+                    elif self.effect:
+                        for eff in self.effect:
+                            if eff.name != "wah":
+                                eff.apply(enemy)
+                            else:
+                                eff.apply(self.player)
         
         self.notify(hit)
 
@@ -99,7 +112,7 @@ class Beam(Weapon):
     def __init__(self, player):
         super().__init__(player)
         self.damage = 12
-        self.threshold = 10
+        self.radius = 10
         self.cooldown = 1.0
 
     def attack(self, player_pos, target_pos, enemies): 
@@ -125,7 +138,9 @@ class Beam(Weapon):
         len_sq = dx ** 2 + dy ** 2 if dx or dy else 1
 
         for enemy in enemies:
-            ex, ey, _, _ = enemy.rect()
+            ex, ey, esize, _ = enemy.rect()
+            ex += esize / 2
+            ey += esize / 2
 
             # проекция точки врага на луч
             t = max(0, min(1, ((ex - px) * dx + (ey - py) * dy) / len_sq))
@@ -133,8 +148,8 @@ class Beam(Weapon):
             closest_y = py + t * dy
 
             dist = math.hypot(closest_x - ex, closest_y - ey)
-            if dist < self.threshold:
-                if enemy.take_damage(self.damage):
+            if dist < self.radius + esize:
+                if enemy.take_damage(self.damage * self.player.ult_active_multiplier):
                     hit.append(enemy)
                 elif self.effect:
                     for eff in self.effect:
@@ -200,10 +215,12 @@ class Bomb(Weapon):
         hit = []
 
         for enemy in enemies:
-            ex, ey, _, _ = enemy.rect()
+            ex, ey, esize, _ = enemy.rect()
+            ex += esize / 2
+            ey += esize / 2
             dist = math.hypot(ex - tx, ey - ty)
-            if dist < self.radius:
-                if enemy.take_damage(self.damage):
+            if dist < self.radius + esize:
+                if enemy.take_damage(self.damage * self.player.ult_active_multiplier):
                     hit.append(enemy)
                 elif self.effect:
                     for eff in self.effect:
@@ -214,7 +231,7 @@ class Bomb(Weapon):
         px, py = player_pos
         dist = math.hypot(px - tx, py - ty)
         if dist < self.radius:
-            if self.player.take_damage(self.damage):
+            if self.player.take_damage(self.damage * self.player.ult_active_multiplier):
                 pass
 
         self.notify(hit)

@@ -1,15 +1,19 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout
-from PySide6.QtGui import QPainter, QColor, QMouseEvent, QKeyEvent, QPen, QLinearGradient, QPixmap
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QMessageBox
+from PySide6.QtGui import QPainter, QColor, QMouseEvent, QKeyEvent, QPen, QLinearGradient
 from PySide6.QtCore import QTimer, Qt, QPoint, QRect, QRectF, Signal
-from ui.hud import HUD
-from core.player import Player
+import math, os, random
 from config import *
-from core.enemy import load_enemies_from_json
-import math
+from ui.hud import HUD
+from ui.menu_pause import PauseMenu
+from core.player import Player
+from core.enemy import load_enemies_from_json, Enemy, ShooterEnemy, CrossShooterEnemy
 from core.weapon import *
 from core.level import Level
 from core.elemental import *
-from ui.menu_pause import PauseMenu
+from core.projectile import Projectile
+from core.artifact_pool import get_random_artifact, create_artifact_pool
+from core.effect_registry import load_unlocked_effects, unlock_effect
+from core.boss import *
 
 import os
 print(os.path.exists("resources/images/backgrounds/level_background1.png"))
@@ -39,14 +43,14 @@ class GameView(QWidget):
 
         self.player = Player()
 
-        self.player_size = 20
-        self.player_x = ROOM_SIZE[0] // 2 - self.player_size // 2
-        self.player_y = ROOM_SIZE[1] // 2 - self.player_size // 2
-        self.speed = 4
+        self.player.size = 20
+        self.player.x = ROOM_SIZE[0] // 2 - self.player.size // 2
+        self.player.y = ROOM_SIZE[1] // 2 - self.player.size // 2
+        self.player.speed = 4
         self.pressed_keys = set()
 
-        self.bounds = [BORDER_SIZE, BORDER_SIZE, ROOM_SIZE[0] - BORDER_SIZE - self.player_size, ROOM_SIZE[1] - BORDER_SIZE - self.player_size]  # границы: left, top, right, bottom
-                                                                                                                                                # self.player_size for hitbox
+        self.bounds = [BORDER_SIZE, BORDER_SIZE, ROOM_SIZE[0] - BORDER_SIZE - self.player.size, ROOM_SIZE[1] - BORDER_SIZE - self.player.size]  # границы: left, top, right, bottom
+                                                                                                                                                # self.player.size for hitbox
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_game)
         self.timer.start(16)
@@ -65,22 +69,30 @@ class GameView(QWidget):
         for weapon in self.player.weapons.values():
             weapon.subscribe(self.on_enemies_hit)
 
-        self.enemies = []
+        self.player.enemies = []
 
         self.floor = 0
         self.level = Level()
         self.current_room = self.level.get_room(*self.level.start_pos)
         self.current_room.visited = True
         self.room_coords = self.level.start_pos
+
+        self.projectiles = []
+
         self.load_room()
 
-        # effect tests
-        self.player.weapons[1].add_effect(Overdrive())
-        self.player.weapons[1].add_effect(Tremolo(self.enemies))
-        self.player.weapons[2].add_effect(Delay())
-        self.player.weapons[2].add_effect(Fuzz())
-        self.player.weapons[3].add_effect(Wah(self.player))
-        self.player.weapons[3].add_effect(Distortion())
+
+        self.current_room.artifact = None
+        self.artifact_pos = QPoint(ROOM_SIZE[0]//2 - 10, ROOM_SIZE[1]//2 - 10)
+        create_artifact_pool()
+
+        self.effect_choices = []
+        if self.room_coords == self.level.start_pos:
+            unlocked = load_unlocked_effects()
+            if unlocked:
+                self.effect_choices = random.sample(unlocked, min(3, len(unlocked)))
+            else:
+                self.effect_choices = []
         
         #pause_menu
         self.isPaused = False
@@ -108,21 +120,38 @@ class GameView(QWidget):
         self.timer.start(16)
 
     def load_room(self):
-        self.enemies.clear
+        self.player.enemies.clear()
+        self.projectiles.clear()
         room = self.current_room
 
         if room.room_type == "fight" and not room.cleared:
-            self.enemies.extend(load_enemies_from_json("resources/data/enemies.json"))
-            room.enemies = self.enemies
-        elif room.room_type == "boss":
-            # load boss logic
-            ...
+            self.current_room.artifact = None
+            # room_id = f"floor{self.floor}_x{self.room_coords[0]}_y{self.room_coords[1]}"
+            room_id = f"floor{self.floor}_{(self.room_coords[0] + self.room_coords[1]) % 4}"
+            path = f"resources/data/enemies/{room_id}.json"
+            if os.path.exists(path):
+                self.player.enemies.extend(load_enemies_from_json(path))
+            else:
+                print(path)
+                self.player.enemies.extend(load_enemies_from_json("resources/data/enemies.json"))
+            room.enemies = self.player.enemies
+        elif room.room_type == "boss" and not room.cleared:
+            self.current_room.artifact = None
+            match self.floor:
+                case 0:
+                    self.player.enemies.append(BossCharger(ROOM_SIZE[0] // 2 - 40, ROOM_SIZE[1] // 2 - 40))
+                case 1:
+                    self.player.enemies.append(BossShooter(ROOM_SIZE[0] // 2 - 40, ROOM_SIZE[1] // 2 - 40))
+                case _:
+                    self.player.enemies.append(BossSpawner(ROOM_SIZE[0] // 2 - 40, ROOM_SIZE[1] // 2 - 40))
+        elif room.room_type == "treasure" and not room.cleared and self.current_room.artifact == None:
+            self.current_room.artifact = get_random_artifact()
 
     def on_enemies_hit(self, enemies):
         for e in enemies:
-            if e in self.enemies:
-                self.enemies.remove(e)
-        if not self.enemies:
+            if e in self.player.enemies:
+                self.player.enemies.remove(e)
+        if not self.player.enemies:
             self.current_room.cleared = True
 
 
@@ -138,6 +167,49 @@ class GameView(QWidget):
         if not self.isPaused:
             self.pressed_keys.add(event.key())
 
+            if event.key() == Qt.Key_Space:
+                dx, dy = 0, 0
+                if Qt.Key_W in self.pressed_keys: dy -= 1
+                if Qt.Key_S in self.pressed_keys: dy += 1
+                if Qt.Key_A in self.pressed_keys: dx -= 1
+                if Qt.Key_D in self.pressed_keys: dx += 1
+                if dx or dy:
+                    length = math.hypot(dx, dy)
+                    direction = (dx / length, dy / length)
+                    self.player.start_roll(direction)
+
+            if event.key() == Qt.Key_E and self.current_room.artifact:
+                # Подбор артефакта, если рядом
+                dist = math.hypot(self.player.x - self.artifact_pos.x(), self.player.y - self.artifact_pos.y())
+                if dist < 40:
+                    artifact = self.current_room.artifact
+
+                    if hasattr(artifact, "effect_cls"):
+                        if artifact.apply(self.player):
+                            unlock_effect(artifact.effect_cls.__name__)
+                            QMessageBox.information(self, "Новый эффект", f"Новый эффект разблокирован: {artifact.effect_cls.__name__}")
+                        else:
+                            QMessageBox.warning(self, "Нет места", "Нет свободных слотов для эффекта!")
+                    else:
+                        artifact.apply(self.player)
+                        QMessageBox.information(self, "Артефакт", f"Получен артефакт: {artifact.name}")
+
+                    self.current_room.artifact = None
+                    self.current_room.cleared = True
+
+            if event.key() == Qt.Key_Q:
+                if self.player.ultimate.activate():
+                    # self.music.play()
+                    print("ULTIMATE ACTIVATED!")
+                else:
+                    print(f"Ульта на перезарядке: {self.player.ultimate.remaining_cooldown()} сек")
+
+            if event.key() == Qt.Key_C:
+                if self.player.heal_fragments.use(self.player):
+                    print("🎵 Хилочка использована!")
+                else:
+                    print("❌ Нет хилок!")
+
             if event.key() in (Qt.Key_1, Qt.Key_2, Qt.Key_3):
                 self.player.set_attack_type(int(event.text()))
                 self.hud.update_chord(int(event.text()))
@@ -151,9 +223,32 @@ class GameView(QWidget):
                 if QRect(BORDER_SIZE, BORDER_SIZE, ROOM_SIZE[0] - 2 * BORDER_SIZE, ROOM_SIZE[1] - 2 * BORDER_SIZE).contains(event.pos()):
                     self.perform_attack(event.pos()) #XXX
 
+                    if self.room_coords == self.level.start_pos and self.effect_choices:
+                        for i, eff_class in enumerate(self.effect_choices):
+                            rect = QRect(100 + i*140, 100, 120, 40)
+                            if rect.contains(event.pos()):
+                                weapon = self.player.weapon
+                                if issubclass(eff_class, Tremolo):
+                                    effect_instance = eff_class(self.player.enemies)
+                                elif issubclass(eff_class, Wah):
+                                    effect_instance = eff_class(self.player)
+                                else:
+                                    effect_instance = eff_class()
+                                if weapon.add_effect(effect_instance):
+                                    print(f"Effect {eff_class.__name__} added to current weapon")
+                                else:
+                                    print("Cannot add more effects")
+                                self.effect_choices.clear()
+
+            if event.button() == Qt.MouseButton.RightButton:
+                if QRect(BORDER_SIZE, BORDER_SIZE, ROOM_SIZE[0] - 2 * BORDER_SIZE, ROOM_SIZE[1] - 2 * BORDER_SIZE).contains(event.pos()):
+                    
+                    self.player.shield.activate()
+
+
     def perform_attack(self, mouse_pos):
         if self.player.weapon.can_attack():
-            player_pos = (self.player_x, self.player_y) #XXX
+            player_pos = (self.player.x, self.player.y) #XXX
             target_pos = (mouse_pos.x(), mouse_pos.y())
 
             self.attack_effects.append({
@@ -162,28 +257,33 @@ class GameView(QWidget):
                 'px': target_pos[0], 'py': target_pos[1],
                 'time': 10
             })
-            self.player.attack(player_pos, target_pos, self.enemies)
+            self.player.attack(player_pos, target_pos, self.player.enemies)
 
     def update_game(self):
-        dx = dy = 0
-        if Qt.Key_W in self.pressed_keys:
-            dy -= self.player.speed
-        if Qt.Key_S in self.pressed_keys:
-            dy += self.player.speed
-        if Qt.Key_A in self.pressed_keys:
-            dx -= self.player.speed
-        if Qt.Key_D in self.pressed_keys:
-            dx += self.player.speed
+        self.player.update()
+        _, hp, max_hp, _ = self.player.get_stats()
+        # if not self.player.ultimate.is_active():
+        #     self.music.stop()
+        if self.player.is_dodging():
+            new_x, new_y = self.player.get_position()
+        else:
+            dx = dy = 0
+            if Qt.Key_W in self.pressed_keys:
+                dy -= self.player.speed * self.player.ult_active_multiplier
+            if Qt.Key_S in self.pressed_keys:
+                dy += self.player.speed * self.player.ult_active_multiplier
+            if Qt.Key_A in self.pressed_keys:
+                dx -= self.player.speed * self.player.ult_active_multiplier
+            if Qt.Key_D in self.pressed_keys:
+                dx += self.player.speed * self.player.ult_active_multiplier
 
-        new_x = self.player_x + dx
-        new_y = self.player_y + dy
+            new_x = self.player.x + dx
+            new_y = self.player.y + dy
 
         door_width = 100
+
         wall_thickness = BORDER_SIZE
 
-        # Центр игрока
-        # cx = new_x + self.player_size // 2
-        # cy = new_y + self.player_size // 2
         cx = new_x
         cy = new_y
 
@@ -201,26 +301,26 @@ class GameView(QWidget):
 
         # Верх
         if new_y <= wall_thickness:
-            if not (neighbors['up'] and abs(cx - ROOM_SIZE[0] // 2) <= door_width // 2 and not self.enemies):
+            if not (neighbors['up'] and abs(cx - ROOM_SIZE[0] // 2) <= door_width // 2 and not self.player.enemies):
                 blocked_y = True
         # Низ
-        if new_y + self.player_size >= ROOM_SIZE[1] - wall_thickness:
-            if not (neighbors['down'] and abs(cx - ROOM_SIZE[0] // 2) <= door_width // 2 and not self.enemies):
+        if new_y + self.player.size >= ROOM_SIZE[1] - wall_thickness:
+            if not (neighbors['down'] and abs(cx - ROOM_SIZE[0] // 2) <= door_width // 2 and not self.player.enemies):
                 blocked_y = True
         # Лево
         if new_x <= wall_thickness:
-            if not (neighbors['left'] and abs(cy - ROOM_SIZE[1] // 2) <= door_width // 2 and not self.enemies):
+            if not (neighbors['left'] and abs(cy - ROOM_SIZE[1] // 2) <= door_width // 2 and not self.player.enemies):
                 blocked_x = True
         # Право
-        if new_x + self.player_size >= ROOM_SIZE[0] - wall_thickness:
-            if not (neighbors['right'] and abs(cy - ROOM_SIZE[1] // 2) <= door_width // 2 and not self.enemies):
+        if new_x + self.player.size >= ROOM_SIZE[0] - wall_thickness:
+            if not (neighbors['right'] and abs(cy - ROOM_SIZE[1] // 2) <= door_width // 2 and not self.player.enemies):
                 blocked_x = True
 
         # Разрешённое движение
         if not blocked_x:
-            self.player_x = new_x
+            self.player.x = new_x
         if not blocked_y:
-            self.player_y = new_y
+            self.player.y = new_y
 
         # Переход в соседнюю комнату
         if self.player_y <= 70:
@@ -233,23 +333,58 @@ class GameView(QWidget):
             self.try_move_room(1, 0)
 
         damage, hp, max_hp, speed = self.player.get_stats()
+        
         self.hud.update_stats(hp, max_hp)
+        self.player.update_invincibility()
 
-        for enemy in self.enemies:
-            enemy.move_towards(self.player_x, self.player_y)
+        for enemy in self.player.enemies:
+            if isinstance(enemy, BossSpawner):
+                enemy.update(self.player.x + self.player.size // 2, self.player.y + self.player.size // 2, self.player.enemies)
+            else:
+                enemy.update(self.player.x + self.player.size // 2, self.player.y + self.player.size // 2, self.projectiles)
             if enemy.hp <= 0:
-                self.enemies.remove(enemy)
+                self.player.enemies.remove(enemy)
+            elif enemy.check_contact_with_player(self.player.x, self.player.y, self.player.size):
+                if self.player.is_dodging():
+                    continue
+                if self.player.shield.absorb_hit():
+                    continue
+                self.player.take_damage(enemy.damage)
 
-        # self.resolve_collisions()
+        if not self.player.enemies:
+            if not self.current_room.cleared:
+                if self.current_room.room_type == "fight":
+                    if random.random() < 0.15:  # 15%
+                        if self.player.heal_fragments.add():
+                            print("🎶 Найдена хилочка!")
+                elif self.current_room.room_type == "boss":
+                    if random.random() < 0.5:  # 50%
+                        if self.player.heal_fragments.add():
+                            print("🎶 Найдена хилочка после босса!")
+                self.current_room.cleared = True
+
 
         for effect in self.attack_effects:
             effect['time'] -= 1
         self.attack_effects = [e for e in self.attack_effects if e['time'] > 0]
 
+        for proj in self.projectiles:
+            proj.update()
+            hits = proj.check_collision(self.player.enemies if proj.target_type == "enemy" else [self.player])
+            for h in hits:
+                if h == self.player:
+                    if self.player.is_dodging():
+                        continue
+                    if self.player.shield.absorb_hit():
+                        continue
+                h.take_damage(proj.damage)
+
+        self.projectiles = [p for p in self.projectiles if p.alive]
+
         self.update()
 
     def try_move_room(self, dx, dy):
-        if self.enemies:
+        if self.player.enemies:
             return
 
         new_x = self.room_coords[0] + dx
@@ -258,12 +393,14 @@ class GameView(QWidget):
 
         if next_room:
             if next_room.room_type == "next_level":
+                if self.current_room.room_type != "boss":
+                    return
                 self.floor += 1
                 self.level = Level()  # Сгенерировать новый этаж
                 self.room_coords = self.level.start_pos
                 self.current_room = self.level.get_room(*self.room_coords)
-                self.player_x = ROOM_SIZE[0] // 2 - self.player_size // 2
-                self.player_y = ROOM_SIZE[1] // 2 - self.player_size // 2
+                self.player.x = ROOM_SIZE[0] // 2 - self.player.size // 2
+                self.player.y = ROOM_SIZE[1] // 2 - self.player.size // 2
             else:
                 self.room_coords = (new_x, new_y)
                 self.current_room = next_room
@@ -280,6 +417,7 @@ class GameView(QWidget):
                 elif dy == -1:  # пришёл снизу → появиться у нижней двери
                     self.player_y = ROOM_SIZE[1] - 70 - self.player_size
                     self.player_x = ROOM_SIZE[0] // 2 - self.player_size // 2
+                    
             self.current_room.visited = True
             self.load_room()
 
@@ -292,8 +430,21 @@ class GameView(QWidget):
         else:
             painter.fillRect(QRect(0, 0, 600, 600), Qt.lightGray)
 
+        if self.player.shield.is_active():
+            painter.setPen(QPen(QColor(0, 255, 255), 4))
+            painter.setBrush(Qt.NoBrush)
+            painter.drawEllipse(self.player.x - 5, self.player.y - 5, self.player.size + 10, self.player.size + 10)
+
+        if self.player.dodge.active:
+            painter.setPen(QPen(QColor(100, 180, 255), 4))
+            painter.setBrush(Qt.NoBrush)
+            painter.drawEllipse(self.player.x - 5, self.player.y - 5, self.player.size + 10, self.player.size + 10)
+
         painter.setBrush(QColor(255, 100, 100))
-        painter.drawEllipse(self.player_x, self.player_y, self.player_size, self.player_size)
+        painter.setPen(QColor(255, 120, 120))
+        if self.player.invincible:
+            painter.setBrush(QColor(255, 100, 100, 100))
+        painter.drawEllipse(self.player.x, self.player.y, self.player.size, self.player.size)
 
         cx, cy = self.room_coords
         neighbors = {
@@ -373,7 +524,7 @@ class GameView(QWidget):
         # Соберем цвета эффектов текущего оружия
         current_effects = self.player.weapon.effect
         if current_effects:
-            gradient = QLinearGradient(self.player_x, self.player_y, self.player_x + self.player_size, self.player_y + self.player_size)
+            gradient = QLinearGradient(self.player.x, self.player.y, self.player.x + self.player.size, self.player.y + self.player.size)
             for i, eff in enumerate(current_effects):
                 color = effect_colors.get(eff.name, QColor(255, 255, 255, 180))
                 gradient.setColorAt(i / max(1, len(current_effects) - 1), color)
@@ -397,7 +548,7 @@ class GameView(QWidget):
 
                 painter.setBrush(gradient)
                 painter.setPen(Qt.NoPen)
-                painter.drawPie(QRectF(x - 30, y - 30, 80, 80), start_angle, span_angle)
+                painter.drawPie(QRectF(x - self.player.weapon.radius + 10, y - self.player.weapon.radius + 10, self.player.weapon.radius * 2, self.player.weapon.radius * 2), start_angle, span_angle)
 
 
             elif atk_type == 'beam':
@@ -406,18 +557,18 @@ class GameView(QWidget):
                 if end:
                     bx, by = end
                     if self.player.weapon.effect:
-                        painter.setPen(effect_colors.get(self.player.weapon.effect[-1].name, QColor(255, 255, 255, 180)))
+                        painter.setPen(QPen(effect_colors.get(self.player.weapon.effect[-1].name, QColor(255, 255, 255, 180)), self.player.weapon.radius * 2))
                     else:
-                        painter.setPen(QColor(255, 255, 255, 180))
+                        painter.setPen(QPen(QColor(255, 255, 255, 180), self.player.weapon.radius * 2))
                     painter.drawLine(x + 10, y + 10, bx, by)
 
             elif atk_type == 'bomb':
                 painter.setBrush(gradient)
                 painter.setPen(Qt.NoPen)
-                painter.drawEllipse(px - 25, py - 25, 50, 50)
+                painter.drawEllipse(px - self.player.weapon.radius, py - self.player.weapon.radius, self.player.weapon.radius * 2, self.player.weapon.radius * 2)
 
 
-        for enemy in self.enemies:
+        for enemy in self.player.enemies:
             painter.setBrush(QColor(200, 50, 50))
             painter.setPen(Qt.NoPen)
             painter.drawEllipse(enemy.x, enemy.y, enemy.size, enemy.size)
@@ -440,6 +591,23 @@ class GameView(QWidget):
             painter.setPen(QColor(255, 255, 255))
             painter.drawText(enemy.x, enemy.y - 5, f"{enemy.hp}/{enemy.max_hp}")
 
+        for proj in self.projectiles:
+            proj.draw(painter)
+
+        if self.current_room.artifact:
+            painter.setBrush(QColor(100, 255, 100))
+            painter.setPen(QColor(255, 255, 255))
+            x, y = self.artifact_pos.x(), self.artifact_pos.y()
+            painter.drawEllipse(x, y, 20, 20)
+            painter.drawText(x - 10, y - 10, self.current_room.artifact.name)
+            painter.drawText(40, 40, self.current_room.artifact.description)
+
+        if self.room_coords == self.level.start_pos and self.effect_choices:
+            for i, eff_class in enumerate(self.effect_choices):
+                painter.setBrush(QColor(80 + i*60, 80, 255 - i*60))
+                painter.drawRect(100 + i*140, 100, 120, 40)
+                painter.setPen(QColor(255, 255, 255))
+                painter.drawText(110 + i*140, 125, eff_class.__name__)
 
         # Рисуем миникарту
         minimap_scale = 8
@@ -467,4 +635,9 @@ class GameView(QWidget):
                 minimap_offset_y + (ry - self.level.start_pos[1]) * room_size,
                 room_size, room_size
             )
+
+        if self.player.ultimate.is_active():
+            painter.setOpacity(0.25)
+            painter.fillRect(QRect(0, 0, *ROOM_SIZE), QColor(255, 0, 0))  # красный фильтр
+            painter.setOpacity(1.0)
         painter.end

@@ -54,11 +54,6 @@ class Level:
                 nx, ny = bx + dx, by + dy
                 if (nx, ny) in candidates:
                     candidates.remove((nx, ny))
-            for dx, dy in directions:
-                nx, ny = bx + dx, by + dy
-                if (nx, ny) not in self.rooms:
-                    self.rooms[(nx, ny)] = Room(nx, ny, "next_level")
-                    break
 
         # 4. Создаём до 3 комнат-сокровищниц
         for _ in range(3):
@@ -69,6 +64,30 @@ class Level:
                     nx, ny = tx + dx, ty + dy
                     if (nx, ny) in candidates:
                         candidates.remove((nx, ny))
+
+        for dx, dy in directions:
+            nx, ny = bx + dx, by + dy
+            if (nx, ny) in self.rooms:
+                continue
+
+            neighbor_count = 0
+            for ddx, ddy in directions:
+                adj_x, adj_y = nx + ddx, ny + ddy
+                if (adj_x, adj_y) in self.rooms:
+                    neighbor_count += 1
+
+            if neighbor_count == 1:
+                candidates.append((nx, ny))
+        if candidates:
+            sx, sy = candidates.pop()
+            self.rooms[(sx, sy)] = Room(sx, sy, "next_level")
+        else:
+            for dx, dy in directions:
+                nx, ny = bx + dx, by + dy
+                if (nx, ny) in self.rooms:
+                    continue
+                self.rooms[(nx, ny)] = Room(nx, ny, "next_level")
+                break
 
 
 
