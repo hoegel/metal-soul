@@ -55,9 +55,11 @@ class GameView(QWidget):
         self.current_room = self.level.get_room(*self.level.start_pos)
         self.current_room.visited = True
         self.room_coords = self.level.start_pos
-        self.load_room()
 
         self.projectiles = []
+
+        self.load_room()
+
 
         self.current_room.artifact = None
         self.artifact_pos = QPoint(ROOM_SIZE[0]//2 - 10, ROOM_SIZE[1]//2 - 10)
@@ -144,6 +146,17 @@ class GameView(QWidget):
         if not self.isPaused:
             self.pressed_keys.add(event.key())
 
+            if event.key() == Qt.Key_Space:
+                dx, dy = 0, 0
+                if Qt.Key_W in self.pressed_keys: dy -= 1
+                if Qt.Key_S in self.pressed_keys: dy += 1
+                if Qt.Key_A in self.pressed_keys: dx -= 1
+                if Qt.Key_D in self.pressed_keys: dx += 1
+                if dx or dy:
+                    length = math.hypot(dx, dy)
+                    direction = (dx / length, dy / length)
+                    self.player.start_roll(direction)
+
             if event.key() == Qt.Key_E and self.current_room.artifact:
                 # Подбор артефакта, если рядом
                 dist = math.hypot(self.player.x - self.artifact_pos.x(), self.player.y - self.artifact_pos.y())
@@ -177,18 +190,6 @@ class GameView(QWidget):
                 if QRect(BORDER_SIZE, BORDER_SIZE, ROOM_SIZE[0] - 2 * BORDER_SIZE, ROOM_SIZE[1] - 2 * BORDER_SIZE).contains(event.pos()):
                     self.perform_attack(event.pos()) #XXX
 
-            if event.button() == Qt.MouseButton.RightButton:
-                if QRect(BORDER_SIZE, BORDER_SIZE, ROOM_SIZE[0] - 2 * BORDER_SIZE, ROOM_SIZE[1] - 2 * BORDER_SIZE).contains(event.pos()):
-                    # Игрок стреляет
-                    proj = Projectile(
-                        source="player", target_type="enemy",
-                        x=self.player.x + self.player.size/2, y=self.player.y + self.player.size/2,
-                        tx=event.pos().x(), ty=event.pos().y(),
-                        damage=15, speed=7, range_=600,
-                        color=QColor(255, 255, 0), radius=4
-                    )
-                    self.projectiles.append(proj)
-
                     if self.room_coords == self.level.start_pos and self.effect_choices:
                         for i, eff_class in enumerate(self.effect_choices):
                             rect = QRect(100 + i*140, 100, 120, 40)
@@ -206,6 +207,11 @@ class GameView(QWidget):
                                     print("Cannot add more effects")
                                 self.effect_choices.clear()
 
+            if event.button() == Qt.MouseButton.RightButton:
+                if QRect(BORDER_SIZE, BORDER_SIZE, ROOM_SIZE[0] - 2 * BORDER_SIZE, ROOM_SIZE[1] - 2 * BORDER_SIZE).contains(event.pos()):
+                    
+                    self.player.shield.activate()
+
 
     def perform_attack(self, mouse_pos):
         if self.player.weapon.can_attack():
@@ -221,25 +227,26 @@ class GameView(QWidget):
             self.player.attack(player_pos, target_pos, self.player.enemies)
 
     def update_game(self):
-        dx = dy = 0
-        if Qt.Key_W in self.pressed_keys:
-            dy -= self.player.speed
-        if Qt.Key_S in self.pressed_keys:
-            dy += self.player.speed
-        if Qt.Key_A in self.pressed_keys:
-            dx -= self.player.speed
-        if Qt.Key_D in self.pressed_keys:
-            dx += self.player.speed
+        self.player.update()
+        if self.player.is_dodging():
+            new_x, new_y = self.player.get_position()
+        else:
+            dx = dy = 0
+            if Qt.Key_W in self.pressed_keys:
+                dy -= self.player.speed
+            if Qt.Key_S in self.pressed_keys:
+                dy += self.player.speed
+            if Qt.Key_A in self.pressed_keys:
+                dx -= self.player.speed
+            if Qt.Key_D in self.pressed_keys:
+                dx += self.player.speed
 
-        new_x = self.player.x + dx
-        new_y = self.player.y + dy
+            new_x = self.player.x + dx
+            new_y = self.player.y + dy
 
         door_width = 40
-        wall_thickness = BORDER_SIZE  # 10 по умолчанию
+        wall_thickness = BORDER_SIZE
 
-        # Центр игрока
-        # cx = new_x + self.player.size // 2
-        # cy = new_y + self.player.size // 2
         cx = new_x
         cy = new_y
 
@@ -304,6 +311,10 @@ class GameView(QWidget):
                 if not self.player.enemies:
                     self.current_room.cleared = True
             elif enemy.check_contact_with_player(self.player.x, self.player.y, self.player.size):
+                if self.player.is_dodging():
+                    continue
+                if self.player.shield.absorb_hit():
+                    continue
                 self.player.take_damage(enemy.damage)
 
 
@@ -315,6 +326,11 @@ class GameView(QWidget):
             proj.update()
             hits = proj.check_collision(self.player.enemies if proj.target_type == "enemy" else [self.player])
             for h in hits:
+                if h == self.player:
+                    if self.player.is_dodging():
+                        continue
+                    if self.player.shield.absorb_hit():
+                        continue
                 h.take_damage(proj.damage)
 
         self.projectiles = [p for p in self.projectiles if p.alive]
@@ -360,7 +376,18 @@ class GameView(QWidget):
         painter = QPainter(self)
         painter.fillRect(self.rect(), QColor(30, 30, 30))
 
+        if self.player.shield.is_active():
+            painter.setPen(QPen(QColor(0, 255, 255), 4))
+            painter.setBrush(Qt.NoBrush)
+            painter.drawEllipse(self.player.x - 5, self.player.y - 5, self.player.size + 10, self.player.size + 10)
+
+        if self.player.dodge.active:
+            painter.setPen(QPen(QColor(100, 180, 255), 4))
+            painter.setBrush(Qt.NoBrush)
+            painter.drawEllipse(self.player.x - 5, self.player.y - 5, self.player.size + 10, self.player.size + 10)
+
         painter.setBrush(QColor(255, 100, 100))
+        painter.setPen(QColor(255, 120, 120))
         if self.player.invincible:
             painter.setBrush(QColor(255, 100, 100, 100))
         painter.drawEllipse(self.player.x, self.player.y, self.player.size, self.player.size)

@@ -1,4 +1,6 @@
 from core.weapon import Melee, Beam, Bomb
+from core.shield import Shield
+from core.dash import DodgeRoll
 
 class Player:
     def __init__(self):
@@ -20,7 +22,25 @@ class Player:
         }
         self.weapon = self.weapons[self.attack_type]
 
+        self.shield = Shield()
+        self.dodge = DodgeRoll()
+
         self.enemies = []
+
+    def update(self):
+        self.shield.update()
+        self.dodge.update()
+
+    def start_roll(self, direction):
+        self.dodge.start_roll((self.x, self.y), direction)
+
+    def is_dodging(self):
+        return self.dodge.active
+
+    def get_position(self):
+        if self.dodge.active:
+            return self.dodge.get_position()
+        return (self.x, self.y)
 
     def set_attack_type(self, atk_id):
         if atk_id in self.weapons:
