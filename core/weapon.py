@@ -74,10 +74,7 @@ class Melee(Weapon):
             if dist > self.radius + esize:
                 continue
 
-            angle_to_enemy = math.atan2(vec_y, vec_x)
-            angle_diff = abs(self.normalize_angle(angle_to_enemy - main_angle))
-
-            if angle_diff <= self.angle_range:
+            if dist < self.radius // 4:
                 if enemy.take_damage(self.damage):
                     hit.append(enemy)
                 elif self.effect:
@@ -86,6 +83,20 @@ class Melee(Weapon):
                             eff.apply(enemy)
                         else:
                             eff.apply(self.player)
+
+            else:
+                angle_to_enemy = math.atan2(vec_y, vec_x)
+                angle_diff = abs(self.normalize_angle(angle_to_enemy - main_angle))
+
+                if angle_diff <= self.angle_range:
+                    if enemy.take_damage(self.damage):
+                        hit.append(enemy)
+                    elif self.effect:
+                        for eff in self.effect:
+                            if eff.name != "wah":
+                                eff.apply(enemy)
+                            else:
+                                eff.apply(self.player)
         
         self.notify(hit)
 
