@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QMessageBox
 from PySide6.QtGui import QPainter, QColor, QMouseEvent, QKeyEvent, QPen, QLinearGradient, QPixmap
+from PySide6.QtGui import QPainter, QColor, QMouseEvent, QKeyEvent, QPen, QLinearGradient
 from PySide6.QtCore import QTimer, Qt, QPoint, QRect, QRectF, Signal
 import math, os, random
 from config import *
@@ -14,9 +15,6 @@ from core.projectile import Projectile
 from core.artifact_pool import get_random_artifact, create_artifact_pool
 from core.effect_registry import load_unlocked_effects, unlock_effect
 from core.boss import *
-
-import os
-print(os.path.exists("resources/images/backgrounds/level_background1.png"))
 
 class GameView(QWidget):
     def __init__(self, main_window):
@@ -281,7 +279,7 @@ class GameView(QWidget):
             new_y = self.player.y + dy
 
         door_width = 100
-
+        
         wall_thickness = BORDER_SIZE
 
         cx = new_x
@@ -333,7 +331,7 @@ class GameView(QWidget):
             self.try_move_room(1, 0)
 
         damage, hp, max_hp, speed = self.player.get_stats()
-        
+
         self.hud.update_stats(hp, max_hp)
         self.player.update_invincibility()
 
@@ -417,7 +415,6 @@ class GameView(QWidget):
                 elif dy == -1:  # пришёл снизу → появиться у нижней двери
                     self.player.y = ROOM_SIZE[1] - 70 - self.player.size
                     self.player.x = ROOM_SIZE[0] // 2 - self.player.size // 2
-                    
             self.current_room.visited = True
             self.load_room()
 
@@ -429,6 +426,16 @@ class GameView(QWidget):
             painter.drawPixmap(0, 0, scaled_pixmap)
         else:
             painter.fillRect(QRect(0, 0, 600, 600), Qt.lightGray)
+
+        if self.player.shield.is_active():
+            painter.setPen(QPen(QColor(0, 255, 255), 4))
+            painter.setBrush(Qt.NoBrush)
+            painter.drawEllipse(self.player.x - 5, self.player.y - 5, self.player.size + 10, self.player.size + 10)
+
+        if self.player.dodge.active:
+            painter.setPen(QPen(QColor(100, 180, 255), 4))
+            painter.setBrush(Qt.NoBrush)
+            painter.drawEllipse(self.player.x - 5, self.player.y - 5, self.player.size + 10, self.player.size + 10)
 
         if self.player.shield.is_active():
             painter.setPen(QPen(QColor(0, 255, 255), 4))
