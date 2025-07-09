@@ -20,6 +20,7 @@ class GameView(QWidget):
         self.main_window = main_window
         
         self.background_pixmap = QPixmap("resources/images/backgrounds/level_background1.png")
+        self.wall_pixmap = QPixmap("resources/images/backgrounds/wall1.jpg")
 
         self.player = Player()
 
@@ -162,8 +163,8 @@ class GameView(QWidget):
         new_x = self.player_x + dx
         new_y = self.player_y + dy
 
-        door_width = 40
-        wall_thickness = BORDER_SIZE  # 10 по умолчанию
+        door_width = 100
+        wall_thickness = BORDER_SIZE
 
         # Центр игрока
         # cx = new_x + self.player_size // 2
@@ -207,13 +208,13 @@ class GameView(QWidget):
             self.player_y = new_y
 
         # Переход в соседнюю комнату
-        if self.player_y <= 0:
+        if self.player_y <= 70:
             self.try_move_room(0, -1)
-        elif self.player_y + self.player_size >= ROOM_SIZE[1]:
+        elif self.player_y + self.player_size >= FIELD_SIZE[1]:
             self.try_move_room(0, 1)
-        elif self.player_x <= 0:
+        elif self.player_x <= 70:
             self.try_move_room(-1, 0)
-        elif self.player_x + self.player_size >= ROOM_SIZE[0]:
+        elif self.player_x + self.player_size >= FIELD_SIZE[0]:
             self.try_move_room(1, 0)
 
         damage, hp, max_hp, speed = self.player.get_stats()
@@ -253,16 +254,16 @@ class GameView(QWidget):
                 self.current_room = next_room
                 # Расчёт позиции игрока у входа в новую комнату
                 if dx == 1:  # пришёл слева → появиться у левой двери
-                    self.player_x = 10
+                    self.player_x = 70
                     self.player_y = ROOM_SIZE[1] // 2 - self.player_size // 2
                 elif dx == -1:  # пришёл справа → появиться у правой двери
-                    self.player_x = ROOM_SIZE[0] - 10 - self.player_size
+                    self.player_x = ROOM_SIZE[0] - 70 - self.player_size
                     self.player_y = ROOM_SIZE[1] // 2 - self.player_size // 2
                 elif dy == 1:  # пришёл сверху → появиться у верхней двери
-                    self.player_y = 10
+                    self.player_y = 70
                     self.player_x = ROOM_SIZE[0] // 2 - self.player_size // 2
                 elif dy == -1:  # пришёл снизу → появиться у нижней двери
-                    self.player_y = ROOM_SIZE[1] - 10 - self.player_size
+                    self.player_y = ROOM_SIZE[1] - 70 - self.player_size
                     self.player_x = ROOM_SIZE[0] // 2 - self.player_size // 2
             self.current_room.visited = True
             self.load_room()
@@ -287,42 +288,7 @@ class GameView(QWidget):
             'right': self.level.get_room(cx + 1, cy)
         }
 
-        door_w, door_h = 40, BORDER_SIZE  # размеры двери
-
-        painter.setBrush(QColor(100, 100, 100))
-        painter.setPen(QColor(0, 0, 0, 0))
-        if not neighbors['up']:
-            painter.drawRect(0, 0, ROOM_SIZE[0], BORDER_SIZE)  # обычная стена
-        else:
-            # левая часть
-            painter.drawRect(0, 0, ROOM_SIZE[0] // 2 - door_w // 2, BORDER_SIZE)
-            # правая часть
-            painter.drawRect(ROOM_SIZE[0] // 2 + door_w // 2, 0, ROOM_SIZE[0] // 2 - door_w // 2, BORDER_SIZE)
-
-        if not neighbors['down']:
-            painter.drawRect(0, ROOM_SIZE[1] - BORDER_SIZE, ROOM_SIZE[0], BORDER_SIZE)  # обычная стена
-        else:
-            # левая часть
-            painter.drawRect(0, ROOM_SIZE[1] - BORDER_SIZE, ROOM_SIZE[0] // 2 - door_w // 2, BORDER_SIZE)
-            # правая часть
-            painter.drawRect(ROOM_SIZE[0] // 2 + door_w // 2, ROOM_SIZE[1] - BORDER_SIZE, ROOM_SIZE[0] // 2 - door_w // 2, BORDER_SIZE)
-
-        if not neighbors['left']:
-            painter.drawRect(0, 0, BORDER_SIZE, ROOM_SIZE[1])  # обычная стена
-        else:
-            # верхняя часть
-            painter.drawRect(0, 0, BORDER_SIZE, ROOM_SIZE[1] // 2 - door_w // 2)
-            # нижняя часть
-            painter.drawRect(0, ROOM_SIZE[1] // 2 + door_w // 2, BORDER_SIZE, ROOM_SIZE[1] // 2 - door_w // 2)
-
-        if not neighbors['right']:
-            painter.drawRect(ROOM_SIZE[0] - BORDER_SIZE, 0, BORDER_SIZE, ROOM_SIZE[1])  # обычная стена
-        else:
-            # верхняя часть
-            painter.drawRect(ROOM_SIZE[0] - BORDER_SIZE, 0, BORDER_SIZE, ROOM_SIZE[1] // 2 - door_w // 2)
-            # нижняя часть
-            painter.drawRect(ROOM_SIZE[0] - BORDER_SIZE, ROOM_SIZE[1] // 2 + door_w // 2, BORDER_SIZE, ROOM_SIZE[1] // 2 - door_w // 2)
-
+        door_w, door_h = 100, BORDER_SIZE  # размеры двери
 
         painter.setBrush(QColor(180, 180, 180))  # цвет двери
 
