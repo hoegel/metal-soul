@@ -72,8 +72,8 @@ class AddEffectArtifact(Artifact):
         weapon = player.weapons.get(self.weapon_id)
         if weapon:
             if issubclass(self.effect_cls, Tremolo):
-                weapon.add_effect(self.effect_cls(player.enemies))
+                return weapon.add_effect(self.effect_cls(player.enemies))
             elif issubclass(self.effect_cls, Wah):
-                weapon.add_effect(self.effect_cls(player))
+                return weapon.add_effect(self.effect_cls(player))
             else:
-                weapon.add_effect(self.effect_cls())
+                return weapon.add_effect(self.effect_cls())

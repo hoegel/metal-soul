@@ -25,6 +25,7 @@ class Player:
     def set_attack_type(self, atk_id):
         if atk_id in self.weapons:
             self.attack_type = atk_id
+            self.weapon = self.weapons[self.attack_type]
 
     def attack(self, player_pos, target_pos, enemies):
         self.weapon = self.weapons[self.attack_type]

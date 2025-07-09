@@ -1,17 +1,18 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QMessageBox
 from PySide6.QtGui import QPainter, QColor, QMouseEvent, QKeyEvent, QPen, QLinearGradient
 from PySide6.QtCore import QTimer, Qt, QPoint, QRect, QRectF, Signal
-from ui.hud import HUD
-from core.player import Player
+import math, os, random
 from config import *
+from ui.hud import HUD
+from ui.menu_pause import PauseMenu
+from core.player import Player
 from core.enemy import load_enemies_from_json, Enemy, ShooterEnemy, CrossShooterEnemy
-import math, os
 from core.weapon import *
 from core.level import Level
 from core.elemental import *
 from core.projectile import Projectile
-from ui.menu_pause import PauseMenu
 from core.artifact_pool import get_random_artifact, create_artifact_pool
+from core.effect_registry import load_unlocked_effects, unlock_effect
 
 class GameView(QWidget):
     def __init__(self, main_window):
@@ -55,19 +56,19 @@ class GameView(QWidget):
         self.room_coords = self.level.start_pos
         self.load_room()
 
-        # effect tests
-        # self.player.weapons[1].add_effect(Overdrive())
-        # self.player.weapons[1].add_effect(Tremolo(self.player.enemies))
-        # self.player.weapons[2].add_effect(Delay())
-        # self.player.weapons[2].add_effect(Fuzz())
-        # self.player.weapons[3].add_effect(Wah(self.player))
-        # self.player.weapons[3].add_effect(Distortion())
-
         self.projectiles = []
 
         self.current_room.artifact = None
         self.artifact_pos = QPoint(ROOM_SIZE[0]//2 - 10, ROOM_SIZE[1]//2 - 10)
         create_artifact_pool()
+
+        self.effect_choices = []
+        if self.room_coords == self.level.start_pos:
+            unlocked = load_unlocked_effects()
+            if unlocked:
+                self.effect_choices = random.sample(unlocked, min(3, len(unlocked)))
+            else:
+                self.effect_choices = []
         
         #pause_menu
         self.isPaused = False
@@ -139,10 +140,21 @@ class GameView(QWidget):
                 # Подбор артефакта, если рядом
                 dist = math.hypot(self.player.x - self.artifact_pos.x(), self.player.y - self.artifact_pos.y())
                 if dist < 40:
-                    self.current_room.artifact.apply(self.player)
-                    print(f"Picked up: {self.current_room.artifact.name}")
+                    artifact = self.current_room.artifact
+
+                    if hasattr(artifact, "effect_cls"):
+                        if artifact.apply(self.player):
+                            unlock_effect(artifact.effect_cls.__name__)
+                            QMessageBox.information(self, "Новый эффект", f"Новый эффект разблокирован: {artifact.effect_cls.__name__}")
+                        else:
+                            QMessageBox.warning(self, "Нет места", "Нет свободных слотов для эффекта!")
+                    else:
+                        artifact.apply(self.player)
+                        QMessageBox.information(self, "Артефакт", f"Получен артефакт: {artifact.name}")
+
                     self.current_room.artifact = None
                     self.current_room.cleared = True
+
 
             if event.key() in (Qt.Key_1, Qt.Key_2, Qt.Key_3):
                 self.player.set_attack_type(int(event.text()))
@@ -168,6 +180,19 @@ class GameView(QWidget):
                         color=QColor(255, 255, 0), radius=4
                     )
                     self.projectiles.append(proj)
+
+                    if self.room_coords == self.level.start_pos and self.effect_choices:
+                        for i, eff_class in enumerate(self.effect_choices):
+                            rect = QRect(100 + i*140, 100, 120, 40)
+                            if rect.contains(event.pos()):
+                                effect_instance = eff_class()
+                                weapon = self.player.weapon
+                                if weapon.add_effect(effect_instance):
+                                    print(f"Effect {eff_class.__name__} added to current weapon")
+                                else:
+                                    print("Cannot add more effects")
+                                self.effect_choices.clear()
+
 
     def perform_attack(self, mouse_pos):
         if self.player.weapon.can_attack():
@@ -263,7 +288,6 @@ class GameView(QWidget):
             elif enemy.check_contact_with_player(self.player.x, self.player.y, self.player.size):
                 self.player.take_damage(enemy.damage)
 
-        # self.resolve_collisions()
 
         for effect in self.attack_effects:
             effect['time'] -= 1
@@ -513,6 +537,13 @@ class GameView(QWidget):
             painter.drawEllipse(x, y, 20, 20)
             painter.drawText(x - 10, y - 10, self.current_room.artifact.name)
             painter.drawText(40, 40, self.current_room.artifact.description)
+
+        if self.room_coords == self.level.start_pos and self.effect_choices:
+            for i, eff_class in enumerate(self.effect_choices):
+                painter.setBrush(QColor(80 + i*60, 80, 255 - i*60))
+                painter.drawRect(100 + i*140, 100, 120, 40)
+                painter.setPen(QColor(255, 255, 255))
+                painter.drawText(110 + i*140, 125, eff_class.__name__)
 
         # Рисуем миникарту
         minimap_scale = 8
