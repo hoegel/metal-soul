@@ -24,6 +24,14 @@ class GameView(QWidget):
         self.doors_down = QPixmap("resources/images/backgrounds/doors_down.png")
         self.doors_right = QPixmap("resources/images/backgrounds/doors_right.png")
         self.doors_left = QPixmap("resources/images/backgrounds/doors_left.png")
+        self.doors_up_treasure = QPixmap("resources/images/backgrounds/doors_up_treasure.png")
+        self.doors_down_treasure = QPixmap("resources/images/backgrounds/doors_down_treasure.png")
+        self.doors_right_treasure = QPixmap("resources/images/backgrounds/doors_right_treasure.png")
+        self.doors_left_treasure = QPixmap("resources/images/backgrounds/doors_left_treasure.png")
+        self.doors_up_next_level = QPixmap("resources/images/backgrounds/doors_up_next_level.png")
+        self.doors_down_next_level = QPixmap("resources/images/backgrounds/doors_down_next_level.png")
+        self.doors_right_next_level = QPixmap("resources/images/backgrounds/doors_right_next_level.png")
+        self.doors_left_next_level = QPixmap("resources/images/backgrounds/doors_left_next_level.png")
         self.doors_up_boss = QPixmap("resources/images/backgrounds/doors_up_boss.png")
         self.doors_down_boss = QPixmap("resources/images/backgrounds/doors_down_boss.png")
         self.doors_right_boss = QPixmap("resources/images/backgrounds/doors_right_boss.png")
@@ -305,9 +313,9 @@ class GameView(QWidget):
                 case "boss":
                     painter.setBrush(self.doors_up_boss)
                 case "treasure":
-                    painter.setBrush(self.doors_up)
+                    painter.setBrush(self.doors_up_treasure)
                 case "next_level":
-                    painter.setBrush(self.doors_up)
+                    painter.setBrush(self.doors_up_next_level)
                 case _:
                     painter.setBrush(self.doors_up)
             painter.drawRect(ROOM_SIZE[0] // 2 - door_w // 2, 0, door_w, door_h)
@@ -317,9 +325,9 @@ class GameView(QWidget):
                 case "boss":
                     painter.setBrush(self.doors_down_boss)
                 case "treasure":
-                    painter.setBrush(self.doors_down)
+                    painter.setBrush(self.doors_down_treasure)
                 case "next_level":
-                    painter.setBrush(self.doors_down)
+                    painter.setBrush(self.doors_down_next_level)
                 case _:
                     painter.setBrush(self.doors_down)
             painter.drawRect(ROOM_SIZE[0] // 2 - door_w // 2, ROOM_SIZE[1] - door_h, door_w, door_h)
@@ -329,9 +337,9 @@ class GameView(QWidget):
                 case "boss":
                     painter.setBrush(self.doors_left_boss)
                 case "treasure":
-                    painter.setBrush(self.doors_left)
+                    painter.setBrush(self.doors_left_treasure)
                 case "next_level":
-                    painter.setBrush(self.doors_left)
+                    painter.setBrush(self.doors_left_next_level)
                 case _:
                     painter.setBrush(self.doors_left)
             painter.drawRect(0, ROOM_SIZE[1] // 2 - door_w // 2, door_h, door_w)
@@ -341,9 +349,9 @@ class GameView(QWidget):
                 case "boss":
                     painter.setBrush(self.doors_right_boss)
                 case "treasure":
-                    painter.setBrush(self.doors_right)
+                    painter.setBrush(self.doors_right_treasure)
                 case "next_level":
-                    painter.setBrush(self.doors_right)
+                    painter.setBrush(self.doors_right_next_level)
                 case _:
                     painter.setBrush(self.doors_right)
             painter.drawRect(ROOM_SIZE[0] - door_h, ROOM_SIZE[1] // 2 - door_w // 2, door_h, door_w)
