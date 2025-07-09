@@ -31,39 +31,35 @@ class HUD(QWidget):
         weapon_row.addWidget(self.minor_chord_label)
 
         # Жизнь
-        self.hp_label = QLabel("HP: 100/100")
-        self.hp_label.setStyleSheet("""
-            color: red;
-            font-size: 16px;
-            font-family: monospace;                               
-        """)
-        self.hp_label.setAlignment(Qt.AlignCenter)
-        self.hp_label.setMinimumWidth(100) 
-
         self.hp_bar = QProgressBar()
         self.hp_bar.setMinimum(0)
         self.hp_bar.setMaximum(100)
         self.hp_bar.setValue(100)
-        self.hp_bar.setTextVisible(False)
+        self.hp_bar.setTextVisible(True)
+        self.hp_bar.setAlignment(Qt.AlignCenter)
         self.hp_bar.setStyleSheet("""
             QProgressBar {
                 border: 1px solid #000;
                 background-color: #444;
                 height: 40px;
+                text-align: center;
+                color: white;
+                font-size: 15px;
+                font-family: monospace;
+                font-weight: bold;
             }
             QProgressBar::chunk {
                 background-color: red;
             }
         """)
 
-        hp_row.addWidget(self.hp_label)
-        hp_row.addWidget(self.hp_bar)
+        hp_row.addWidget(self.hp_bar) 
 
         main_layout.addLayout(weapon_row)
         main_layout.addLayout(hp_row)
     
     def update_stats(self, hp, max_hp):
-        self.hp_label.setText(f"HP: {hp}/{max_hp}")
+        self.hp_bar.setFormat(f"HP: {hp}/{max_hp} ({int(hp * 100 // max_hp)}%)")
         self.hp_bar.setMaximum(max_hp)
         self.hp_bar.setValue(hp)
 
@@ -81,6 +77,11 @@ class HUD(QWidget):
                 border: 1px solid #000;
                 background-color: #444;
                 height: 40px;
+                text-align: center;
+                color: white;
+                font-size: 15px;
+                font-family: monospace;
+                font-weight: bold;
             }}
             QProgressBar::chunk {{
                 background-color: {color};
