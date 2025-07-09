@@ -50,16 +50,8 @@ class Level:
         if candidates:
             bx, by = candidates.pop()
             self.rooms[(bx, by)] = Room(bx, by, "boss")
-            next_level_flag = False
             for dx, dy in directions:
                 nx, ny = bx + dx, by + dy
-                if (nx, ny) not in candidates and (nx, ny) not in self.rooms and not next_level_flag:
-                    self.rooms[(nx, ny)] = Room(nx, ny, "next_level")
-                    next_level_flag = True
-                    for dx, dy in directions:
-                        nnx, nny = nx + dx, ny + dy
-                        if (nnx, nny) in candidates:
-                            candidates.remove((nnx, nny))
                 if (nx, ny) in candidates:
                     candidates.remove((nx, ny))
 
@@ -72,6 +64,30 @@ class Level:
                     nx, ny = tx + dx, ty + dy
                     if (nx, ny) in candidates:
                         candidates.remove((nx, ny))
+
+        for dx, dy in directions:
+            nx, ny = bx + dx, by + dy
+            if (nx, ny) in self.rooms:
+                continue
+
+            neighbor_count = 0
+            for ddx, ddy in directions:
+                adj_x, adj_y = nx + ddx, ny + ddy
+                if (adj_x, adj_y) in self.rooms:
+                    neighbor_count += 1
+
+            if neighbor_count == 1:
+                candidates.append((nx, ny))
+        if candidates:
+            sx, sy = candidates.pop()
+            self.rooms[(sx, sy)] = Room(sx, sy, "next_level")
+        else:
+            for dx, dy in directions:
+                nx, ny = bx + dx, by + dy
+                if (nx, ny) in self.rooms:
+                    continue
+                self.rooms[(nx, ny)] = Room(nx, ny, "next_level")
+                break
 
 
 
