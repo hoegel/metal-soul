@@ -9,7 +9,7 @@ class HUD(QWidget):
         super().__init__(parent)
         self.setFixedHeight(WINDOW_HEIGHT - ROOM_SIZE[0])
         self.setFixedWidth(WINDOW_WIDTH)
-        self.setStyleSheet("background-color: rgba(0, 0, 0, 180);")
+        #self.setStyleSheet("background-color: rgba(0, 0, 0, 180);")
 
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(10, 5, 10, 5)
@@ -22,9 +22,13 @@ class HUD(QWidget):
         self.major_chord_label = QLabel("Major chord")
         self.minor_chord_label = QLabel("Minor chord")
         
-        self.power_chord_label.setStyleSheet(f"background-color: {CHOSEN_WEAPON_COLOR}; font-size: 16px;")
-        self.major_chord_label.setStyleSheet(f"background-color: {NOT_CHOSEN_WEAPON_COLOR}; font-size: 16px;")
-        self.minor_chord_label.setStyleSheet(f"background-color: {NOT_CHOSEN_WEAPON_COLOR}; font-size: 16px;")
+        self.power_chord_label.setObjectName("power_chord_label")
+        self.major_chord_label.setObjectName("major_chord_label")
+        self.minor_chord_label.setObjectName("minor_chord_label")
+
+        # self.power_chord_label.setStyleSheet(f"background-color: {CHOSEN_WEAPON_COLOR}; font-size: 16px;")
+        # self.major_chord_label.setStyleSheet(f"background-color: {NOT_CHOSEN_WEAPON_COLOR}; font-size: 16px;")
+        # self.minor_chord_label.setStyleSheet(f"background-color: {NOT_CHOSEN_WEAPON_COLOR}; font-size: 16px;")
             
         weapon_row.addWidget(self.power_chord_label)
         weapon_row.addWidget(self.major_chord_label)
