@@ -1,7 +1,6 @@
 from PySide6.QtWidgets import QMainWindow, QStackedWidget
 from ui.menu_main import MainMenu
 from ui.game_view import GameView
-from ui.menu_pause import PauseMenu
 from config import *
 
 class MainWindow(QMainWindow):
