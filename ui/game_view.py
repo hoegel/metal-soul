@@ -183,6 +183,11 @@ class GameView(QWidget):
                 else:
                     print(f"Ульта на перезарядке: {self.player.ultimate.remaining_cooldown()} сек")
 
+            if event.key() == Qt.Key_C:
+                if self.player.heal_fragments.use(self.player):
+                    print("🎵 Хилочка использована!")
+                else:
+                    print("❌ Нет хилок!")
 
             if event.key() in (Qt.Key_1, Qt.Key_2, Qt.Key_3):
                 self.player.set_attack_type(int(event.text()))
@@ -317,14 +322,24 @@ class GameView(QWidget):
                 enemy.update(self.player.x + self.player.size // 2, self.player.y + self.player.size // 2, self.projectiles)
             if enemy.hp <= 0:
                 self.player.enemies.remove(enemy)
-                if not self.player.enemies:
-                    self.current_room.cleared = True
             elif enemy.check_contact_with_player(self.player.x, self.player.y, self.player.size):
                 if self.player.is_dodging():
                     continue
                 if self.player.shield.absorb_hit():
                     continue
                 self.player.take_damage(enemy.damage)
+
+        if not self.player.enemies:
+            if not self.current_room.cleared:
+                if self.current_room.room_type == "fight":
+                    if random.random() < 1:  # 15%
+                        if self.player.heal_fragments.add():
+                            print("🎶 Найдена хилочка!")
+                elif self.current_room.room_type == "boss":
+                    if random.random() < 1:  # 50%
+                        if self.player.heal_fragments.add():
+                            print("🎶 Найдена хилочка после босса!")
+                self.current_room.cleared = True
 
 
         for effect in self.attack_effects:
