@@ -1,5 +1,5 @@
 # ui/hud.py
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout
+from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout, QProgressBar
 from PySide6.QtCore import Qt
 from config import *
 
@@ -32,13 +32,33 @@ class HUD(QWidget):
         # Жизнь
         self.hp_label = QLabel("HP: 100/100")
         self.hp_label.setStyleSheet("color: red; font-size: 16px;")
+
+        self.hp_bar = QProgressBar()
+        self.hp_bar.setMinimum(0)
+        self.hp_bar.setMaximum(100)
+        self.hp_bar.setValue(100)
+        self.hp_bar.setTextVisible(False)  # убрать надпись "100%"
+        self.hp_bar.setStyleSheet("""
+            QProgressBar {
+                border: 1px solid #000;
+                background-color: #444;
+                height: 10px;
+            }
+            QProgressBar::chunk {
+                background-color: red;
+            }
+        """)
+
         hp_row.addWidget(self.hp_label)
+        hp_row.addWidget(self.hp_bar)
 
         main_layout.addLayout(weapon_row)
         main_layout.addLayout(hp_row)
     
     def update_stats(self, hp, max_hp):
         self.hp_label.setText(f"HP: {hp}/{max_hp}")
+        self.hp_bar.setMaximum(max_hp)
+        self.hp_bar.setValue(hp)
     
     def update_chord(self, number):
         if(number == 1):
