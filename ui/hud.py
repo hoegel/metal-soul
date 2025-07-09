@@ -2,6 +2,7 @@
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout, QProgressBar
 from PySide6.QtCore import Qt
 from config import *
+from resources.colors import *
 
 class HUD(QWidget):
     def __init__(self, parent=None):
@@ -69,11 +70,11 @@ class HUD(QWidget):
         percent = hp / max_hp if max_hp > 0 else 0
 
         if percent > 0.7:
-            color = "#579a33"
+            color = GOOD_HP_BAR
         elif percent > 0.3:
-            color = "#ffea00"
+            color = MID_HP_BAR
         else:
-            color = "#ee1c25"
+            color = LOW_HP_BAR
 
         self.hp_bar.setStyleSheet(f"""
             QProgressBar {{
