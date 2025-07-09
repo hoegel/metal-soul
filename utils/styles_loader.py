@@ -1,10 +1,15 @@
 from PySide6.QtWidgets import QWidget
+from PySide6.QtCore import qDebug
 from resources.colors import (
     CHOSEN_WEAPON_COLOR,
     NOT_CHOSEN_WEAPON_COLOR,
     GOOD_HP_BAR
 )
 
+style_paths = [
+        "resources/styles/hud.qss",
+        "resources/styles/main_menu.qss",
+    ]
 
 def load_stylesheet_with_variables(paths: list[str], variables: dict[str, str]) -> str:
     full_style = ""
@@ -23,10 +28,6 @@ def get_all_styles() -> str:
         "GOOD_HP_BAR": GOOD_HP_BAR,
     }
 
-    style_paths = [
-        "resources/styles/hud.qss",
-    ]
-
     return load_stylesheet_with_variables(style_paths, variables)
 
 
@@ -36,10 +37,8 @@ def apply_app_styles(app):
 
 def update_style_property(widget: QWidget, property_name: str, new_value: str) -> None:
     """Обновляет конкретное свойство стиля, сохраняя остальные."""
-    # Получаем текущий стиль
     current_style = widget.styleSheet()
     
-    # Парсим текущий стиль в словарь (свойство: значение)
     styles = {}
     for rule in current_style.split(';'):
         rule = rule.strip()

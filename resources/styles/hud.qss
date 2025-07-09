@@ -1,7 +1,3 @@
-HUD {{
-    background-color: rgba(0, 0, 0, 180);
-}}
-
 QLabel#power_chord_label,
 QLabel#major_chord_label,
 QLabel#minor_chord_label {{
