@@ -6,6 +6,7 @@ class Room:
         self.visited = False
         self.enemies = []
         self.cleared = False
+        self.artifact = None
 
     def position(self):
         return (self.x, self.y)

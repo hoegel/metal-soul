@@ -2,6 +2,9 @@ import json
 import random
 import math
 import time
+from config import *
+from PySide6.QtGui import QColor
+from core.projectile import Projectile
 
 class Enemy:
     def __init__(self, x, y, damage, hp, max_hp, speed, size):
@@ -22,14 +25,16 @@ class Enemy:
         self.knock_timer = 0
         self.last_chain_time = 0
 
-    def move_towards(self, target_x, target_y):
+    def update(self, player_x, player_y, projectiles):
         self.update_effects()
+        self.move_towards(player_x, player_y)
 
+    def move_towards(self, target_x, target_y):
         if self.stun["active"]:
             return
         
-        dx = target_x - self.x
-        dy = target_y - self.y
+        dx = target_x - (self.x + self.size // 2)
+        dy = target_y - (self.y + self.size // 2)
         dist = math.hypot(dx, dy)
         if dist == 0:
             return
@@ -43,6 +48,10 @@ class Enemy:
         speed = self.speed
         self.x += speed * dx / dist
         self.y += speed * dy / dist
+        self.x = max(self.x, BORDER_SIZE)
+        self.x = min(self.x, ROOM_SIZE[0] - BORDER_SIZE - self.size)
+        self.y = max(self.y, BORDER_SIZE)
+        self.y = min(self.y, ROOM_SIZE[1] - BORDER_SIZE - self.size)
 
     def update_effects(self):
         # DOT
@@ -119,12 +128,80 @@ class Enemy:
         self.knock_x = force * math.cos(angle)
         self.knock_y = force * math.sin(angle)
 
+    def check_contact_with_player(self, player_x, player_y, player_size):
+        dx = (self.x + self.size / 2) - (player_x + player_size / 2)
+        dy = (self.y + self.size / 2) - (player_y + player_size / 2)
+        distance = math.hypot(dx, dy)
+        return distance < (self.size + player_size) / 2
+
+
+class ShooterEnemy(Enemy):
+    def __init__(self, x, y, cooldown=90, damage=5, hp=30, max_hp=30, speed=0.6, size=24):
+        super().__init__(x, y, damage, hp, max_hp, speed, size)
+        self.shoot_cooldown = cooldown
+        self.shoot_timer = cooldown
+
+    def update(self, player_x, player_y, projectiles):
+        super().update(player_x, player_y, projectiles)
+
+        if self.stun["active"]:
+            return
+
+        if self.shoot_timer > 0:
+            self.shoot_timer -= 1
+        else:
+            proj = Projectile(
+                source="enemy", target_type="player",
+                x=self.x + self.size / 2, y=self.y + self.size / 2,
+                tx=player_x, ty=player_y,
+                damage=self.damage, speed=4, range_=500,
+                color=QColor(255, 0, 0), radius=5
+            )
+            projectiles.append(proj)
+            self.shoot_timer = self.shoot_cooldown
+
+class CrossShooterEnemy(Enemy):
+    def __init__(self, x, y, cooldown=150, damage=4, hp=40, max_hp=40, speed=0.4, size=26):
+        super().__init__(x, y, damage, hp, max_hp, speed, size)
+        self.shoot_cooldown = cooldown
+        self.shoot_timer = cooldown
+
+    def update(self, player_x, player_y, projectiles):
+        self.update_effects()
+
+        if self.stun["active"]:
+            return
+
+        self.move_randomly()
+        if self.shoot_timer > 0:
+            self.shoot_timer -= 1
+        else:
+            dirs = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+            for dx, dy in dirs:
+                proj = Projectile(
+                    source="enemy", target_type="player",
+                    x=self.x + self.size / 2, y=self.y + self.size / 2,
+                    tx=self.x + dx * 100, ty=self.y + dy * 100,
+                    damage=self.damage, speed=3, range_=400,
+                    color=QColor(255, 128, 0), radius=5
+                )
+                projectiles.append(proj)
+            self.shoot_timer = self.shoot_cooldown
+
+    def move_randomly(self):
+        if random.random() < 0.02:
+            angle = random.uniform(0, 2 * math.pi)
+            self.x += math.cos(angle) * self.speed
+            self.y += math.sin(angle) * self.speed
+
 
 def load_enemies_from_json(path):
     with open(path, 'r') as f:
         data = json.load(f)
+
     enemies = []
     for entry in data.get("enemies", []):
+        enemy_type = entry.get("type", "base")
         x = entry.get("x", random.randint(100, 700))
         y = entry.get("y", random.randint(100, 500))
         damage = entry.get("damage", 10)
@@ -132,5 +209,14 @@ def load_enemies_from_json(path):
         max_hp = entry.get("max_hp", 20)
         speed = entry.get("speed", 1.5)
         size = entry.get("size", 20)
-        enemies.append(Enemy(x, y, damage, hp, max_hp, speed, size))
+
+        if enemy_type == "shooter":
+            cooldown = entry.get("cooldown", 90)
+            enemies.append(ShooterEnemy(x, y, cooldown, damage, hp, max_hp, speed, size))
+        elif enemy_type == "cross_shooter":
+            cooldown = entry.get("cooldown", 90)
+            enemies.append(CrossShooterEnemy(x, y, cooldown, damage, hp, max_hp, speed, size))
+        else:
+            enemies.append(Enemy(x, y, damage, hp, max_hp, speed, size))
+
     return enemies

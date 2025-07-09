@@ -1,7 +1,8 @@
 # ui/hud.py
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout
+from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout, QProgressBar
 from PySide6.QtCore import Qt
 from config import *
+from resources.colors import *
 
 class HUD(QWidget):
     def __init__(self, parent=None):
@@ -30,15 +31,62 @@ class HUD(QWidget):
         weapon_row.addWidget(self.minor_chord_label)
 
         # Жизнь
-        self.hp_label = QLabel("HP: 100/100")
-        self.hp_label.setStyleSheet("color: red; font-size: 16px;")
-        hp_row.addWidget(self.hp_label)
+        self.hp_bar = QProgressBar()
+        self.hp_bar.setMinimum(0)
+        self.hp_bar.setMaximum(100)
+        self.hp_bar.setValue(100)
+        self.hp_bar.setTextVisible(True)
+        self.hp_bar.setAlignment(Qt.AlignCenter)
+        self.hp_bar.setStyleSheet("""
+            QProgressBar {
+                border: 1px solid #000;
+                background-color: #444;
+                height: 40px;
+                text-align: center;
+                color: white;
+                font-size: 15px;
+                font-family: monospace;
+                font-weight: bold;
+            }
+            QProgressBar::chunk {
+                background-color: red;
+            }
+        """)
+
+        hp_row.addWidget(self.hp_bar) 
 
         main_layout.addLayout(weapon_row)
         main_layout.addLayout(hp_row)
     
     def update_stats(self, hp, max_hp):
-        self.hp_label.setText(f"HP: {hp}/{max_hp}")
+        self.hp_bar.setFormat(f"HP: {hp}/{max_hp} ({int(hp * 100 // max_hp)}%)")
+        self.hp_bar.setMaximum(max_hp)
+        self.hp_bar.setValue(hp)
+
+        percent = hp / max_hp if max_hp > 0 else 0
+
+        if percent > 0.7:
+            color = GOOD_HP_BAR
+        elif percent > 0.3:
+            color = MID_HP_BAR
+        else:
+            color = LOW_HP_BAR
+
+        self.hp_bar.setStyleSheet(f"""
+            QProgressBar {{
+                border: 1px solid #000;
+                background-color: #444;
+                height: 40px;
+                text-align: center;
+                color: white;
+                font-size: 15px;
+                font-family: monospace;
+                font-weight: bold;
+            }}
+            QProgressBar::chunk {{
+                background-color: {color};
+            }}
+        """)
     
     def update_chord(self, number):
         if(number == 1):
