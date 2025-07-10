@@ -15,6 +15,7 @@ from core.projectile import Projectile
 from core.artifact_pool import get_random_artifact, create_artifact_pool
 from core.effect_registry import load_unlocked_effects, unlock_effect
 from core.boss import *
+from ui.countdown_circle import CountdownCircle
 
 class GameView(QWidget):
     def __init__(self, main_window):
@@ -174,7 +175,8 @@ class GameView(QWidget):
                 if dx or dy:
                     length = math.hypot(dx, dy)
                     direction = (dx / length, dy / length)
-                    self.player.start_roll(direction)
+                    if self.player.start_roll(direction):
+                        self.hud.dodge_widget.circle.start_countdown(self.player.dodge.get_cooldown())
 
             if event.key() == Qt.Key_E and self.current_room.artifact:
                 # Подбор артефакта, если рядом
@@ -198,9 +200,7 @@ class GameView(QWidget):
             if event.key() == Qt.Key_Q:
                 if self.player.ultimate.activate():
                     # self.music.play()
-                    print("ULTIMATE ACTIVATED!")
-                else:
-                    print(f"Ульта на перезарядке: {self.player.ultimate.remaining_cooldown()} сек")
+                    self.hud.ult_widget.circle.start_countdown(self.player.ultimate.get_cooldown())
 
             if event.key() == Qt.Key_C:
                 if self.player.heal_fragments.use(self.player):
@@ -220,7 +220,7 @@ class GameView(QWidget):
             if event.button() == Qt.MouseButton.LeftButton:
                 if QRect(BORDER_SIZE, BORDER_SIZE, ROOM_SIZE[0] - 2 * BORDER_SIZE, ROOM_SIZE[1] - 2 * BORDER_SIZE).contains(event.pos()):
                     self.perform_attack(event.pos()) #XXX
-
+                    
                     if self.room_coords == self.level.start_pos and self.effect_choices:
                         for i, eff_class in enumerate(self.effect_choices):
                             rect = QRect(100 + i*140, 100, 120, 40)
@@ -241,9 +241,9 @@ class GameView(QWidget):
             if event.button() == Qt.MouseButton.RightButton:
                 if QRect(BORDER_SIZE, BORDER_SIZE, ROOM_SIZE[0] - 2 * BORDER_SIZE, ROOM_SIZE[1] - 2 * BORDER_SIZE).contains(event.pos()):
                     
-                    self.player.shield.activate()
-
-
+                    if self.player.shield.activate():
+                        self.hud.shield_widget.circle.start_countdown(self.player.shield.get_cooldown())
+                    
     def perform_attack(self, mouse_pos):
         if self.player.weapon.can_attack():
             player_pos = (self.player.x, self.player.y) #XXX
@@ -256,9 +256,26 @@ class GameView(QWidget):
                 'time': 10
             })
             self.player.attack(player_pos, target_pos, self.player.enemies)
+            
+            for effect in self.attack_effects:
+                atk_type = effect['type']
+                
+                if atk_type == 'melee':
+                    self.hud.power_chord_text.start_countdown(self.player.weapon.cooldown)
+                elif atk_type == 'beam':
+                    self.hud.major_chord_text.start_countdown(self.player.weapon.cooldown)
+                elif atk_type == 'bomb':
+                    self.hud.minor_chord_text.start_countdown(self.player.weapon.cooldown)
 
     def update_game(self):
         self.player.update()
+
+        next_cd = self.player.shield.get_next_cooldown()
+        if next_cd > 0:
+            self.hud.shield_widget.circle.set_progress(next_cd, self.player.shield.cooldown)
+        else:
+            self.hud.shield_widget.circle.set_progress(0, self.player.shield.cooldown)
+
         _, hp, max_hp, _ = self.player.get_stats()
         # if not self.player.ultimate.is_active():
         #     self.music.stop()
@@ -556,7 +573,7 @@ class GameView(QWidget):
                 painter.setBrush(gradient)
                 painter.setPen(Qt.NoPen)
                 painter.drawPie(QRectF(x - self.player.weapon.radius + 10, y - self.player.weapon.radius + 10, self.player.weapon.radius * 2, self.player.weapon.radius * 2), start_angle, span_angle)
-
+                
 
             elif atk_type == 'beam':
                 # Вычисляем конец луча до столкновения со стеной
@@ -618,8 +635,8 @@ class GameView(QWidget):
 
         # Рисуем миникарту
         minimap_scale = 8
-        minimap_offset_x = WINDOW_WIDTH - 100
-        minimap_offset_y = 100
+        minimap_offset_x = WINDOW_WIDTH - 125
+        minimap_offset_y = 85
         room_size = 16
 
         for (rx, ry), room in self.level.rooms.items():

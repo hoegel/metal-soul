@@ -1,4 +1,4 @@
-WINDOW_WIDTH = 800
+WINDOW_WIDTH = 850
 WINDOW_HEIGHT = 800
 ROOM_SIZE = (600, 600) #width height
 FIELD_SIZE = (530, 530) #play field width height
