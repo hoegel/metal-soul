@@ -68,7 +68,7 @@ class CountdownCircle(QWidget):
             painter.drawText(self.rect(), Qt.AlignCenter, text)
         else:
             painter.setPen(Qt.white)
-            painter.setFont(QFont("Arial", 20, QFont.Bold))
+            painter.setFont(QFont("Arial", 25, QFont.Bold))
             text = f"{self.text}"
             painter.drawText(self.rect(), Qt.AlignCenter, text)
             

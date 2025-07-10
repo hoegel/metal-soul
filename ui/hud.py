@@ -19,6 +19,7 @@ class HUD(QWidget):
         self.shield_pixmap = QPixmap("resources/images/icons/shield_guitar.png")
         self.ult_pixmap = QPixmap("resources/images/icons/ult.png")
         self.dash_pixmap = QPixmap("resources/images/icons/dash.png")
+        self.heal_pixmap = QPixmap("resources/images/icons/heal.png")
 
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(10, 5, 10, 5)
@@ -94,15 +95,32 @@ class HUD(QWidget):
 
             return widget
 
-        self.dodge_widget = create_cooldown_widget(self.dash_pixmap, "Space")
+        self.dodge_widget = create_cooldown_widget(self.dash_pixmap, "SPC")
         self.shield_widget = create_cooldown_widget(self.shield_pixmap, "RMB")
         self.ult_widget = create_cooldown_widget(self.ult_pixmap, "Q")
-        # self.potion_widget = create_cooldown_widget("Хилки")
+        
+        self.heal_widget = QWidget()
+        self.heal_widget.setObjectName("skill_widget")
+        self.heal_layout = QHBoxLayout(self.heal_widget)
+        self.heal_icon = QLabel()
+        self.heal_icon.setPixmap(self.heal_pixmap)
+        self.heal_text = QLabel("3")
+        self.heal_layout.addWidget(self.heal_icon)
+        self.heal_layout.addWidget(self.heal_text)
+        self.heal_text.setAlignment(Qt.AlignRight)
+        self.heal_text.setStyleSheet("""
+            color: white;
+            font-size: 40px;
+            font-weight: bold;
+            margin-top: 10px;
+            margin-right: 16px;
+        """)
 
         vbox.addWidget(self.dodge_widget)
         vbox.addWidget(self.shield_widget)
         vbox.addWidget(self.ult_widget)
-        # vbox.addWidget(self.potion_widget)
+        vbox.addWidget(self.heal_widget)
+        
         vbox.addStretch()
         
         hbox = QHBoxLayout()
@@ -140,13 +158,37 @@ class HUD(QWidget):
         update_style_property(self.power_chord_widget, "background-color", str(NOT_CHOSEN_WEAPON_COLOR))
         update_style_property(self.major_chord_widget, "background-color", str(NOT_CHOSEN_WEAPON_COLOR))
         update_style_property(self.minor_chord_widget, "background-color", str(NOT_CHOSEN_WEAPON_COLOR))
+        update_style_property(self.power_chord_widget, "min-width", "235px")
+        update_style_property(self.power_chord_widget, "max-width", "235px")
+        update_style_property(self.power_chord_widget, "min-height", "110px")
+        update_style_property(self.power_chord_widget, "max-height", "110px")
+        update_style_property(self.major_chord_widget, "min-width", "235px")
+        update_style_property(self.major_chord_widget, "max-width", "235px")
+        update_style_property(self.major_chord_widget, "min-height", "110px")
+        update_style_property(self.major_chord_widget, "max-height", "110px")
+        update_style_property(self.minor_chord_widget, "min-width", "235px")
+        update_style_property(self.minor_chord_widget, "max-width", "235px")
+        update_style_property(self.minor_chord_widget, "min-height", "110px")
+        update_style_property(self.minor_chord_widget, "max-height", "110px")
         match number:
             case 1:
                 update_style_property(self.power_chord_widget, "background-color", str(CHOSEN_WEAPON_COLOR))
+                update_style_property(self.power_chord_widget, "min-width", "245px")
+                update_style_property(self.power_chord_widget, "max-width", "245px")
+                update_style_property(self.power_chord_widget, "min-height", "120px")
+                update_style_property(self.power_chord_widget, "max-height", "120px")
             case 2:
                 update_style_property(self.major_chord_widget, "background-color", str(CHOSEN_WEAPON_COLOR))
+                update_style_property(self.major_chord_widget, "min-width", "245px")
+                update_style_property(self.major_chord_widget, "max-width", "245px")
+                update_style_property(self.major_chord_widget, "min-height", "120px")
+                update_style_property(self.major_chord_widget, "max-height", "120px")
             case 3:
                 update_style_property(self.minor_chord_widget, "background-color", str(CHOSEN_WEAPON_COLOR))
+                update_style_property(self.minor_chord_widget, "min-width", "245px")
+                update_style_property(self.minor_chord_widget, "max-width", "245px")
+                update_style_property(self.minor_chord_widget, "min-height", "120px")
+                update_style_property(self.minor_chord_widget, "max-height", "120px")
     
     def pause(self):
         self.dodge_widget.circle.pause()
