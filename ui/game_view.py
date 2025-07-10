@@ -201,6 +201,16 @@ class GameView(QWidget):
             if e in self.player.enemies:
                 self.player.enemies.remove(e)
         if not self.player.enemies:
+            if self.current_room.room_type == "fight":
+                self.player.score += 10
+                if random.random() < 0.15:  # 15%
+                    if self.player.heal_fragments.add():
+                        ...
+            elif self.current_room.room_type == "boss":
+                self.player.score += 40
+                if random.random() < 0.5:  # 50%
+                    if self.player.heal_fragments.add():
+                        ...
             self.current_room.cleared = True
 
 
@@ -415,10 +425,12 @@ class GameView(QWidget):
         if not self.player.enemies:
             if not self.current_room.cleared:
                 if self.current_room.room_type == "fight":
+                    self.player.score += 10
                     if random.random() < 0.15:  # 15%
                         if self.player.heal_fragments.add():
                             ...
                 elif self.current_room.room_type == "boss":
+                    self.player.score += 40
                     if random.random() < 0.5:  # 50%
                         if self.player.heal_fragments.add():
                             ...
@@ -709,3 +721,16 @@ class GameView(QWidget):
             painter.setOpacity(0.25)
             painter.fillRect(QRect(0, 0, *ROOM_SIZE), QColor(255, 0, 0))
             painter.setOpacity(1.0)
+
+        painter.setPen(QColor(255, 255, 255))
+        font = painter.font()
+        font.setPointSize(18)
+        font.setBold(True)
+        painter.setFont(font)
+
+        score_text = f"Score: {self.player.score}"
+        text_rect = painter.fontMetrics().boundingRect(score_text)
+        text_x = ROOM_SIZE[0] // 2 - text_rect.width() // 2
+        text_y = 40  # Высота от верхнего края, можешь подстроить
+
+        painter.drawText(text_x, text_y, score_text)
