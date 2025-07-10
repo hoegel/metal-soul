@@ -659,6 +659,6 @@ class GameView(QWidget):
 
         if self.player.ultimate.is_active():
             painter.setOpacity(0.25)
-            painter.fillRect(QRect(0, 0, *ROOM_SIZE), QColor(255, 0, 0))  # красный фильтр
+            painter.fillRect(QRect(0, 0, *ROOM_SIZE), QColor(255, 0, 0, 50))  # красный фильтр
             painter.setOpacity(1.0)
         painter.end

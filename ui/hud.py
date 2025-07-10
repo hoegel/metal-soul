@@ -16,6 +16,9 @@ class HUD(QWidget):
         self.power_chord_pixmap = QPixmap("resources/images/icons/axe_guitar.png")
         self.major_chord_pixmap = QPixmap("resources/images/icons/blaster_guitar.png")
         self.minor_chord_pixmap = QPixmap("resources/images/icons/bomb_amp.png")
+        self.shield_pixmap = QPixmap("resources/images/icons/shield_guitar.png")
+        self.ult_pixmap = QPixmap("resources/images/icons/ult.png")
+        self.dash_pixmap = QPixmap("resources/images/icons/dash.png")
 
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(10, 5, 10, 5)
@@ -74,25 +77,26 @@ class HUD(QWidget):
         
         vbox = QVBoxLayout()
         
-        def create_cooldown_widget(label_text: str, key_text: str) -> QWidget:
+        def create_cooldown_widget(icon: str, key_text: str) -> QWidget:
             widget = QWidget()
             widget.setObjectName("skill_widget")
             layout = QHBoxLayout(widget)
             # layout.setContentsMargins(0, 0, 0, 0)
 
-            label = QLabel(label_text)
-            label.setStyleSheet("color: white; font-size: 20px;")
+            image = QLabel()
+            image.setPixmap(icon)
+            
             widget.circle = CountdownCircle(0.1, key_text)
 
-            layout.addWidget(label)
+            layout.addWidget(image)
             layout.addStretch()
             layout.addWidget(widget.circle)
 
             return widget
 
-        self.dodge_widget = create_cooldown_widget("Кувырок", "Space")
-        self.shield_widget = create_cooldown_widget("Щит", "RMB")
-        self.ult_widget = create_cooldown_widget("Ульта", "Q")
+        self.dodge_widget = create_cooldown_widget(self.dash_pixmap, "Space")
+        self.shield_widget = create_cooldown_widget(self.shield_pixmap, "RMB")
+        self.ult_widget = create_cooldown_widget(self.ult_pixmap, "Q")
         # self.potion_widget = create_cooldown_widget("Хилки")
 
         vbox.addWidget(self.dodge_widget)
