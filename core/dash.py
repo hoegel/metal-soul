@@ -13,12 +13,14 @@ class DodgeRoll:
         self.last_end_time = -cooldown
         self.direction = (0, 0)
         self.start_pos = (0, 0)
+        self.start_time = 0
+        self.dtime = 0
 
-    def can_roll(self, current_time):
-        return not self.active and (current_time - self.last_end_time) >= self.cooldown
+    def can_roll(self):
+        return not self.active and (time.time() - self.last_end_time) >= self.cooldown
 
-    def start_roll(self, current_pos, direction, current_time):
-        if not self.can_roll(current_time):
+    def start_roll(self, current_pos, direction):
+        if not self.can_roll():
             return False
         self.start_time = time.time()
         self.start_pos = current_pos
@@ -46,3 +48,16 @@ class DodgeRoll:
     
     def get_cooldown(self):
         return self.cooldown + self.duration
+    
+    def on_pause_on(self):
+        self.pause_start = time.time()
+        
+    def on_pause_off(self):
+        self.dtime = time.time() - self.pause_start
+
+        # Если в момент паузы ролл был активен — корректируем start_time
+        if self.active:
+            self.start_time += self.dtime
+        else:
+            # Если не активен, то значит cooldown идет — нужно поправить last_end_time
+            self.last_end_time += self.dtime

@@ -37,9 +37,17 @@ class Player:
     def update(self):
         self.shield.update()
         self.dodge.update()
+        
+    def on_pause_on(self):
+        self.shield.on_pause_on()
+        self.dodge.on_pause_on()
+        
+    def on_pause_off(self):
+        self.shield.on_pause_off()
+        self.dodge.on_pause_off()
 
-    def start_roll(self, direction, current_time):
-        return self.dodge.start_roll((self.x, self.y), direction, current_time)
+    def start_roll(self, direction):
+        return self.dodge.start_roll((self.x, self.y), direction)
 
     def is_dodging(self):
         return self.dodge.active

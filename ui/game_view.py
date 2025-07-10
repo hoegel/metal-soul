@@ -80,7 +80,6 @@ class GameView(QWidget):
 
         self.load_room()
 
-
         self.current_room.artifact = None
         self.artifact_pos = QPoint(ROOM_SIZE[0]//2 - 10, ROOM_SIZE[1]//2 - 10)
         create_artifact_pool()
@@ -108,12 +107,14 @@ class GameView(QWidget):
         self.pauseMenu.show()
         self.pauseMenu.move(270, 200)
         self.timer.stop()
+        self.player.on_pause_on()
         
     def resume_game(self):
         self.isPaused = False
         self.hud.resume()
         self.pauseMenu.hide()
         self.timer.start()
+        self.player.on_pause_off()
 
     def game_starts(self):
         self.pauseMenu.hide()
@@ -177,7 +178,7 @@ class GameView(QWidget):
                 if dx or dy:
                     length = math.hypot(dx, dy)
                     direction = (dx / length, dy / length)
-                    if self.player.start_roll(direction, time.time()):
+                    if self.player.start_roll(direction):
                         self.hud.dodge_widget.circle.start_countdown(self.player.dodge.get_cooldown())
 
             if event.key() == Qt.Key_E and self.current_room.artifact:
@@ -271,12 +272,6 @@ class GameView(QWidget):
 
     def update_game(self):
         self.player.update()
-
-        next_cd = self.player.shield.get_next_cooldown()
-        if next_cd > 0:
-            self.hud.shield_widget.circle.set_progress(next_cd, self.player.shield.cooldown)
-        else:
-            self.hud.shield_widget.circle.set_progress(0, self.player.shield.cooldown)
 
         _, hp, max_hp, _ = self.player.get_stats()
         # if not self.player.ultimate.is_active():
