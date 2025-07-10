@@ -24,3 +24,6 @@ class Ultimate:
     def remaining_cooldown(self):
         remaining = self.cooldown - (time.time() - self.last_used)
         return max(0, int(remaining))
+
+    def get_cooldown(self):
+        return self.cooldown

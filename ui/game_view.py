@@ -1,4 +1,5 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QMessageBox
+from PySide6.QtGui import QPainter, QColor, QMouseEvent, QKeyEvent, QPen, QLinearGradient, QPixmap
 from PySide6.QtGui import QPainter, QColor, QMouseEvent, QKeyEvent, QPen, QLinearGradient
 from PySide6.QtCore import QTimer, Qt, QPoint, QRect, QRectF, Signal
 import math, os, random
@@ -14,11 +15,30 @@ from core.projectile import Projectile
 from core.artifact_pool import get_random_artifact, create_artifact_pool
 from core.effect_registry import load_unlocked_effects, unlock_effect
 from core.boss import *
+from ui.countdown_circle import CountdownCircle
 
 class GameView(QWidget):
     def __init__(self, main_window):
         super().__init__()
         self.main_window = main_window
+        
+        self.background_pixmap = QPixmap("resources/images/backgrounds/level_background1.png")
+        self.doors_up = QPixmap("resources/images/backgrounds/doors_up.png")
+        self.doors_down = QPixmap("resources/images/backgrounds/doors_down.png")
+        self.doors_right = QPixmap("resources/images/backgrounds/doors_right.png")
+        self.doors_left = QPixmap("resources/images/backgrounds/doors_left.png")
+        self.doors_up_treasure = QPixmap("resources/images/backgrounds/doors_up_treasure.png")
+        self.doors_down_treasure = QPixmap("resources/images/backgrounds/doors_down_treasure.png")
+        self.doors_right_treasure = QPixmap("resources/images/backgrounds/doors_right_treasure.png")
+        self.doors_left_treasure = QPixmap("resources/images/backgrounds/doors_left_treasure.png")
+        self.doors_up_next_level = QPixmap("resources/images/backgrounds/doors_up_next_level.png")
+        self.doors_down_next_level = QPixmap("resources/images/backgrounds/doors_down_next_level.png")
+        self.doors_right_next_level = QPixmap("resources/images/backgrounds/doors_right_next_level.png")
+        self.doors_left_next_level = QPixmap("resources/images/backgrounds/doors_left_next_level.png")
+        self.doors_up_boss = QPixmap("resources/images/backgrounds/doors_up_boss.png")
+        self.doors_down_boss = QPixmap("resources/images/backgrounds/doors_down_boss.png")
+        self.doors_right_boss = QPixmap("resources/images/backgrounds/doors_right_boss.png")
+        self.doors_left_boss = QPixmap("resources/images/backgrounds/doors_left_boss.png")
 
         self.player = Player()
 
@@ -155,7 +175,8 @@ class GameView(QWidget):
                 if dx or dy:
                     length = math.hypot(dx, dy)
                     direction = (dx / length, dy / length)
-                    self.player.start_roll(direction)
+                    if self.player.start_roll(direction):
+                        self.hud.dodge_widget.circle.start_countdown(self.player.dodge.get_cooldown())
 
             if event.key() == Qt.Key_E and self.current_room.artifact:
                 # Подбор артефакта, если рядом
@@ -179,9 +200,7 @@ class GameView(QWidget):
             if event.key() == Qt.Key_Q:
                 if self.player.ultimate.activate():
                     # self.music.play()
-                    print("ULTIMATE ACTIVATED!")
-                else:
-                    print(f"Ульта на перезарядке: {self.player.ultimate.remaining_cooldown()} сек")
+                    self.hud.ult_widget.circle.start_countdown(self.player.ultimate.get_cooldown())
 
             if event.key() == Qt.Key_C:
                 if self.player.heal_fragments.use(self.player):
@@ -201,7 +220,7 @@ class GameView(QWidget):
             if event.button() == Qt.MouseButton.LeftButton:
                 if QRect(BORDER_SIZE, BORDER_SIZE, ROOM_SIZE[0] - 2 * BORDER_SIZE, ROOM_SIZE[1] - 2 * BORDER_SIZE).contains(event.pos()):
                     self.perform_attack(event.pos()) #XXX
-
+                    
                     if self.room_coords == self.level.start_pos and self.effect_choices:
                         for i, eff_class in enumerate(self.effect_choices):
                             rect = QRect(100 + i*140, 100, 120, 40)
@@ -222,9 +241,9 @@ class GameView(QWidget):
             if event.button() == Qt.MouseButton.RightButton:
                 if QRect(BORDER_SIZE, BORDER_SIZE, ROOM_SIZE[0] - 2 * BORDER_SIZE, ROOM_SIZE[1] - 2 * BORDER_SIZE).contains(event.pos()):
                     
-                    self.player.shield.activate()
-
-
+                    if self.player.shield.activate():
+                        self.hud.shield_widget.circle.start_countdown(self.player.shield.get_cooldown())
+                    
     def perform_attack(self, mouse_pos):
         if self.player.weapon.can_attack():
             player_pos = (self.player.x, self.player.y) #XXX
@@ -237,9 +256,26 @@ class GameView(QWidget):
                 'time': 10
             })
             self.player.attack(player_pos, target_pos, self.player.enemies)
+            
+            for effect in self.attack_effects:
+                atk_type = effect['type']
+                
+                if atk_type == 'melee':
+                    self.hud.power_chord_text.start_countdown(self.player.weapon.cooldown)
+                elif atk_type == 'beam':
+                    self.hud.major_chord_text.start_countdown(self.player.weapon.cooldown)
+                elif atk_type == 'bomb':
+                    self.hud.minor_chord_text.start_countdown(self.player.weapon.cooldown)
 
     def update_game(self):
         self.player.update()
+
+        next_cd = self.player.shield.get_next_cooldown()
+        if next_cd > 0:
+            self.hud.shield_widget.circle.set_progress(next_cd, self.player.shield.cooldown)
+        else:
+            self.hud.shield_widget.circle.set_progress(0, self.player.shield.cooldown)
+
         _, hp, max_hp, _ = self.player.get_stats()
         # if not self.player.ultimate.is_active():
         #     self.music.stop()
@@ -259,7 +295,8 @@ class GameView(QWidget):
             new_x = self.player.x + dx
             new_y = self.player.y + dy
 
-        door_width = 40
+        door_width = 100
+        
         wall_thickness = BORDER_SIZE
 
         cx = new_x
@@ -301,16 +338,16 @@ class GameView(QWidget):
             self.player.y = new_y
 
         # Переход в соседнюю комнату
-        if self.player.y <= 0:
+        if self.player.y <= 70:
             self.try_move_room(0, -1)
-        elif self.player.y + self.player.size >= ROOM_SIZE[1]:
+        elif self.player.y + self.player.size >= FIELD_SIZE[1]:
             self.try_move_room(0, 1)
-        elif self.player.x <= 0:
+        elif self.player.x <= 70:
             self.try_move_room(-1, 0)
-        elif self.player.x + self.player.size >= ROOM_SIZE[0]:
+        elif self.player.x + self.player.size >= FIELD_SIZE[0]:
             self.try_move_room(1, 0)
 
-
+        damage, hp, max_hp, speed = self.player.get_stats()
 
         self.hud.update_stats(hp, max_hp)
         self.player.update_invincibility()
@@ -384,23 +421,38 @@ class GameView(QWidget):
                 self.current_room = next_room
                 # Расчёт позиции игрока у входа в новую комнату
                 if dx == 1:  # пришёл слева → появиться у левой двери
-                    self.player.x = 10
+                    self.player.x = 70
                     self.player.y = ROOM_SIZE[1] // 2 - self.player.size // 2
                 elif dx == -1:  # пришёл справа → появиться у правой двери
-                    self.player.x = ROOM_SIZE[0] - 10 - self.player.size
+                    self.player.x = ROOM_SIZE[0] - 70 - self.player.size
                     self.player.y = ROOM_SIZE[1] // 2 - self.player.size // 2
                 elif dy == 1:  # пришёл сверху → появиться у верхней двери
-                    self.player.y = 10
+                    self.player.y = 70
                     self.player.x = ROOM_SIZE[0] // 2 - self.player.size // 2
                 elif dy == -1:  # пришёл снизу → появиться у нижней двери
-                    self.player.y = ROOM_SIZE[1] - 10 - self.player.size
+                    self.player.y = ROOM_SIZE[1] - 70 - self.player.size
                     self.player.x = ROOM_SIZE[0] // 2 - self.player.size // 2
             self.current_room.visited = True
             self.load_room()
 
     def paintEvent(self, event):
         painter = QPainter(self)
-        painter.fillRect(self.rect(), QColor(30, 30, 30))
+        
+        if not self.background_pixmap.isNull():
+            scaled_pixmap = self.background_pixmap.scaled(600, 600, Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
+            painter.drawPixmap(0, 0, scaled_pixmap)
+        else:
+            painter.fillRect(QRect(0, 0, 600, 600), Qt.lightGray)
+
+        if self.player.shield.is_active():
+            painter.setPen(QPen(QColor(0, 255, 255), 4))
+            painter.setBrush(Qt.NoBrush)
+            painter.drawEllipse(self.player.x - 5, self.player.y - 5, self.player.size + 10, self.player.size + 10)
+
+        if self.player.dodge.active:
+            painter.setPen(QPen(QColor(100, 180, 255), 4))
+            painter.setBrush(Qt.NoBrush)
+            painter.drawEllipse(self.player.x - 5, self.player.y - 5, self.player.size + 10, self.player.size + 10)
 
         if self.player.shield.is_active():
             painter.setPen(QPen(QColor(0, 255, 255), 4))
@@ -426,92 +478,57 @@ class GameView(QWidget):
             'right': self.level.get_room(cx + 1, cy)
         }
 
-        door_w, door_h = 40, BORDER_SIZE  # размеры двери
+        door_w, door_h = 100, BORDER_SIZE  # размеры двери
 
-        painter.setBrush(QColor(100, 100, 100))
         painter.setPen(QColor(0, 0, 0, 0))
-        if not neighbors['up']:
-            painter.drawRect(0, 0, ROOM_SIZE[0], BORDER_SIZE)  # обычная стена
-        else:
-            # левая часть
-            painter.drawRect(0, 0, ROOM_SIZE[0] // 2 - door_w // 2, BORDER_SIZE)
-            # правая часть
-            painter.drawRect(ROOM_SIZE[0] // 2 + door_w // 2, 0, ROOM_SIZE[0] // 2 - door_w // 2, BORDER_SIZE)
-
-        if not neighbors['down']:
-            painter.drawRect(0, ROOM_SIZE[1] - BORDER_SIZE, ROOM_SIZE[0], BORDER_SIZE)  # обычная стена
-        else:
-            # левая часть
-            painter.drawRect(0, ROOM_SIZE[1] - BORDER_SIZE, ROOM_SIZE[0] // 2 - door_w // 2, BORDER_SIZE)
-            # правая часть
-            painter.drawRect(ROOM_SIZE[0] // 2 + door_w // 2, ROOM_SIZE[1] - BORDER_SIZE, ROOM_SIZE[0] // 2 - door_w // 2, BORDER_SIZE)
-
-        if not neighbors['left']:
-            painter.drawRect(0, 0, BORDER_SIZE, ROOM_SIZE[1])  # обычная стена
-        else:
-            # верхняя часть
-            painter.drawRect(0, 0, BORDER_SIZE, ROOM_SIZE[1] // 2 - door_w // 2)
-            # нижняя часть
-            painter.drawRect(0, ROOM_SIZE[1] // 2 + door_w // 2, BORDER_SIZE, ROOM_SIZE[1] // 2 - door_w // 2)
-
-        if not neighbors['right']:
-            painter.drawRect(ROOM_SIZE[0] - BORDER_SIZE, 0, BORDER_SIZE, ROOM_SIZE[1])  # обычная стена
-        else:
-            # верхняя часть
-            painter.drawRect(ROOM_SIZE[0] - BORDER_SIZE, 0, BORDER_SIZE, ROOM_SIZE[1] // 2 - door_w // 2)
-            # нижняя часть
-            painter.drawRect(ROOM_SIZE[0] - BORDER_SIZE, ROOM_SIZE[1] // 2 + door_w // 2, BORDER_SIZE, ROOM_SIZE[1] // 2 - door_w // 2)
-
-
-        painter.setBrush(QColor(180, 180, 180))  # цвет двери
 
         # Вверх
         if neighbors['up']:
             match self.level.get_room(cx, cy - 1).room_type:
                 case "boss":
-                    painter.setBrush(QColor(255, 0, 0))
+                    painter.setBrush(self.doors_up_boss)
                 case "treasure":
-                    painter.setBrush(QColor(255, 215, 0))
+                    painter.setBrush(self.doors_up_treasure)
                 case "next_level":
-                    painter.setBrush(QColor(255, 0, 255))
+                    painter.setBrush(self.doors_up_next_level)
                 case _:
-                    painter.setBrush(QColor(180, 180, 180))
+                    painter.setBrush(self.doors_up)
             painter.drawRect(ROOM_SIZE[0] // 2 - door_w // 2, 0, door_w, door_h)
         # Вниз
         if neighbors['down']:
             match self.level.get_room(cx, cy + 1).room_type:
                 case "boss":
-                    painter.setBrush(QColor(255, 0, 0))
+                    painter.setBrush(self.doors_down_boss)
                 case "treasure":
-                    painter.setBrush(QColor(255, 215, 0))
+                    painter.setBrush(self.doors_down_treasure)
                 case "next_level":
-                    painter.setBrush(QColor(255, 0, 255))
+                    painter.setBrush(self.doors_down_next_level)
                 case _:
-                    painter.setBrush(QColor(180, 180, 180))
+                    painter.setBrush(self.doors_down)
             painter.drawRect(ROOM_SIZE[0] // 2 - door_w // 2, ROOM_SIZE[1] - door_h, door_w, door_h)
         # Влево
         if neighbors['left']:
             match self.level.get_room(cx - 1, cy).room_type:
                 case "boss":
-                    painter.setBrush(QColor(255, 0, 0))
+                    painter.setBrush(self.doors_left_boss)
                 case "treasure":
-                    painter.setBrush(QColor(255, 215, 0))
+                    painter.setBrush(self.doors_left_treasure)
                 case "next_level":
-                    painter.setBrush(QColor(255, 0, 255))
+                    painter.setBrush(self.doors_left_next_level)
                 case _:
-                    painter.setBrush(QColor(180, 180, 180))
+                    painter.setBrush(self.doors_left)
             painter.drawRect(0, ROOM_SIZE[1] // 2 - door_w // 2, door_h, door_w)
         # Вправо
         if neighbors['right']:
             match self.level.get_room(cx + 1, cy).room_type:
                 case "boss":
-                    painter.setBrush(QColor(255, 0, 0))
+                    painter.setBrush(self.doors_right_boss)
                 case "treasure":
-                    painter.setBrush(QColor(255, 215, 0))
+                    painter.setBrush(self.doors_right_treasure)
                 case "next_level":
-                    painter.setBrush(QColor(255, 0, 255))
+                    painter.setBrush(self.doors_right_next_level)
                 case _:
-                    painter.setBrush(QColor(180, 180, 180))
+                    painter.setBrush(self.doors_right)
             painter.drawRect(ROOM_SIZE[0] - door_h, ROOM_SIZE[1] // 2 - door_w // 2, door_h, door_w)
 
 
@@ -556,7 +573,7 @@ class GameView(QWidget):
                 painter.setBrush(gradient)
                 painter.setPen(Qt.NoPen)
                 painter.drawPie(QRectF(x - self.player.weapon.radius + 10, y - self.player.weapon.radius + 10, self.player.weapon.radius * 2, self.player.weapon.radius * 2), start_angle, span_angle)
-
+                
 
             elif atk_type == 'beam':
                 # Вычисляем конец луча до столкновения со стеной
@@ -618,8 +635,8 @@ class GameView(QWidget):
 
         # Рисуем миникарту
         minimap_scale = 8
-        minimap_offset_x = WINDOW_WIDTH - 100
-        minimap_offset_y = 100
+        minimap_offset_x = WINDOW_WIDTH - 125
+        minimap_offset_y = 85
         room_size = 16
 
         for (rx, ry), room in self.level.rooms.items():
@@ -647,3 +664,4 @@ class GameView(QWidget):
             painter.setOpacity(0.25)
             painter.fillRect(QRect(0, 0, *ROOM_SIZE), QColor(255, 0, 0))  # красный фильтр
             painter.setOpacity(1.0)
+        painter.end

@@ -1,14 +1,36 @@
-QLabel#power_chord_label,
-QLabel#major_chord_label,
-QLabel#minor_chord_label {{
-    font-size: 16px;
-}}
+QWidget#power_chord_label,
+QWidget#major_chord_label,
+QWidget#minor_chord_label {{
+    min-width: 245px;
+    max-width: 245px;
+    min-height: 120px;
+    max-height: 120px;
 
-QLabel#power_chord_label {{
+    padding: 8px 15px;
+    border: none;
+    border-radius: 8px;
+
+    font-size: 16px;
+    color: white;
+    font-weight: bold;
+
     background-color: {CHOSEN_WEAPON_COLOR};
 }}
-QLabel#major_chord_label,
-QLabel#minor_chord_label {{
+
+QWidget#skill_widget{{
+    min-width: 200;
+    max-width: 200;
+    min-height: 100px;
+    max-height: 100px;
+
+    padding: 8px 15px;
+    border: none;
+    border-radius: 8px;
+
+    font-size: 16px;
+    color: white;
+    font-weight: bold;
+    
     background-color: {NOT_CHOSEN_WEAPON_COLOR};
 }}
 

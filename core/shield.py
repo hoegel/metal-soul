@@ -30,3 +30,15 @@ class Shield:
             self.active_until = 0
             return True
         return False
+
+    def get_cooldown(self):
+        return self.cooldown
+    
+    def get_next_cooldown(self):
+        now = time.time()
+        if self.charges < self.max_charges:
+            remaining_times = [self.cooldown - (now - t) for t in self.last_used_times]
+            remaining_times = [rt for rt in remaining_times if rt > 0]
+            if remaining_times:
+                return min(remaining_times)
+        return 0
