@@ -24,21 +24,10 @@ class MainMenu(QWidget):
         self.exit_button.clicked.connect(self.close_app)
 
         self.difficulty_label = QLabel("Select Difficulty:")
-        self.difficulty_label.setStyleSheet("color: white; font-size: 14px;")
+        self.difficulty_label.setObjectName("difficulty_label")
         self.difficulty_selector = QComboBox()
         self.difficulty_selector.addItems(["Easy", "Normal", "Hard", "Nightmare"])
-        self.difficulty_selector.setStyleSheet("""
-            QComboBox {
-                background-color: #333;
-                color: white;
-                font-size: 14px;
-                padding: 5px;
-                border-radius: 4px;
-            }
-            QComboBox::drop-down {
-                border: none;
-            }
-        """)
+        self.difficulty_selector.setObjectName("difficulty_selector")
         layout.addWidget(self.difficulty_label)
         layout.addWidget(self.difficulty_selector)
 
