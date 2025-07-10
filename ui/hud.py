@@ -37,6 +37,7 @@ class HUD(QWidget):
         self.power_chord_icon.setPixmap(self.power_chord_pixmap)
         self.power_chord_layout.addWidget(self.power_chord_icon)
         self.power_chord_layout.addWidget(self.power_chord_text)
+        self.power_chord_layout.addSpacing(100)  # добавляем отступ справа
 
         self.major_chord_widget = QWidget()
         self.major_chord_widget.setObjectName("major_chord_label")
@@ -47,6 +48,7 @@ class HUD(QWidget):
         self.major_chord_icon.setPixmap(self.major_chord_pixmap)
         self.major_chord_layout.addWidget(self.major_chord_icon)
         self.major_chord_layout.addWidget(self.major_chord_text)
+        self.major_chord_layout.addSpacing(100)  # добавляем отступ справа
         
         self.minor_chord_widget = QWidget()
         self.minor_chord_widget.setObjectName("minor_chord_label")
@@ -57,6 +59,12 @@ class HUD(QWidget):
         self.minor_chord_icon.setPixmap(self.minor_chord_pixmap)
         self.minor_chord_layout.addWidget(self.minor_chord_icon)
         self.minor_chord_layout.addWidget(self.minor_chord_text)
+        self.minor_chord_layout.addSpacing(100)  # добавляем отступ справа
+
+        # Увеличиваем размер текста в CountdownCircle для всех аккордов
+        self.power_chord_text.setStyleSheet("font-size: 40px; font-weight: bold; color: white;")
+        self.major_chord_text.setStyleSheet("font-size: 40px; font-weight: bold; color: white;")
+        self.minor_chord_text.setStyleSheet("font-size: 40px; font-weight: bold; color: white;")
         
         weapon_row.addWidget(self.power_chord_widget)
         weapon_row.addWidget(self.major_chord_widget)
@@ -99,12 +107,16 @@ class HUD(QWidget):
         self.shield_widget = create_cooldown_widget(self.shield_pixmap, "RMB")
         self.ult_widget = create_cooldown_widget(self.ult_pixmap, "Q")
         
+        self.dodge_widget.circle.setFixedSize(120, 80)
+        self.shield_widget.circle.setFixedSize(120, 80)
+        self.ult_widget.circle.setFixedSize(120, 80)
+        
         self.heal_widget = QWidget()
         self.heal_widget.setObjectName("skill_widget")
         self.heal_layout = QHBoxLayout(self.heal_widget)
         self.heal_icon = QLabel()
         self.heal_icon.setPixmap(self.heal_pixmap)
-        self.heal_text = QLabel("3")
+        self.heal_text = QLabel("3/3")
         self.heal_layout.addWidget(self.heal_icon)
         self.heal_layout.addWidget(self.heal_text)
         self.heal_text.setAlignment(Qt.AlignRight)
@@ -133,6 +145,9 @@ class HUD(QWidget):
         main_layout.addLayout(hbox)
         main_layout.addLayout(weapon_row)
         main_layout.addLayout(hp_row)
+        
+    def update_heal(self, heal_count, max_heal_count):
+        self.heal_text.setText(f"{heal_count}/{max_heal_count}")
     
     def update_stats(self, hp, max_hp):
         self.hp_bar.setFormat(f"HP: {hp}/{max_hp} ({int(hp * 100 // max_hp)}%)")

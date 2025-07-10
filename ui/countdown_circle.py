@@ -40,7 +40,7 @@ class CountdownCircle(QWidget):
         painter.setRenderHint(QPainter.Antialiasing)
         if self.remaining_time > 0:
             # Радиус и центр
-            radius = min(self.width(), self.height()) // 2 - 7
+            radius = min(self.width(), self.height()) / 2.5
             center = self.rect().center()
 
             # Фон круга (серый)
@@ -63,12 +63,12 @@ class CountdownCircle(QWidget):
 
             # Текст (остаток времени, округлённый)
             painter.setPen(Qt.white)
-            painter.setFont(QFont("Arial", 20, QFont.Bold))
+            painter.setFont(QFont("Arial", 19, QFont.Bold))
             text = f"{self.remaining_time:.1f}"
             painter.drawText(self.rect(), Qt.AlignCenter, text)
         else:
             painter.setPen(Qt.white)
-            painter.setFont(QFont("Arial", 25, QFont.Bold))
+            painter.setFont(QFont("Arial", 30, QFont.Bold))
             text = f"{self.text}"
             painter.drawText(self.rect(), Qt.AlignCenter, text)
             

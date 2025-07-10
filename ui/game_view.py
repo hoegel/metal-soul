@@ -208,6 +208,7 @@ class GameView(QWidget):
             if event.key() == Qt.Key_C:
                 if self.player.heal_fragments.use(self.player):
                     print("🎵 Хилочка использована!")
+                    self.hud.update_heal(self.player.heal_fragments.get_count(), self.player.heal_fragments.get_max_count())
                 else:
                     print("❌ Нет хилок!")
 
@@ -347,6 +348,7 @@ class GameView(QWidget):
         damage, hp, max_hp, speed = self.player.get_stats()
 
         self.hud.update_stats(hp, max_hp)
+        
         self.player.update_invincibility()
 
         for enemy in self.player.enemies:
