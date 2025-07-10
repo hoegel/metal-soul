@@ -1,10 +1,9 @@
-# ui/hud.py
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout, QProgressBar
 from PySide6.QtCore import Qt
 from config import *
 from resources.colors import *
 from utils.styles_loader import update_style_property
-from PySide6.QtGui import QPainter, QPixmap
+from PySide6.QtGui import QPixmap
 from ui.countdown_circle import CountdownCircle
 
 class HUD(QWidget):
@@ -23,11 +22,10 @@ class HUD(QWidget):
         weapon_row = QHBoxLayout()
         hp_row = QHBoxLayout()
         
-        # Скилы        
+        # Weapons        
         self.power_chord_widget = QWidget()
         self.power_chord_widget.setObjectName("power_chord_label")
         self.power_chord_layout = QHBoxLayout(self.power_chord_widget)
-        # self.power_chord_layout.setContentsMargins(0, 0, 0, 0)
         self.power_chord_icon = QLabel()
         self.power_chord_text = CountdownCircle(0.1)
         self.power_chord_icon.setPixmap(self.power_chord_pixmap)
@@ -37,7 +35,6 @@ class HUD(QWidget):
         self.major_chord_widget = QWidget()
         self.major_chord_widget.setObjectName("major_chord_label")
         self.major_chord_layout = QHBoxLayout(self.major_chord_widget)
-        # self.major_chord_layout.setContentsMargins(0, 0, 0, 0)
         self.major_chord_icon = QLabel()
         self.major_chord_text = CountdownCircle(0.1)
         self.major_chord_icon.setPixmap(self.major_chord_pixmap)
@@ -47,7 +44,6 @@ class HUD(QWidget):
         self.minor_chord_widget = QWidget()
         self.minor_chord_widget.setObjectName("minor_chord_label")
         self.minor_chord_layout = QHBoxLayout(self.minor_chord_widget)
-        # self.minor_chord_layout.setContentsMargins(0, 0, 0, 0)
         self.minor_chord_icon = QLabel()
         self.minor_chord_text = CountdownCircle(0.1)
         self.minor_chord_icon.setPixmap(self.minor_chord_pixmap)
@@ -60,7 +56,7 @@ class HUD(QWidget):
 
         self.update_chord(1)
 
-        # Жизнь
+        # Health
         self.hp_bar = QProgressBar()
         self.hp_bar.setMinimum(0)
         self.hp_bar.setMaximum(100)
@@ -70,18 +66,16 @@ class HUD(QWidget):
 
         hp_row.addWidget(self.hp_bar) 
 
-        #Кувырок и т.д.
-        
+        # Skills
         vbox = QVBoxLayout()
         
         def create_cooldown_widget(label_text: str) -> QWidget:
             widget = QWidget()
             widget.setObjectName("skill_widget")
             layout = QHBoxLayout(widget)
-            # layout.setContentsMargins(0, 0, 0, 0)
-
+            
             label = QLabel(label_text)
-            label.setStyleSheet("color: white; font-size: 14px;")
+            label.setObjectName("skill_label")
             widget.circle = CountdownCircle(0.1)
 
             layout.addWidget(label)
@@ -90,10 +84,10 @@ class HUD(QWidget):
 
             return widget
 
-        self.dodge_widget = create_cooldown_widget("Кувырок")
-        self.shield_widget = create_cooldown_widget("Щит")
-        self.ult_widget = create_cooldown_widget("Ульта")
-        # self.potion_widget = create_cooldown_widget("Хилки")
+        self.dodge_widget = create_cooldown_widget("Dash")
+        self.shield_widget = create_cooldown_widget("Shield")
+        self.ult_widget = create_cooldown_widget("Utimate")
+        # self.potion_widget = create_cooldown_widget("Heal")
 
         vbox.addWidget(self.dodge_widget)
         vbox.addWidget(self.shield_widget)
@@ -103,8 +97,8 @@ class HUD(QWidget):
         
         hbox = QHBoxLayout()
         hbox.addStretch()
-        hbox.addLayout(vbox)  # вертикальный layout справа
-        hbox.setContentsMargins(0, 0, 0, 0)  # отступ справа 20 пикселей
+        hbox.addLayout(vbox)
+        hbox.setContentsMargins(0, 0, 0, 0)
 
         self.resize(400, 300)
         

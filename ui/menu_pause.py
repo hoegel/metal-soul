@@ -18,12 +18,12 @@ class PauseMenu(QWidget):
         self.exitButton.clicked.connect(self.exitRequested)
 
     def setup_ui(self):
-        title = QLabel("Пауза", self)
+        title = QLabel("Pause", self)
         title.setObjectName("pause_title")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.resumeButton = QPushButton("Продолжить", self)
-        self.exitButton = QPushButton("Выйти в меню", self)
+        self.resumeButton = QPushButton("Continue", self)
+        self.exitButton = QPushButton("Exit to menu", self)
         self.resumeButton.setObjectName("pause_button")
         self.exitButton.setObjectName("pause_button")
         for btn in (self.resumeButton, self.exitButton):

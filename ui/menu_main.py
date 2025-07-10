@@ -13,9 +13,9 @@ class MainMenu(QWidget):
         title.setObjectName("menu_title")
         layout.addWidget(title)
 
-        self.continue_button = QPushButton("Продолжить")
-        self.new_game_button = QPushButton("Новая игра")
-        self.exit_button = QPushButton("Выйти из игры")
+        self.continue_button = QPushButton("Continue")
+        self.new_game_button = QPushButton("New game")
+        self.exit_button = QPushButton("Exit the game")
         for button in (self.continue_button, self.new_game_button, self.exit_button):  
             self.set_button_style(button)
             layout.addWidget(button)
