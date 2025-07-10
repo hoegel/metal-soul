@@ -204,6 +204,7 @@ class Bomb(Weapon):
         self.damage = 18
         self.radius = 50
         self.tod = 10
+        self.cooldown = 1.5
 
     def attack(self, player_pos, target_pos, enemies):
         if not self.can_attack():

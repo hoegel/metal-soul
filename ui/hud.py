@@ -103,11 +103,11 @@ class HUD(QWidget):
 
             label = QLabel(label_text)
             label.setStyleSheet("color: white; font-size: 14px;")
-            circle = CountdownCircle(0.1)  # здесь можно задать стартовое время
+            widget.circle = CountdownCircle(0.1)  # здесь можно задать стартовое время
 
             layout.addWidget(label)
             layout.addStretch()
-            layout.addWidget(circle)
+            layout.addWidget(widget.circle)
 
             return widget
 

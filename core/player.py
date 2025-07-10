@@ -39,7 +39,7 @@ class Player:
         self.dodge.update()
 
     def start_roll(self, direction):
-        self.dodge.start_roll((self.x, self.y), direction)
+        return self.dodge.start_roll((self.x, self.y), direction)
 
     def is_dodging(self):
         return self.dodge.active

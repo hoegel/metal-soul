@@ -175,7 +175,8 @@ class GameView(QWidget):
                 if dx or dy:
                     length = math.hypot(dx, dy)
                     direction = (dx / length, dy / length)
-                    self.player.start_roll(direction)
+                    if self.player.start_roll(direction):
+                        self.hud.dodge_widget.circle.start_countdown(self.player.dodge.get_cooldown())
 
             if event.key() == Qt.Key_E and self.current_room.artifact:
                 # Подбор артефакта, если рядом
@@ -199,9 +200,7 @@ class GameView(QWidget):
             if event.key() == Qt.Key_Q:
                 if self.player.ultimate.activate():
                     # self.music.play()
-                    print("ULTIMATE ACTIVATED!")
-                else:
-                    print(f"Ульта на перезарядке: {self.player.ultimate.remaining_cooldown()} сек")
+                    self.hud.ult_widget.circle.start_countdown(self.player.ultimate.get_cooldown())
 
             if event.key() == Qt.Key_C:
                 if self.player.heal_fragments.use(self.player):
@@ -242,7 +241,8 @@ class GameView(QWidget):
             if event.button() == Qt.MouseButton.RightButton:
                 if QRect(BORDER_SIZE, BORDER_SIZE, ROOM_SIZE[0] - 2 * BORDER_SIZE, ROOM_SIZE[1] - 2 * BORDER_SIZE).contains(event.pos()):
                     
-                    self.player.shield.activate()
+                    if self.player.shield.activate():
+                        self.hud.shield_widget.circle.start_countdown(self.player.shield.get_cooldown())
                     
     def perform_attack(self, mouse_pos):
         if self.player.weapon.can_attack():
@@ -261,14 +261,21 @@ class GameView(QWidget):
                 atk_type = effect['type']
                 
                 if atk_type == 'melee':
-                    self.hud.power_chord_text.start_countdown(0.3)
+                    self.hud.power_chord_text.start_countdown(self.player.weapon.cooldown)
                 elif atk_type == 'beam':
-                    self.hud.major_chord_text.start_countdown(1)
+                    self.hud.major_chord_text.start_countdown(self.player.weapon.cooldown)
                 elif atk_type == 'bomb':
-                    self.hud.minor_chord_text.start_countdown(1.5)
+                    self.hud.minor_chord_text.start_countdown(self.player.weapon.cooldown)
 
     def update_game(self):
         self.player.update()
+
+        next_cd = self.player.shield.get_next_cooldown()
+        if next_cd > 0:
+            self.hud.shield_widget.circle.set_progress(next_cd, self.player.shield.cooldown)
+        else:
+            self.hud.shield_widget.circle.set_progress(0, self.player.shield.cooldown)
+
         _, hp, max_hp, _ = self.player.get_stats()
         # if not self.player.ultimate.is_active():
         #     self.music.stop()

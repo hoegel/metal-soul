@@ -43,3 +43,6 @@ class DodgeRoll:
         y = min(self.start_pos[1] + dy, ROOM_SIZE[1] - BORDER_SIZE - 20)
         
         return (x, y)
+    
+    def get_cooldown(self):
+        return self.cooldown + self.duration

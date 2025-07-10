@@ -56,5 +56,10 @@ class CountdownCircle(QWidget):
     def start_countdown(self, seconds):
         self.total_time = seconds
         self.remaining_time = seconds
-        self.timer.start(50)
+        self.timer.start(100)
+        self.update()
+
+    def set_progress(self, remaining, total):
+        self.total_time = total
+        self.remaining_time = remaining
         self.update()
