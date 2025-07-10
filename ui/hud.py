@@ -114,12 +114,12 @@ class HUD(QWidget):
         self.dodge_widget = create_cooldown_widget("Кувырок")
         self.shield_widget = create_cooldown_widget("Щит")
         self.ult_widget = create_cooldown_widget("Ульта")
-        self.potion_widget = create_cooldown_widget("Хилки")
+        # self.potion_widget = create_cooldown_widget("Хилки")
 
         vbox.addWidget(self.dodge_widget)
         vbox.addWidget(self.shield_widget)
         vbox.addWidget(self.ult_widget)
-        vbox.addWidget(self.potion_widget)
+        # vbox.addWidget(self.potion_widget)
         vbox.addStretch()
         
         hbox = QHBoxLayout()
