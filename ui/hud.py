@@ -3,6 +3,7 @@ from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout, QProgre
 from PySide6.QtCore import Qt
 from config import *
 from resources.colors import *
+from utils.styles_loader import update_style_property
 from PySide6.QtGui import QPainter, QPixmap
 from ui.countdown_circle import CountdownCircle
 
@@ -11,7 +12,6 @@ class HUD(QWidget):
         super().__init__(parent)
         self.setFixedHeight(WINDOW_HEIGHT // 1.3)
         self.setFixedWidth(WINDOW_WIDTH)
-        self.setStyleSheet("background-color: rgba(0, 0, 0, 180);")
         
         self.power_chord_pixmap = QPixmap("resources/images/icons/axe_guitar.png")
         self.major_chord_pixmap = QPixmap("resources/images/icons/blaster_guitar.png")
@@ -25,38 +25,40 @@ class HUD(QWidget):
         
         # Скилы        
         self.power_chord_widget = QWidget()
+        self.power_chord_widget.setObjectName("power_chord_label")
         self.power_chord_layout = QHBoxLayout(self.power_chord_widget)
-        self.power_chord_layout.setContentsMargins(0, 0, 0, 0)
+        # self.power_chord_layout.setContentsMargins(0, 0, 0, 0)
         self.power_chord_icon = QLabel()
         self.power_chord_text = CountdownCircle(0.1)
         self.power_chord_icon.setPixmap(self.power_chord_pixmap)
         self.power_chord_layout.addWidget(self.power_chord_icon)
         self.power_chord_layout.addWidget(self.power_chord_text)
-        self.set_chosen_skill_style(self.power_chord_widget)
-        
+
         self.major_chord_widget = QWidget()
+        self.major_chord_widget.setObjectName("major_chord_label")
         self.major_chord_layout = QHBoxLayout(self.major_chord_widget)
-        self.major_chord_layout.setContentsMargins(0, 0, 0, 0)
+        # self.major_chord_layout.setContentsMargins(0, 0, 0, 0)
         self.major_chord_icon = QLabel()
         self.major_chord_text = CountdownCircle(0.1)
         self.major_chord_icon.setPixmap(self.major_chord_pixmap)
         self.major_chord_layout.addWidget(self.major_chord_icon)
         self.major_chord_layout.addWidget(self.major_chord_text)
-        self.set_not_chosen_skill_style(self.major_chord_widget)
         
         self.minor_chord_widget = QWidget()
+        self.minor_chord_widget.setObjectName("minor_chord_label")
         self.minor_chord_layout = QHBoxLayout(self.minor_chord_widget)
-        self.minor_chord_layout.setContentsMargins(0, 0, 0, 0)
+        # self.minor_chord_layout.setContentsMargins(0, 0, 0, 0)
         self.minor_chord_icon = QLabel()
         self.minor_chord_text = CountdownCircle(0.1)
         self.minor_chord_icon.setPixmap(self.minor_chord_pixmap)
         self.minor_chord_layout.addWidget(self.minor_chord_icon)
         self.minor_chord_layout.addWidget(self.minor_chord_text)
-        self.set_not_chosen_skill_style(self.minor_chord_widget)
         
         weapon_row.addWidget(self.power_chord_widget)
         weapon_row.addWidget(self.major_chord_widget)
         weapon_row.addWidget(self.minor_chord_widget)
+
+        self.update_chord(1)
 
         # Жизнь
         self.hp_bar = QProgressBar()
@@ -65,21 +67,6 @@ class HUD(QWidget):
         self.hp_bar.setValue(100)
         self.hp_bar.setTextVisible(True)
         self.hp_bar.setAlignment(Qt.AlignCenter)
-        self.hp_bar.setStyleSheet("""
-            QProgressBar {
-                border: 1px solid #000;
-                background-color: #444;
-                height: 40px;
-                text-align: center;
-                color: white;
-                font-size: 15px;
-                font-family: monospace;
-                font-weight: bold;
-            }
-            QProgressBar::chunk {
-                background-color: red;
-            }
-        """)
 
         hp_row.addWidget(self.hp_bar) 
 
@@ -89,21 +76,13 @@ class HUD(QWidget):
         
         def create_cooldown_widget(label_text: str) -> QWidget:
             widget = QWidget()
-            widget.setFixedSize(200, 100)
-            widget.setStyleSheet(f"""
-                QWidget {{
-                    background-color: {NOT_CHOSEN_WEAPON_COLOR};
-                    border: none;
-                    border-radius: 8px;
-                    padding: 8px 15px;
-                }}
-            """)
+            widget.setObjectName("skill_widget")
             layout = QHBoxLayout(widget)
-            layout.setContentsMargins(0, 0, 0, 0)
+            # layout.setContentsMargins(0, 0, 0, 0)
 
             label = QLabel(label_text)
             label.setStyleSheet("color: white; font-size: 14px;")
-            widget.circle = CountdownCircle(0.1)  # здесь можно задать стартовое время
+            widget.circle = CountdownCircle(0.1)
 
             layout.addWidget(label)
             layout.addStretch()
@@ -125,7 +104,7 @@ class HUD(QWidget):
         hbox = QHBoxLayout()
         hbox.addStretch()
         hbox.addLayout(vbox)  # вертикальный layout справа
-        hbox.setContentsMargins(0, 0, 20, 20)  # отступ справа 20 пикселей
+        hbox.setContentsMargins(0, 0, 0, 0)  # отступ справа 20 пикселей
 
         self.resize(400, 300)
         
@@ -148,64 +127,19 @@ class HUD(QWidget):
             color = LOW_HP_BAR
 
         self.hp_bar.setStyleSheet(f"""
-            QProgressBar {{
-                border: 1px solid #000;
-                background-color: #444;
-                height: 40px;
-                text-align: center;
-                color: white;
-                font-size: 15px;
-                font-family: monospace;
-                font-weight: bold;
-            }}
             QProgressBar::chunk {{
                 background-color: {color};
             }}
         """)
     
     def update_chord(self, number):
-        if(number == 1):
-            self.set_chosen_skill_style(self.power_chord_widget)
-            self.set_not_chosen_skill_style(self.major_chord_widget)
-            self.set_not_chosen_skill_style(self.minor_chord_widget)
-        elif(number == 2):
-            self.set_not_chosen_skill_style(self.power_chord_widget)
-            self.set_chosen_skill_style(self.major_chord_widget)
-            self.set_not_chosen_skill_style(self.minor_chord_widget)
-        elif(number == 3):
-            self.set_not_chosen_skill_style(self.power_chord_widget)
-            self.set_not_chosen_skill_style(self.major_chord_widget)
-            self.set_chosen_skill_style(self.minor_chord_widget)
-            
-    def set_chosen_skill_style(self, widget):
-        widget.setFixedSize(260, 130)
-        widget.setStyleSheet(f"""
-            QWidget {{
-                background-color: {CHOSEN_WEAPON_COLOR};
-                border: none;
-                border-radius: 8px;
-                padding: 8px 15px;
-            }}
-            QLabel {{
-                color: white;
-                font-size: 48px;
-                font-weight: bold;
-            }}
-        """)
-        
-    def set_not_chosen_skill_style(self, widget):
-        widget.setFixedSize(245, 120)
-        widget.setStyleSheet(f"""
-            QWidget {{
-                background-color: {NOT_CHOSEN_WEAPON_COLOR};
-                border: none;
-                border-radius: 8px;
-                padding: 8px 15px;
-            }}
-            QLabel {{
-                color: white;
-                font-size: 48px;
-                font-weight: bold;
-            }}
-        """)
-
+        update_style_property(self.power_chord_widget, "background-color", str(NOT_CHOSEN_WEAPON_COLOR))
+        update_style_property(self.major_chord_widget, "background-color", str(NOT_CHOSEN_WEAPON_COLOR))
+        update_style_property(self.minor_chord_widget, "background-color", str(NOT_CHOSEN_WEAPON_COLOR))
+        match number:
+            case 1:
+                update_style_property(self.power_chord_widget, "background-color", str(CHOSEN_WEAPON_COLOR))
+            case 2:
+                update_style_property(self.major_chord_widget, "background-color", str(CHOSEN_WEAPON_COLOR))
+            case 3:
+                update_style_property(self.minor_chord_widget, "background-color", str(CHOSEN_WEAPON_COLOR))

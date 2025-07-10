@@ -1,0 +1,28 @@
+QLabel#pause_title {{
+    color: #ffd4d4d4;
+    font-family: monospace;
+    font-size: 48px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}}
+
+QPushButton#pause_button {{
+    background-color: #7289da;
+    border: none;
+    border-radius: 8px;
+    height: 50px;
+    color: #dcd7d7;
+    font-family: monospace;
+    font-size: 24px;
+    font-weight: bold;
+    padding: 10px 20px;
+    min-width: 200px;
+}}
+
+QPushButton#pause_button:hover {{
+    background-color: #5b6eae;
+}}
+
+QPushButton#pause_button:pressed {{
+    background-color: #4a5a8e;
+}}
