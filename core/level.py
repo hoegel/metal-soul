@@ -2,7 +2,8 @@ import random
 from core.room import Room
 
 class Level:
-    def __init__(self, width=5, height=5):
+    def __init__(self, room_count=11, width=5, height=5):
+        self.room_count = room_count
         self.width = width
         self.height = height
         self.rooms = {}
@@ -17,7 +18,7 @@ class Level:
         queue = [(cx, cy)]
 
         # 1. Создаём основной остов комнат
-        while len(self.rooms) < 12:
+        while len(self.rooms) < self.room_count:
             x, y = random.choice(queue)
             dx, dy = random.choice(directions)
             nx, ny = x + dx, y + dy
