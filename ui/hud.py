@@ -143,3 +143,19 @@ class HUD(QWidget):
                 update_style_property(self.major_chord_widget, "background-color", str(CHOSEN_WEAPON_COLOR))
             case 3:
                 update_style_property(self.minor_chord_widget, "background-color", str(CHOSEN_WEAPON_COLOR))
+    
+    def pause(self):
+        self.dodge_widget.circle.pause()
+        self.shield_widget.circle.pause()
+        self.ult_widget.circle.pause()
+        self.power_chord_text.pause()
+        self.major_chord_text.pause()
+        self.minor_chord_text.pause()
+
+    def resume(self):
+        self.dodge_widget.circle.resume()
+        self.shield_widget.circle.resume()
+        self.ult_widget.circle.resume()
+        self.power_chord_text.resume()
+        self.major_chord_text.resume()
+        self.minor_chord_text.resume()

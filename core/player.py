@@ -38,8 +38,8 @@ class Player:
         self.shield.update()
         self.dodge.update()
 
-    def start_roll(self, direction):
-        return self.dodge.start_roll((self.x, self.y), direction)
+    def start_roll(self, direction, current_time):
+        return self.dodge.start_roll((self.x, self.y), direction, current_time)
 
     def is_dodging(self):
         return self.dodge.active

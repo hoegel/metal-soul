@@ -14,11 +14,11 @@ class DodgeRoll:
         self.direction = (0, 0)
         self.start_pos = (0, 0)
 
-    def can_roll(self):
-        return not self.active and (time.time() - self.last_end_time) >= self.cooldown
+    def can_roll(self, current_time):
+        return not self.active and (current_time - self.last_end_time) >= self.cooldown
 
-    def start_roll(self, current_pos, direction):
-        if not self.can_roll():
+    def start_roll(self, current_pos, direction, current_time):
+        if not self.can_roll(current_time):
             return False
         self.start_time = time.time()
         self.start_pos = current_pos

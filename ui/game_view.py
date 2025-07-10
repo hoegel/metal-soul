@@ -104,12 +104,14 @@ class GameView(QWidget):
         
     def pause_game(self):
         self.isPaused = True
+        self.hud.pause()
         self.pauseMenu.show()
         self.pauseMenu.move(270, 200)
         self.timer.stop()
         
     def resume_game(self):
         self.isPaused = False
+        self.hud.resume()
         self.pauseMenu.hide()
         self.timer.start()
 
@@ -175,7 +177,7 @@ class GameView(QWidget):
                 if dx or dy:
                     length = math.hypot(dx, dy)
                     direction = (dx / length, dy / length)
-                    if self.player.start_roll(direction):
+                    if self.player.start_roll(direction, time.time()):
                         self.hud.dodge_widget.circle.start_countdown(self.player.dodge.get_cooldown())
 
             if event.key() == Qt.Key_E and self.current_room.artifact:

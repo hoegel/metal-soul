@@ -7,8 +7,10 @@ class CountdownCircle(QWidget):
     def __init__(self, total_time=5, text = "", parent=None):
         super().__init__(parent)
         self.hide()
+        self.is_paused = False  # флаг для паузы
         QTimer.singleShot(100, self.show)  # показать виджет через 100 мс
         self.text = text  # текст, отображаемый при окончании таймера
+        
         self.total_time = total_time  # общее время в секундах
         self.remaining_time = total_time
         self.setFixedSize(80, 80)
@@ -17,7 +19,16 @@ class CountdownCircle(QWidget):
         self.timer.timeout.connect(self.update_timer)
         self.timer.start(100)  # обновлять каждые 100 мс
 
+    def pause(self):
+        self.is_paused = True
+
+    def resume(self):
+        self.is_paused = False
+
     def update_timer(self):
+        if self.is_paused:
+            return
+        
         self.remaining_time -= 0.1
         if self.remaining_time <= 0:
             self.remaining_time = 0
