@@ -1,11 +1,12 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QMessageBox
 from PySide6.QtGui import QPainter, QColor, QMouseEvent, QKeyEvent, QPen, QLinearGradient, QPixmap
 from PySide6.QtGui import QPainter, QColor, QMouseEvent, QKeyEvent, QPen, QLinearGradient
-from PySide6.QtCore import QTimer, Qt, QPoint, QRect, QRectF, Signal
+from PySide6.QtCore import QTimer, Qt, QPoint, QRect, QRectF, Signal, qDebug
 import math, os, random
 from config import *
 from ui.hud import HUD
 from ui.menu_pause import PauseMenu
+from ui.menu_death import DeathMenu
 from core.player import Player
 from core.enemy import load_enemies_from_json, Enemy, ShooterEnemy, CrossShooterEnemy
 from core.weapon import *
@@ -86,15 +87,10 @@ class GameView(QWidget):
         self.current_room.artifact = None
         self.artifact_pos = QPoint(ROOM_SIZE[0]//2 - 10, ROOM_SIZE[1]//2 - 10)
         create_artifact_pool()
-
-        self.effect_choices = []
-        if self.room_coords == self.level.start_pos:
-            unlocked = load_unlocked_effects()
-            if unlocked:
-                self.effect_choices = random.sample(unlocked, min(3, len(unlocked)))
-            else:
-                self.effect_choices = []
         
+        self.effect_choices = []
+        self.load_unlocked_effects()
+
         #pause_menu
         self.isPaused = False
 
@@ -104,10 +100,28 @@ class GameView(QWidget):
         self.pauseMenu.resumeRequested.connect(self.resume_game)
         self.pauseMenu.exitRequested.connect(self.main_window.go_to_main_menu)
 
+        #death_menu
+        self.isDead = False
+        self.deathMenu = DeathMenu(self)
+        self.deathMenu.setGeometry(100, 100, 200, 100)
+        self.deathMenu.hide()
+  
+        self.deathMenu.reviveRequested.connect(self.revive_player)
+        self.deathMenu.exitRequested.connect(self.main_window.go_to_main_menu)
+
     def set_difficulty(self, difficulty_name):
         self.difficulty_name = difficulty_name
         self.difficulty_config = DIFFICULTY_SETTINGS[difficulty_name]
-        
+      
+    def load_unlocked_effects(self):
+        self.effect_choices = []
+        if self.room_coords == self.level.start_pos:
+            unlocked = load_unlocked_effects()
+            if unlocked:
+                self.effect_choices = random.sample(unlocked, min(3, len(unlocked)))
+            else:
+                self.effect_choices = []
+
     def pause_game(self):
         self.isPaused = True
         self.pauseMenu.show()
@@ -123,6 +137,42 @@ class GameView(QWidget):
         self.pauseMenu.hide()
         self.isPaused = False
         self.timer.start(16)
+
+    def check_player_death(self):
+        if self.player.hp <= 0:
+            self.player_death()
+        else:
+            self.isDead = False
+
+    def player_death(self):
+        self.isDead = True
+        self.isPaused = True
+        self.timer.stop()
+        self.deathMenu.show()
+        self.deathMenu.move(270, 200)
+
+    def revive_player(self):
+        self.player.hp = self.player.max_hp
+        self.isDead = False
+        self.isPaused = False
+        self.floor = 0
+        self.level = Level()
+        self.current_room = self.level.get_room(*self.level.start_pos)
+        self.current_room.visited = True
+        self.room_coords = self.level.start_pos
+        self.load_unlocked_effects()
+        self.player = Player()
+        for weapon in self.player.weapons.values():
+            weapon.subscribe(self.on_enemies_hit)
+        create_artifact_pool()
+        self.deathMenu.hide()
+        self.timer.start(16)
+        
+        self.room_coords = self.level.start_pos
+        self.current_room = self.level.get_room(*self.room_coords)
+        self.player.x = ROOM_SIZE[0] // 2 - self.player.size // 2
+        self.player.y = ROOM_SIZE[1] // 2 - self.player.size // 2
+        self.load_room()
 
     def load_room(self):
         self.player.enemies.clear()
@@ -272,6 +322,11 @@ class GameView(QWidget):
                     self.hud.minor_chord_text.start_countdown(self.player.weapon.cooldown)
 
     def update_game(self):
+        self.check_player_death()
+        if self.isDead:
+            _, hp, max_hp, _ = self.player.get_stats()
+            self.hud.update_stats(hp, max_hp)
+            return
         self.player.update()
 
         next_cd = self.player.shield.get_next_cooldown()
