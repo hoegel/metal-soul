@@ -1,5 +1,6 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel, QComboBox
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel, QComboBox, QSlider
 from PySide6.QtCore import Qt
+from utils.music import music
 
 class MainMenu(QWidget):
     def __init__(self, main_window):
@@ -30,6 +31,24 @@ class MainMenu(QWidget):
         self.difficulty_selector.setObjectName("difficulty_selector")
         layout.addWidget(self.difficulty_label)
         layout.addWidget(self.difficulty_selector)
+
+        self.music_slider = QSlider(Qt.Horizontal)
+        self.music_slider.setRange(0, 100)
+        self.music_slider.setValue(int(music.music_volume * 100))
+        self.music_slider.valueChanged.connect(lambda v: music.set_volume(music_volume=v / 100))
+
+        self.sfx_slider = QSlider(Qt.Horizontal)
+        self.sfx_slider.setRange(0, 100)
+        self.sfx_slider.setValue(int(music.sfx_volume * 100))
+        self.sfx_slider.valueChanged.connect(lambda v: music.set_volume(sfx_volume=v / 100))
+
+        music_label = QLabel("Music Volume")
+        sfx_label = QLabel("SFX Volume")
+
+        layout.addWidget(music_label)
+        layout.addWidget(self.music_slider)
+        layout.addWidget(sfx_label)
+        layout.addWidget(self.sfx_slider)
 
         self.continue_button.setEnabled(False)
         self.set_button_style(self.continue_button)
