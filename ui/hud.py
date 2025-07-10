@@ -9,7 +9,7 @@ from ui.countdown_circle import CountdownCircle
 class HUD(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setFixedHeight(WINDOW_HEIGHT - ROOM_SIZE[0])
+        self.setFixedHeight(WINDOW_HEIGHT // 1.3)
         self.setFixedWidth(WINDOW_WIDTH)
         self.setStyleSheet("background-color: rgba(0, 0, 0, 180);")
         
@@ -83,6 +83,53 @@ class HUD(QWidget):
 
         hp_row.addWidget(self.hp_bar) 
 
+        #Кувырок и т.д.
+        
+        vbox = QVBoxLayout()
+        
+        def create_cooldown_widget(label_text: str) -> QWidget:
+            widget = QWidget()
+            widget.setFixedSize(200, 100)
+            widget.setStyleSheet(f"""
+                QWidget {{
+                    background-color: {NOT_CHOSEN_WEAPON_COLOR};
+                    border: none;
+                    border-radius: 8px;
+                    padding: 8px 15px;
+                }}
+            """)
+            layout = QHBoxLayout(widget)
+            layout.setContentsMargins(0, 0, 0, 0)
+
+            label = QLabel(label_text)
+            label.setStyleSheet("color: white; font-size: 14px;")
+            circle = CountdownCircle(0.1)  # здесь можно задать стартовое время
+
+            layout.addWidget(label)
+            layout.addStretch()
+            layout.addWidget(circle)
+
+            return widget
+
+        self.dodge_widget = create_cooldown_widget("Кувырок")
+        self.shield_widget = create_cooldown_widget("Щит")
+        self.ult_widget = create_cooldown_widget("Ульта")
+        self.potion_widget = create_cooldown_widget("Хилки")
+
+        vbox.addWidget(self.dodge_widget)
+        vbox.addWidget(self.shield_widget)
+        vbox.addWidget(self.ult_widget)
+        vbox.addWidget(self.potion_widget)
+        vbox.addStretch()
+        
+        hbox = QHBoxLayout()
+        hbox.addStretch()
+        hbox.addLayout(vbox)  # вертикальный layout справа
+        hbox.setContentsMargins(0, 0, 20, 20)  # отступ справа 20 пикселей
+
+        self.resize(400, 300)
+        
+        main_layout.addLayout(hbox)
         main_layout.addLayout(weapon_row)
         main_layout.addLayout(hp_row)
     
@@ -131,7 +178,7 @@ class HUD(QWidget):
             self.set_chosen_skill_style(self.minor_chord_widget)
             
     def set_chosen_skill_style(self, widget):
-        widget.setFixedSize(240, 130)
+        widget.setFixedSize(260, 130)
         widget.setStyleSheet(f"""
             QWidget {{
                 background-color: {CHOSEN_WEAPON_COLOR};
@@ -147,7 +194,7 @@ class HUD(QWidget):
         """)
         
     def set_not_chosen_skill_style(self, widget):
-        widget.setFixedSize(230, 120)
+        widget.setFixedSize(245, 120)
         widget.setStyleSheet(f"""
             QWidget {{
                 background-color: {NOT_CHOSEN_WEAPON_COLOR};
@@ -161,3 +208,4 @@ class HUD(QWidget):
                 font-weight: bold;
             }}
         """)
+

@@ -628,8 +628,8 @@ class GameView(QWidget):
 
         # Рисуем миникарту
         minimap_scale = 8
-        minimap_offset_x = WINDOW_WIDTH - 100
-        minimap_offset_y = 100
+        minimap_offset_x = WINDOW_WIDTH - 125
+        minimap_offset_y = 85
         room_size = 16
 
         for (rx, ry), room in self.level.rooms.items():
