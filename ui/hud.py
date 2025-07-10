@@ -29,7 +29,7 @@ class HUD(QWidget):
         self.power_chord_layout = QHBoxLayout(self.power_chord_widget)
         # self.power_chord_layout.setContentsMargins(0, 0, 0, 0)
         self.power_chord_icon = QLabel()
-        self.power_chord_text = CountdownCircle(0.1)
+        self.power_chord_text = CountdownCircle(0.1, "1")
         self.power_chord_icon.setPixmap(self.power_chord_pixmap)
         self.power_chord_layout.addWidget(self.power_chord_icon)
         self.power_chord_layout.addWidget(self.power_chord_text)
@@ -39,7 +39,7 @@ class HUD(QWidget):
         self.major_chord_layout = QHBoxLayout(self.major_chord_widget)
         # self.major_chord_layout.setContentsMargins(0, 0, 0, 0)
         self.major_chord_icon = QLabel()
-        self.major_chord_text = CountdownCircle(0.1)
+        self.major_chord_text = CountdownCircle(0.1, "2")
         self.major_chord_icon.setPixmap(self.major_chord_pixmap)
         self.major_chord_layout.addWidget(self.major_chord_icon)
         self.major_chord_layout.addWidget(self.major_chord_text)
@@ -49,7 +49,7 @@ class HUD(QWidget):
         self.minor_chord_layout = QHBoxLayout(self.minor_chord_widget)
         # self.minor_chord_layout.setContentsMargins(0, 0, 0, 0)
         self.minor_chord_icon = QLabel()
-        self.minor_chord_text = CountdownCircle(0.1)
+        self.minor_chord_text = CountdownCircle(0.1, "3")
         self.minor_chord_icon.setPixmap(self.minor_chord_pixmap)
         self.minor_chord_layout.addWidget(self.minor_chord_icon)
         self.minor_chord_layout.addWidget(self.minor_chord_text)
@@ -74,15 +74,15 @@ class HUD(QWidget):
         
         vbox = QVBoxLayout()
         
-        def create_cooldown_widget(label_text: str) -> QWidget:
+        def create_cooldown_widget(label_text: str, key_text: str) -> QWidget:
             widget = QWidget()
             widget.setObjectName("skill_widget")
             layout = QHBoxLayout(widget)
             # layout.setContentsMargins(0, 0, 0, 0)
 
             label = QLabel(label_text)
-            label.setStyleSheet("color: white; font-size: 14px;")
-            widget.circle = CountdownCircle(0.1)
+            label.setStyleSheet("color: white; font-size: 20px;")
+            widget.circle = CountdownCircle(0.1, key_text)
 
             layout.addWidget(label)
             layout.addStretch()
@@ -90,9 +90,9 @@ class HUD(QWidget):
 
             return widget
 
-        self.dodge_widget = create_cooldown_widget("Кувырок")
-        self.shield_widget = create_cooldown_widget("Щит")
-        self.ult_widget = create_cooldown_widget("Ульта")
+        self.dodge_widget = create_cooldown_widget("Кувырок", "Space")
+        self.shield_widget = create_cooldown_widget("Щит", "RMB")
+        self.ult_widget = create_cooldown_widget("Ульта", "Q")
         # self.potion_widget = create_cooldown_widget("Хилки")
 
         vbox.addWidget(self.dodge_widget)
