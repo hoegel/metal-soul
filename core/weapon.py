@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from config import ROOM_SIZE
+from config import ROOM_SIZE, BORDER_SIZE
 import math
 import time
 
@@ -124,7 +124,6 @@ class Beam(Weapon):
         px, py = player_pos
         tx, ty = target_pos
 
-        # Вычисление конечной точки на границе комнаты
         beam_end = self._compute_wall_intersection(px, py, tx, ty)
         if not beam_end:
             return
@@ -132,7 +131,6 @@ class Beam(Weapon):
         bx, by = beam_end
         hit = []
 
-        # Вектор луча
         dx = bx - px
         dy = by - py
         len_sq = dx ** 2 + dy ** 2 if dx or dy else 1
@@ -142,7 +140,6 @@ class Beam(Weapon):
             ex += esize / 2
             ey += esize / 2
 
-            # проекция точки врага на луч
             t = max(0, min(1, ((ex - px) * dx + (ey - py) * dy) / len_sq))
             closest_x = px + t * dx
             closest_y = py + t * dy
@@ -162,7 +159,7 @@ class Beam(Weapon):
 
     def _compute_wall_intersection(self, px, py, tx, ty):
         from PySide6.QtCore import QRectF
-        rect = QRectF(0, 0, *ROOM_SIZE)
+        rect = QRectF(0, 0, ROOM_SIZE[0] - BORDER_SIZE // 2, ROOM_SIZE[1] - BORDER_SIZE // 2)
 
         dx = tx - px
         dy = ty - py
@@ -172,7 +169,6 @@ class Beam(Weapon):
 
         t_values = []
 
-        # левая и правая границы (x = const)
         if dx != 0:
             for x_edge in (rect.left(), rect.right()):
                 t = (x_edge - px) / dx
@@ -181,7 +177,6 @@ class Beam(Weapon):
                     if rect.top() <= y <= rect.bottom():
                         t_values.append((t, x_edge, y))
 
-        # верхняя и нижняя границы (y = const)
         if dy != 0:
             for y_edge in (rect.top(), rect.bottom()):
                 t = (y_edge - py) / dy
@@ -193,7 +188,6 @@ class Beam(Weapon):
         if not t_values:
             return None
 
-        # вернуть ближайшую точку пересечения
         t_values.sort(key=lambda v: v[0])
         _, bx, by = t_values[0]
         return bx, by

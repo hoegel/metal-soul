@@ -34,6 +34,12 @@ QWidget#skill_widget{{
     background-color: {NOT_CHOSEN_WEAPON_COLOR};
 }}
 
+QLabel#skill_label{{
+    font-size: 24px;
+    color: white;
+    font-weight: bold;
+}}
+
 QProgressBar {{
     border: 1px solid #000;
     background-color: #444;
