@@ -1,5 +1,6 @@
 import math
 from PySide6.QtGui import QColor
+from config import *
 
 class Projectile:
     def __init__(self, source, target_type, x, y, tx, ty, damage=10, speed=5, range_=500, color=QColor(255, 255, 255), radius=5):
@@ -36,6 +37,11 @@ class Projectile:
         # Проверка на дальность
         traveled = math.hypot(self.x - self.start_x, self.y - self.start_y)
         if traveled >= self.range:
+            self.alive = False
+
+        if self.x < BORDER_SIZE // 2 or self.x > ROOM_SIZE[0] - BORDER_SIZE:
+            self.alive = False
+        if self.y < BORDER_SIZE // 2 or self.y > ROOM_SIZE[1] - BORDER_SIZE:
             self.alive = False
 
     def check_collision(self, targets):
