@@ -20,11 +20,11 @@ class MainWindow(QMainWindow):
         
         self.isStarted = False
 
-    def new_game(self):
+    def new_game(self, difficulty="Normal"):
         self.isStarted = True
         self.main_menu.continue_button.setEnabled(True)
         self.main_menu.set_button_style(self.main_menu.continue_button)
-        self.game = GameView(self)
+        self.game = GameView(self, difficulty)
         self.stack.addWidget(self.game)
         self.stack.setCurrentWidget(self.game)
         self.game.game_starts()

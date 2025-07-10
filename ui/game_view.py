@@ -19,7 +19,7 @@ from core.boss import *
 from ui.countdown_circle import CountdownCircle
 
 class GameView(QWidget):
-    def __init__(self, main_window):
+    def __init__(self, main_window, difficulty_name):
         super().__init__()
         self.main_window = main_window
         
@@ -40,6 +40,8 @@ class GameView(QWidget):
         self.doors_down_boss = QPixmap("resources/images/backgrounds/doors_down_boss.png")
         self.doors_right_boss = QPixmap("resources/images/backgrounds/doors_right_boss.png")
         self.doors_left_boss = QPixmap("resources/images/backgrounds/doors_left_boss.png")
+
+        self.set_difficulty(difficulty_name)
 
         self.player = Player()
 
@@ -72,7 +74,7 @@ class GameView(QWidget):
         self.player.enemies = []
 
         self.floor = 0
-        self.level = Level()
+        self.level = Level(self.difficulty_config["room_count"])
         self.current_room = self.level.get_room(*self.level.start_pos)
         self.current_room.visited = True
         self.room_coords = self.level.start_pos
@@ -103,10 +105,14 @@ class GameView(QWidget):
         self.deathMenu = DeathMenu(self)
         self.deathMenu.setGeometry(100, 100, 200, 100)
         self.deathMenu.hide()
-        
+  
         self.deathMenu.reviveRequested.connect(self.revive_player)
         self.deathMenu.exitRequested.connect(self.main_window.go_to_main_menu)
 
+    def set_difficulty(self, difficulty_name):
+        self.difficulty_name = difficulty_name
+        self.difficulty_config = DIFFICULTY_SETTINGS[difficulty_name]
+      
     def load_unlocked_effects(self):
         self.effect_choices = []
         if self.room_coords == self.level.start_pos:
@@ -179,20 +185,20 @@ class GameView(QWidget):
             room_id = f"floor{self.floor}_{(self.room_coords[0] + self.room_coords[1]) % 4}"
             path = f"resources/data/enemies/{room_id}.json"
             if os.path.exists(path):
-                self.player.enemies.extend(load_enemies_from_json(path))
+                self.player.enemies.extend(load_enemies_from_json(path, self.difficulty_config["hp_multiplier"]))
             else:
                 print(path)
-                self.player.enemies.extend(load_enemies_from_json("resources/data/enemies.json"))
+                self.player.enemies.extend(load_enemies_from_json("resources/data/enemies.json", self.difficulty_config["hp_multiplier"]))
             room.enemies = self.player.enemies
         elif room.room_type == "boss" and not room.cleared:
             self.current_room.artifact = None
             match self.floor:
                 case 0:
-                    self.player.enemies.append(BossCharger(ROOM_SIZE[0] // 2 - 40, ROOM_SIZE[1] // 2 - 40))
+                    self.player.enemies.append(BossCharger(ROOM_SIZE[0] // 2 - 40, ROOM_SIZE[1] // 2 - 40, self.difficulty_config["hp_multiplier"]))
                 case 1:
-                    self.player.enemies.append(BossShooter(ROOM_SIZE[0] // 2 - 40, ROOM_SIZE[1] // 2 - 40))
+                    self.player.enemies.append(BossShooter(ROOM_SIZE[0] // 2 - 40, ROOM_SIZE[1] // 2 - 40, self.difficulty_config["hp_multiplier"]))
                 case _:
-                    self.player.enemies.append(BossSpawner(ROOM_SIZE[0] // 2 - 40, ROOM_SIZE[1] // 2 - 40))
+                    self.player.enemies.append(BossSpawner(ROOM_SIZE[0] // 2 - 40, ROOM_SIZE[1] // 2 - 40, self.difficulty_config["hp_multiplier"]))
         elif room.room_type == "treasure" and not room.cleared and self.current_room.artifact == None:
             self.current_room.artifact = get_random_artifact()
 
@@ -415,11 +421,11 @@ class GameView(QWidget):
         if not self.player.enemies:
             if not self.current_room.cleared:
                 if self.current_room.room_type == "fight":
-                    if random.random() < 0.15:  # 15%
+                    if random.random() < self.difficulty_config["heart_drop_chance"]:
                         if self.player.heal_fragments.add():
                             ...
                 elif self.current_room.room_type == "boss":
-                    if random.random() < 0.5:  # 50%
+                    if random.random() < self.difficulty_config["heart_drop_chance_boss"]:
                         if self.player.heal_fragments.add():
                             ...
                 self.current_room.cleared = True
