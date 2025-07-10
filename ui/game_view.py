@@ -15,6 +15,7 @@ from core.projectile import Projectile
 from core.artifact_pool import get_random_artifact, create_artifact_pool
 from core.effect_registry import load_unlocked_effects, unlock_effect
 from core.boss import *
+from ui.countdown_circle import CountdownCircle
 
 class GameView(QWidget):
     def __init__(self, main_window):
@@ -220,7 +221,7 @@ class GameView(QWidget):
             if event.button() == Qt.MouseButton.LeftButton:
                 if QRect(BORDER_SIZE, BORDER_SIZE, ROOM_SIZE[0] - 2 * BORDER_SIZE, ROOM_SIZE[1] - 2 * BORDER_SIZE).contains(event.pos()):
                     self.perform_attack(event.pos()) #XXX
-
+                    
                     if self.room_coords == self.level.start_pos and self.effect_choices:
                         for i, eff_class in enumerate(self.effect_choices):
                             rect = QRect(100 + i*140, 100, 120, 40)
@@ -242,8 +243,7 @@ class GameView(QWidget):
                 if QRect(BORDER_SIZE, BORDER_SIZE, ROOM_SIZE[0] - 2 * BORDER_SIZE, ROOM_SIZE[1] - 2 * BORDER_SIZE).contains(event.pos()):
                     
                     self.player.shield.activate()
-
-
+                    
     def perform_attack(self, mouse_pos):
         if self.player.weapon.can_attack():
             player_pos = (self.player.x, self.player.y) #XXX
@@ -256,6 +256,16 @@ class GameView(QWidget):
                 'time': 10
             })
             self.player.attack(player_pos, target_pos, self.player.enemies)
+            
+            for effect in self.attack_effects:
+                atk_type = effect['type']
+                
+                if atk_type == 'melee':
+                    self.hud.power_chord_text.start_countdown(0.3)
+                elif atk_type == 'beam':
+                    self.hud.major_chord_text.start_countdown(1)
+                elif atk_type == 'bomb':
+                    self.hud.minor_chord_text.start_countdown(1.5)
 
     def update_game(self):
         self.player.update()
@@ -556,7 +566,7 @@ class GameView(QWidget):
                 painter.setBrush(gradient)
                 painter.setPen(Qt.NoPen)
                 painter.drawPie(QRectF(x - self.player.weapon.radius + 10, y - self.player.weapon.radius + 10, self.player.weapon.radius * 2, self.player.weapon.radius * 2), start_angle, span_angle)
-
+                
 
             elif atk_type == 'beam':
                 # Вычисляем конец луча до столкновения со стеной

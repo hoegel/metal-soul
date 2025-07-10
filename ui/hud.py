@@ -4,6 +4,7 @@ from PySide6.QtCore import Qt
 from config import *
 from resources.colors import *
 from PySide6.QtGui import QPainter, QPixmap
+from ui.countdown_circle import CountdownCircle
 
 class HUD(QWidget):
     def __init__(self, parent=None):
@@ -26,10 +27,9 @@ class HUD(QWidget):
         self.power_chord_widget = QWidget()
         self.power_chord_layout = QHBoxLayout(self.power_chord_widget)
         self.power_chord_layout.setContentsMargins(0, 0, 0, 0)
-        self.power_chord_text = QLabel()
         self.power_chord_icon = QLabel()
+        self.power_chord_text = CountdownCircle(0.1)
         self.power_chord_icon.setPixmap(self.power_chord_pixmap)
-        self.power_chord_text.setText("1")
         self.power_chord_layout.addWidget(self.power_chord_icon)
         self.power_chord_layout.addWidget(self.power_chord_text)
         self.set_chosen_skill_style(self.power_chord_widget)
@@ -37,10 +37,9 @@ class HUD(QWidget):
         self.major_chord_widget = QWidget()
         self.major_chord_layout = QHBoxLayout(self.major_chord_widget)
         self.major_chord_layout.setContentsMargins(0, 0, 0, 0)
-        self.major_chord_text = QLabel()
         self.major_chord_icon = QLabel()
+        self.major_chord_text = CountdownCircle(0.1)
         self.major_chord_icon.setPixmap(self.major_chord_pixmap)
-        self.major_chord_text.setText("2")
         self.major_chord_layout.addWidget(self.major_chord_icon)
         self.major_chord_layout.addWidget(self.major_chord_text)
         self.set_not_chosen_skill_style(self.major_chord_widget)
@@ -48,10 +47,9 @@ class HUD(QWidget):
         self.minor_chord_widget = QWidget()
         self.minor_chord_layout = QHBoxLayout(self.minor_chord_widget)
         self.minor_chord_layout.setContentsMargins(0, 0, 0, 0)
-        self.minor_chord_text = QLabel()
         self.minor_chord_icon = QLabel()
+        self.minor_chord_text = CountdownCircle(0.1)
         self.minor_chord_icon.setPixmap(self.minor_chord_pixmap)
-        self.minor_chord_text.setText("3")
         self.minor_chord_layout.addWidget(self.minor_chord_icon)
         self.minor_chord_layout.addWidget(self.minor_chord_text)
         self.set_not_chosen_skill_style(self.minor_chord_widget)
