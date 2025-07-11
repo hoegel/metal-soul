@@ -12,7 +12,6 @@ class BossEnemy(Enemy):
         self.attack_timer = 120
 
     def update_effects(self):
-        # Боссы получают меньше урона от эффектов
         if self.dot["active"]:
             self.dot["timer"] -= 1
             if self.dot["timer"] % 30 == 0:

@@ -13,8 +13,8 @@ class Projectile:
         self.range = range_
         self.color = color
         self.radius = radius
-        self.source = source          # "player", "enemy", "trap"
-        self.target_type = target_type  # "enemy" или "player"
+        self.source = source
+        self.target_type = target_type
 
         dx = tx - x
         dy = ty - y
@@ -34,7 +34,6 @@ class Projectile:
         self.x += self.dir_x * self.speed
         self.y += self.dir_y * self.speed
 
-        # Проверка на дальность
         traveled = math.hypot(self.x - self.start_x, self.y - self.start_y)
         if traveled >= self.range:
             self.alive = False

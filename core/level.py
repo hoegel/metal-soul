@@ -17,7 +17,6 @@ class Level:
         directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
         queue = [(cx, cy)]
 
-        # 1. Создаём основной остов комнат
         while len(self.rooms) < self.room_count:
             x, y = random.choice(queue)
             dx, dy = random.choice(directions)
@@ -27,7 +26,6 @@ class Level:
                 self.rooms[(nx, ny)] = Room(nx, ny, "fight")
                 queue.append((nx, ny))
 
-        # 2. Находим возможные тупиковые места (ещё не занятые)
         candidates = []
         for (x, y) in list(self.rooms.keys()):
             for dx, dy in directions:
@@ -35,7 +33,6 @@ class Level:
                 if (nx, ny) in self.rooms:
                     continue
 
-                # Подсчитать, сколько соседей будет у новой комнаты
                 neighbor_count = 0
                 for ddx, ddy in directions:
                     adj_x, adj_y = nx + ddx, ny + ddy
@@ -47,7 +44,6 @@ class Level:
 
         random.shuffle(candidates)
 
-        # 3. Создаём комнату босса
         if candidates:
             bx, by = candidates.pop()
             self.rooms[(bx, by)] = Room(bx, by, "boss")
@@ -56,7 +52,6 @@ class Level:
                 if (nx, ny) in candidates:
                     candidates.remove((nx, ny))
 
-        # 4. Создаём до 3 комнат-сокровищниц
         for _ in range(3):
             if candidates:
                 tx, ty = candidates.pop()

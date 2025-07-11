@@ -8,19 +8,18 @@ class Artifact(ABC):
 
     @abstractmethod
     def apply(self, player):
-        """Применяет эффект артефакта к игроку"""
         pass
 
 class SpeedBoost(Artifact):
     def __init__(self):
-        super().__init__("Speed Boost", "Увеличивает скорость передвижения на 1.")
+        super().__init__("Speed Boost", "Increases movement speed by 1.")
 
     def apply(self, player):
         player.speed += 1
 
 class MaxHealthUp(Artifact):
     def __init__(self):
-        super().__init__("Vital Crystal", "Увеличивает макс. здоровье на 20.")
+        super().__init__("Vital Crystal", "Increases max health by 20.")
 
     def apply(self, player):
         player.max_hp += 20
@@ -29,7 +28,7 @@ class MaxHealthUp(Artifact):
 
 class WeaponDamageUp(Artifact):
     def __init__(self, weapon_id, amount):
-        super().__init__("Sharpened Edge", f"Увеличивает урон оружия {weapon_id} на {amount}.")
+        super().__init__("Sharpened Edge", f"Increases weapon damage of {weapon_id} by {amount}.")
         self.weapon_id = weapon_id
         self.amount = amount
 
@@ -41,7 +40,7 @@ class WeaponDamageUp(Artifact):
 
 class CooldownReducer(Artifact):
     def __init__(self, weapon_id, factor=0.8):
-        super().__init__("Tempo Modulator", f"Уменьшает перезарядку оружия {weapon_id} на 20%.")
+        super().__init__("Tempo Modulator", f"Reduces the reload time of weapon {weapon_id} by 20%.")
         self.weapon_id = weapon_id
         self.factor = factor
 
@@ -52,7 +51,7 @@ class CooldownReducer(Artifact):
 
 class RangeUp(Artifact):
     def __init__(self, weapon_id, factor=1.2):
-        super().__init__("Snipe Modulator", f"Увеличивает дальность(радиус) {weapon_id} на 20%.")
+        super().__init__("Snipe Modulator", f"Increases the range(radius) of {weapon_id} by 20%.")
         self.weapon_id = weapon_id
         self.factor = factor
 
@@ -64,7 +63,7 @@ class RangeUp(Artifact):
 
 class AddEffectArtifact(Artifact):
     def __init__(self, weapon_id, effect_cls):
-        super().__init__(f"{effect_cls.__name__} Module", f"Добавляет эффект {effect_cls.__name__} к оружию {weapon_id}.")
+        super().__init__(f"{effect_cls.__name__} Module", f"Adds effect {effect_cls.__name__} to weapon {weapon_id}.")
         self.weapon_id = weapon_id
         self.effect_cls = effect_cls
 

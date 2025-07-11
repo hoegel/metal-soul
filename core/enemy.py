@@ -85,7 +85,6 @@ class Enemy:
     def rect(self):
         return (self.x, self.y, self.size, self.size)
     
-    # --- ЭФФЕКТЫ ---
 
     def apply_dot(self, damage=1, duration=3):
         self.dot = {"active": True, "damage": damage, "timer": duration * 60}

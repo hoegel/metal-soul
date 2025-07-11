@@ -4,7 +4,6 @@ from core.elemental import Delay, Overdrive, Fuzz, Wah, Tremolo, Distortion
 
 ARTIFACT_POOL = []
 
-# Пул возможных артефактов (включает оружейные, эффектные и базовые)
 def create_artifact_pool():
     global ARTIFACT_POOL
     ARTIFACT_POOL = [

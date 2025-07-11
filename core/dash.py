@@ -1,6 +1,5 @@
 # core/dodge_roll.py
 import time
-import math
 from config import *
 
 class DodgeRoll:
@@ -55,9 +54,7 @@ class DodgeRoll:
     def on_pause_off(self):
         self.dtime = time.time() - self.pause_start
 
-        # Если в момент паузы ролл был активен — корректируем start_time
         if self.active:
             self.start_time += self.dtime
         else:
-            # Если не активен, то значит cooldown идет — нужно поправить last_end_time
             self.last_end_time += self.dtime

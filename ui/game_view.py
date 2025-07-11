@@ -497,13 +497,13 @@ class GameView(QWidget):
                     self.player.score += 10
                     if random.random() < self.difficulty_config["heart_drop_chance"]:
                         if self.player.heal_fragments.add():
-                            ...
+                            self.hud.update_heal(self.player.heal_fragments.get_count(), self.player.heal_fragments.get_max_count())
                 elif self.current_room.room_type == "boss":
                     self.play_music_()
                     self.player.score += 40
                     if random.random() < self.difficulty_config["heart_drop_chance_boss"]:
                         if self.player.heal_fragments.add():
-                            ...
+                            self.hud.update_heal(self.player.heal_fragments.get_count(), self.player.heal_fragments.get_max_count())
                 self.current_room.cleared = True
 
 
