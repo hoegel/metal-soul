@@ -13,7 +13,7 @@ class MainMenu(QWidget):
         container = QWidget()
         container.setFixedWidth(550)
         layout = QVBoxLayout(container)
-        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.setSpacing(15)
 
         title = QLabel("Metal soul")

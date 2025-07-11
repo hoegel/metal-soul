@@ -39,7 +39,7 @@ class MusicManager:
             self.current_category = category
             self.track_queue = self._build_track_queue(category)
 
-        print("Currently playing:", self.current_category)
+        # print("Currently playing:", self.current_category)
 
         self.loop_enabled = loop
         self._play_next_in_queue()

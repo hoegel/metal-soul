@@ -29,7 +29,6 @@ class Shield:
 
     def absorb_hit(self):
         if self.is_active():
-            self.active_until = 0
             return True
         return False
 
