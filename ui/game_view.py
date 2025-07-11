@@ -84,7 +84,6 @@ class GameView(QWidget):
 
         self.load_room()
 
-
         self.current_room.artifact = None
         self.artifact_pos = QPoint(ROOM_SIZE[0]//2 - 10, ROOM_SIZE[1]//2 - 10)
         create_artifact_pool()
@@ -132,14 +131,18 @@ class GameView(QWidget):
 
     def pause_game(self):
         self.isPaused = True
+        self.hud.pause()
         self.pauseMenu.show()
         self.pauseMenu.move(270, 200)
         self.timer.stop()
+        self.player.on_pause_on()
         
     def resume_game(self):
         self.isPaused = False
+        self.hud.resume()
         self.pauseMenu.hide()
         self.timer.start()
+        self.player.on_pause_off()
 
     def game_starts(self):
         self.pauseMenu.hide()
@@ -294,7 +297,8 @@ class GameView(QWidget):
 
             if event.key() == Qt.Key_C:
                 if self.player.heal_fragments.use(self.player):
-                    ...#XXX
+                    print("🎵 Хилочка использована!")
+                    self.hud.update_heal(self.player.heal_fragments.get_count(), self.player.heal_fragments.get_max_count())
                 else:
                     ...#XXX
             if event.key() in (Qt.Key_1, Qt.Key_2, Qt.Key_3):
@@ -365,12 +369,6 @@ class GameView(QWidget):
             return
         self.player.update()
 
-        next_cd = self.player.shield.get_next_cooldown()
-        if next_cd > 0:
-            self.hud.shield_widget.circle.set_progress(next_cd, self.player.shield.cooldown)
-        else:
-            self.hud.shield_widget.circle.set_progress(0, self.player.shield.cooldown)
-
         _, hp, max_hp, _ = self.player.get_stats()
         # if not self.player.ultimate.is_active():
         #     self.music.stop()
@@ -438,6 +436,7 @@ class GameView(QWidget):
         damage, hp, max_hp, speed = self.player.get_stats()
 
         self.hud.update_stats(hp, max_hp)
+        
         self.player.update_invincibility()
 
         for enemy in self.player.enemies:
@@ -757,7 +756,7 @@ class GameView(QWidget):
 
         if self.player.ultimate.is_active():
             painter.setOpacity(0.25)
-            painter.fillRect(QRect(0, 0, *ROOM_SIZE), QColor(255, 0, 0))
+            painter.fillRect(QRect(0, 0, *ROOM_SIZE), QColor(255, 0, 0, 50))  # красный фильтр
             painter.setOpacity(1.0)
 
         painter.setPen(QColor(255, 255, 255))

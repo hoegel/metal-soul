@@ -2,12 +2,14 @@ import time
 
 class Shield:
     def __init__(self):
-        self.max_charges = 2
+        self.max_charges = 1
         self.cooldown = 20  # seconds
         self.active_duration = 7  # seconds
         self.charges = self.max_charges
         self.last_used_times = []
         self.active_until = 0
+        self.pause_start = 0
+        self.dtime = 0
 
     def activate(self):
         if self.charges > 0 and not self.is_active():
@@ -42,3 +44,11 @@ class Shield:
             if remaining_times:
                 return min(remaining_times)
         return 0
+    
+    def on_pause_on(self):
+        self.pause_start = time.time()
+        
+    def on_pause_off(self):
+        self.dtime = time.time() - self.pause_start
+        self.last_used_times = [t + self.dtime for t in self.last_used_times]
+        self.active_until += self.dtime
