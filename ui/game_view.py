@@ -7,6 +7,7 @@ from config import *
 from ui.hud import HUD
 from ui.menu_pause import PauseMenu
 from ui.menu_death import DeathMenu
+from ui.menu_win import WinMenu
 from core.player import Player
 from core.enemy import load_enemies_from_json, Enemy, ShooterEnemy, CrossShooterEnemy
 from core.weapon import *
@@ -109,6 +110,13 @@ class GameView(QWidget):
         self.deathMenu.reviveRequested.connect(self.revive_player)
         self.deathMenu.exitRequested.connect(self.main_window.go_to_main_menu)
 
+        #win menu
+        self.winMenu = WinMenu(self)
+        self.winMenu.setGeometry(100, 100, 300, 200)
+        self.winMenu.hide()
+        self.winMenu.restartRequested.connect(self.restart_game)
+        self.winMenu.exitRequested.connect(self.main_window.go_to_main_menu)
+
     def set_difficulty(self, difficulty_name):
         self.difficulty_name = difficulty_name
         self.difficulty_config = DIFFICULTY_SETTINGS[difficulty_name]
@@ -173,6 +181,23 @@ class GameView(QWidget):
         self.player.x = ROOM_SIZE[0] // 2 - self.player.size // 2
         self.player.y = ROOM_SIZE[1] // 2 - self.player.size // 2
         self.load_room()
+
+    def check_win_condition(self):
+        if (self.current_room.room_type == "next_level" and 
+            self.floor == MAX_FLOORS - 1 and 
+            not self.player.enemies):
+            self.player_win()
+
+    def player_win(self):
+        self.isPaused = True
+        self.timer.stop()
+        self.winMenu.set_score(self.player.score)
+        self.winMenu.show()
+        self.winMenu.move(250, 200)
+
+    def restart_game(self):
+        self.winMenu.hide()
+        self.revive_player()
 
     def load_room(self):
         self.player.enemies.clear()
@@ -333,6 +358,7 @@ class GameView(QWidget):
 
     def update_game(self):
         self.check_player_death()
+        self.check_win_condition() 
         if self.isDead:
             _, hp, max_hp, _ = self.player.get_stats()
             self.hud.update_stats(hp, max_hp)
@@ -474,12 +500,18 @@ class GameView(QWidget):
             if next_room.room_type == "next_level":
                 if self.current_room.room_type != "boss":
                     return
-                self.floor += 1
-                self.level = Level()  # Generate new floor
-                self.room_coords = self.level.start_pos
-                self.current_room = self.level.get_room(*self.room_coords)
-                self.player.x = ROOM_SIZE[0] // 2 - self.player.size // 2
-                self.player.y = ROOM_SIZE[1] // 2 - self.player.size // 2
+                if self.floor < MAX_FLOORS - 1:
+                    self.floor += 1
+                    self.level = Level()  # Generate new floor
+                    self.room_coords = self.level.start_pos
+                    self.current_room = self.level.get_room(*self.room_coords)
+                    self.player.x = ROOM_SIZE[0] // 2 - self.player.size // 2
+                    self.player.y = ROOM_SIZE[1] // 2 - self.player.size // 2
+                    self.load_room()
+                    return
+                else:
+                    self.player_win()
+                    return
             else:
                 self.room_coords = (new_x, new_y)
                 self.current_room = next_room
