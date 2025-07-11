@@ -223,6 +223,7 @@ class GameView(QWidget):
         self.winMenu.set_score(self.player.score)
         self.winMenu.show()
         self.winMenu.move(250, 200)
+        music.play_music("win", loop=True)
 
     def restart_game(self):
         self.winMenu.hide()
