@@ -98,7 +98,6 @@ class HUD(QWidget):
 
             return widget
 
-        features/hud_with_images
         self.dodge_widget = create_cooldown_widget(self.dash_pixmap, "SPC")
         self.shield_widget = create_cooldown_widget(self.shield_pixmap, "RMB")
         self.ult_widget = create_cooldown_widget(self.ult_pixmap, "Q")
