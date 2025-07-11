@@ -195,7 +195,7 @@ class CrossShooterEnemy(Enemy):
             self.y += math.sin(angle) * self.speed
 
 
-def load_enemies_from_json(path):
+def load_enemies_from_json(path, hp_multiplier):
     with open(path, 'r') as f:
         data = json.load(f)
 
@@ -205,8 +205,8 @@ def load_enemies_from_json(path):
         x = entry.get("x", random.randint(100, 700))
         y = entry.get("y", random.randint(100, 500))
         damage = entry.get("damage", 10)
-        hp = entry.get("hp", 20)
-        max_hp = entry.get("max_hp", 20)
+        hp = round(entry.get("hp", 20) * hp_multiplier, 0)
+        max_hp = round(entry.get("max_hp", 20) * hp_multiplier, 0)
         speed = entry.get("speed", 1.5)
         size = entry.get("size", 20)
 

@@ -1,32 +1,30 @@
-from PySide6.QtWidgets import QWidget, QPushButton, QVBoxLayout, QLabel, QSpacerItem, QSizePolicy, QGraphicsDropShadowEffect
+from PySide6.QtWidgets import QWidget, QPushButton, QVBoxLayout, QLabel, QSpacerItem, QSizePolicy
 from PySide6.QtCore import Signal, Qt
-from PySide6.QtGui import QColor
-from pathlib import Path
 
-class PauseMenu(QWidget):
-    resumeRequested = Signal()
+class DeathMenu(QWidget):
+    reviveRequested = Signal()
     exitRequested = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setObjectName("pause_menu")
+        self.setObjectName("death_menu")
         self.setFixedSize(400, 350)
 
         self.setup_ui()
 
-        self.resumeButton.clicked.connect(self.resumeRequested)
+        self.reviveButton.clicked.connect(self.reviveRequested)
         self.exitButton.clicked.connect(self.exitRequested)
 
     def setup_ui(self):
-        title = QLabel("Pause", self)
-        title.setObjectName("pause_title")
+        title = QLabel("You Died", self)
+        title.setObjectName("death_title")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.resumeButton = QPushButton("Continue", self)
+        self.reviveButton = QPushButton("Revive", self)
         self.exitButton = QPushButton("Exit to menu", self)
-        self.resumeButton.setObjectName("pause_button")
-        self.exitButton.setObjectName("pause_button")
-        for btn in (self.resumeButton, self.exitButton):
+        self.reviveButton.setObjectName("death_button")
+        self.exitButton.setObjectName("death_button")
+        for btn in (self.reviveButton, self.exitButton):
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
 
         layout = QVBoxLayout(self)
@@ -34,6 +32,6 @@ class PauseMenu(QWidget):
         layout.setSpacing(20)
         layout.addWidget(title)
         layout.addSpacerItem(QSpacerItem(0, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))
-        layout.addWidget(self.resumeButton)
+        layout.addWidget(self.reviveButton)
         layout.addWidget(self.exitButton)
         layout.addSpacerItem(QSpacerItem(0, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))

@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel, QComboBox
 from PySide6.QtCore import Qt
 
 class MainMenu(QWidget):
@@ -13,15 +13,23 @@ class MainMenu(QWidget):
         title.setObjectName("menu_title")
         layout.addWidget(title)
 
-        self.continue_button = QPushButton("Продолжить")
-        self.new_game_button = QPushButton("Новая игра")
-        self.exit_button = QPushButton("Выйти из игры")
+        self.continue_button = QPushButton("Continue")
+        self.new_game_button = QPushButton("New game")
+        self.exit_button = QPushButton("Exit the game")
         for button in (self.continue_button, self.new_game_button, self.exit_button):  
             self.set_button_style(button)
             layout.addWidget(button)
         self.continue_button.clicked.connect(self.main_window.continue_game)
-        self.new_game_button.clicked.connect(self.main_window.new_game)
+        self.new_game_button.clicked.connect(self.handle_new_game)
         self.exit_button.clicked.connect(self.close_app)
+
+        self.difficulty_label = QLabel("Select Difficulty:")
+        self.difficulty_label.setObjectName("difficulty_label")
+        self.difficulty_selector = QComboBox()
+        self.difficulty_selector.addItems(["Easy", "Normal", "Hard", "Nightmare"])
+        self.difficulty_selector.setObjectName("difficulty_selector")
+        layout.addWidget(self.difficulty_label)
+        layout.addWidget(self.difficulty_selector)
 
         self.continue_button.setEnabled(False)
         self.set_button_style(self.continue_button)
@@ -37,3 +45,7 @@ class MainMenu(QWidget):
         button.style().unpolish(button)
         button.style().polish(button)
         button.update()
+
+    def handle_new_game(self):
+        selected_difficulty = self.difficulty_selector.currentText()
+        self.main_window.new_game(selected_difficulty)
