@@ -24,7 +24,7 @@ class WinMenu(QWidget):
         self.scoreLabel.setObjectName("win_score")
         self.scoreLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
-        self.restartButton = QPushButton("Start new game", self)
+        self.restartButton = QPushButton("Start new run", self)
         self.exitButton = QPushButton("Exit to menu", self)
         self.restartButton.setObjectName("win_button")
         self.exitButton.setObjectName("win_button")

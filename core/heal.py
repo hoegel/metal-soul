@@ -2,7 +2,7 @@ class HealFragment:
     MAX_FRAGMENTS = 3
 
     def __init__(self):
-        self.count = 3  # три в начале
+        self.count = 1
 
     def can_use(self):
         return self.count > 0

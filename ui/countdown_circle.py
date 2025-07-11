@@ -7,17 +7,17 @@ class CountdownCircle(QWidget):
     def __init__(self, total_time=5, text = "", parent=None):
         super().__init__(parent)
         self.hide()
-        self.is_paused = False  # флаг для паузы
-        QTimer.singleShot(100, self.show)  # показать виджет через 100 мс
-        self.text = text  # текст, отображаемый при окончании таймера
+        self.is_paused = False
+        QTimer.singleShot(100, self.show)
+        self.text = text
         
-        self.total_time = total_time  # общее время в секундах
+        self.total_time = total_time
         self.remaining_time = total_time
         self.setFixedSize(80, 80)
 
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_timer)
-        self.timer.start(100)  # обновлять каждые 100 мс
+        self.timer.start(100)
 
     def pause(self):
         self.is_paused = True
@@ -39,16 +39,13 @@ class CountdownCircle(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         if self.remaining_time > 0:
-            # Радиус и центр
             radius = min(self.width(), self.height()) / 2.5
             center = self.rect().center()
 
-            # Фон круга (серый)
             pen = QPen(Qt.gray, 10)
             painter.setPen(pen)
             painter.drawEllipse(center, radius, radius)
 
-            # Активная дуга (синяя)
             percent = self.remaining_time / self.total_time
             angle_span = 360 * percent
 
@@ -57,11 +54,10 @@ class CountdownCircle(QWidget):
             painter.drawArc(
                 center.x() - radius, center.y() - radius,
                 radius * 2, radius * 2,
-                90 * 16,  # старт с верхней точки (12 часов)
-                -angle_span * 16  # по часовой стрелке
+                90 * 16,
+                -angle_span * 16
             )
 
-            # Текст (остаток времени, округлённый)
             painter.setPen(Qt.white)
             painter.setFont(QFont("Arial", 19, QFont.Bold))
             text = f"{self.remaining_time:.1f}"
