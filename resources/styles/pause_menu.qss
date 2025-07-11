@@ -27,3 +27,34 @@ QPushButton#pause_button:hover {{
 QPushButton#pause_button:pressed {{
     background-color: #3f1875;
 }}
+
+QSlider::groove:horizontal {{
+    border: 1px solid #111;
+    height: 10px;
+    background: #2b2b2b;
+    border-radius: 3px;
+    margin: 0 8px;
+}}
+
+QSlider::handle:horizontal {{
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #ff8800, stop:1 #cc5500);
+    border: 1px solid #000;
+    width: 18px;
+    height: 18px;
+    margin: -5px 0;
+    border-radius: 2px;
+}}
+
+QSlider::sub-page:horizontal {{
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #ffaa00, stop:1 #ff4400);
+    border: 1px solid #222;
+    height: 10px;
+    border-radius: 3px;
+}}
+
+QSlider::add-page:horizontal {{
+    background: #111;
+    border: 1px solid #222;
+    height: 10px;
+    border-radius: 3px;
+}}
