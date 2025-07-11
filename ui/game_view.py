@@ -7,13 +7,12 @@ from config import *
 from ui.hud import HUD
 from ui.menu_pause import PauseMenu
 from ui.menu_death import DeathMenu
-from ui.countdown_circle import CountdownCircle
+from ui.menu_win import WinMenu
 from core.player import Player
-from core.enemy import load_enemies_from_json, Enemy, ShooterEnemy, CrossShooterEnemy
+from core.enemy import load_enemies_from_json
 from core.weapon import *
 from core.level import Level
 from core.elemental import *
-from core.projectile import Projectile
 from core.artifact_pool import get_random_artifact, create_artifact_pool
 from core.effect_registry import load_unlocked_effects, unlock_effect
 from core.boss import *
@@ -86,7 +85,6 @@ class GameView(QWidget):
 
         self.load_room()
 
-
         self.current_room.artifact = None
         self.artifact_pos = QPoint(ROOM_SIZE[0]//2 - 10, ROOM_SIZE[1]//2 - 10)
         create_artifact_pool()
@@ -111,6 +109,13 @@ class GameView(QWidget):
   
         self.deathMenu.reviveRequested.connect(self.revive_player)
         self.deathMenu.exitRequested.connect(self.main_window.go_to_main_menu)
+
+        #win menu
+        self.winMenu = WinMenu(self)
+        self.winMenu.setGeometry(100, 100, 300, 200)
+        self.winMenu.hide()
+        self.winMenu.restartRequested.connect(self.restart_game)
+        self.winMenu.exitRequested.connect(self.main_window.go_to_main_menu)
 
     def set_difficulty(self, difficulty_name):
         self.difficulty_name = difficulty_name
@@ -144,16 +149,20 @@ class GameView(QWidget):
 
     def pause_game(self):
         self.isPaused = True
+        self.hud.pause()
         self.pauseMenu.show()
         self.pauseMenu.move(270, 200)
         self.timer.stop()
         music.play_music("menu", loop=True, temporary=True)
+        self.player.on_pause_on()
         
     def resume_game(self):
         self.isPaused = False
+        self.hud.resume()
         self.pauseMenu.hide()
         self.timer.start()
         self.play_music_()
+        self.player.on_pause_off()
 
     def game_starts(self):
         self.pauseMenu.hide()
@@ -200,6 +209,24 @@ class GameView(QWidget):
         self.load_room()
 
         music.play_music("background", loop=True)
+
+    
+    def check_win_condition(self):
+        if (self.current_room.room_type == "next_level" and 
+            self.floor == MAX_FLOORS - 1 and 
+            not self.player.enemies):
+            self.player_win()
+
+    def player_win(self):
+        self.isPaused = True
+        self.timer.stop()
+        self.winMenu.set_score(self.player.score)
+        self.winMenu.show()
+        self.winMenu.move(250, 200)
+
+    def restart_game(self):
+        self.winMenu.hide()
+        self.revive_player()
 
     def load_room(self):
         self.player.enemies.clear()
@@ -299,7 +326,8 @@ class GameView(QWidget):
 
             if event.key() == Qt.Key_C:
                 if self.player.heal_fragments.use(self.player):
-                    ...#XXX
+                    print("🎵 Хилочка использована!")
+                    self.hud.update_heal(self.player.heal_fragments.get_count(), self.player.heal_fragments.get_max_count())
                 else:
                     ...#XXX
             if event.key() in (Qt.Key_1, Qt.Key_2, Qt.Key_3):
@@ -367,17 +395,12 @@ class GameView(QWidget):
         music.update()
 
         self.check_player_death()
+        self.check_win_condition() 
         if self.isDead:
             _, hp, max_hp, _ = self.player.get_stats()
             self.hud.update_stats(hp, max_hp)
             return
         self.player.update()
-
-        next_cd = self.player.shield.get_next_cooldown()
-        if next_cd > 0:
-            self.hud.shield_widget.circle.set_progress(next_cd, self.player.shield.cooldown)
-        else:
-            self.hud.shield_widget.circle.set_progress(0, self.player.shield.cooldown)
 
         _, hp, max_hp, _ = self.player.get_stats()
 
@@ -450,6 +473,7 @@ class GameView(QWidget):
         damage, hp, max_hp, speed = self.player.get_stats()
 
         self.hud.update_stats(hp, max_hp)
+        
         self.player.update_invincibility()
 
         for enemy in self.player.enemies:
@@ -513,14 +537,20 @@ class GameView(QWidget):
             if next_room.room_type == "next_level":
                 if self.current_room.room_type != "boss":
                     return
-                self.floor += 1
-                self.level = Level(self.difficulty_config["room_count"])
-                self.current_room = self.level.get_room(*self.level.start_pos)
-                self.current_room.visited = True
-                self.current_room.cleared = True
-                self.room_coords = self.level.start_pos
-                self.player.x = ROOM_SIZE[0] // 2 - self.player.size // 2
-                self.player.y = ROOM_SIZE[1] // 2 - self.player.size // 2
+                if self.floor < MAX_FLOORS - 1:
+                    self.floor += 1
+                    self.level = Level(self.difficulty_config["room_count"])  # Generate new floor
+                    self.current_room = self.level.get_room(*self.level.start_pos)
+                    self.current_room.visited = True
+                    self.current_room.cleared = True
+                    self.room_coords = self.level.start_pos
+                    self.player.x = ROOM_SIZE[0] // 2 - self.player.size // 2
+                    self.player.y = ROOM_SIZE[1] // 2 - self.player.size // 2
+                    self.load_room()
+                    return
+                else:
+                    self.player_win()
+                    return
             else:
                 self.room_coords = (new_x, new_y)
                 self.current_room = next_room
@@ -766,7 +796,7 @@ class GameView(QWidget):
 
         if self.player.ultimate.is_active():
             painter.setOpacity(0.25)
-            painter.fillRect(QRect(0, 0, *ROOM_SIZE), QColor(255, 0, 0))
+            painter.fillRect(QRect(0, 0, *ROOM_SIZE), QColor(255, 0, 0, 50))  # красный фильтр
             painter.setOpacity(1.0)
 
         painter.setPen(QColor(255, 255, 255))

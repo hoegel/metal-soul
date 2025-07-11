@@ -11,6 +11,7 @@ style_paths = [
         "resources/styles/main_menu.qss",
         "resources/styles/pause_menu.qss",
         "resources/styles/death_menu.qss",
+        "resources/styles/menu_win.qss",
     ]
 
 def load_stylesheet_with_variables(paths: list[str], variables: dict[str, str]) -> str:

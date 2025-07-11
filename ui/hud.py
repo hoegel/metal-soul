@@ -15,6 +15,10 @@ class HUD(QWidget):
         self.power_chord_pixmap = QPixmap("resources/images/icons/axe_guitar.png")
         self.major_chord_pixmap = QPixmap("resources/images/icons/blaster_guitar.png")
         self.minor_chord_pixmap = QPixmap("resources/images/icons/bomb_amp.png")
+        self.shield_pixmap = QPixmap("resources/images/icons/shield_guitar.png")
+        self.ult_pixmap = QPixmap("resources/images/icons/ult.png")
+        self.dash_pixmap = QPixmap("resources/images/icons/dash.png")
+        self.heal_pixmap = QPixmap("resources/images/icons/heal.png")
 
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(10, 5, 10, 5)
@@ -27,28 +31,36 @@ class HUD(QWidget):
         self.power_chord_widget.setObjectName("power_chord_label")
         self.power_chord_layout = QHBoxLayout(self.power_chord_widget)
         self.power_chord_icon = QLabel()
-        self.power_chord_text = CountdownCircle(0.1)
+        self.power_chord_text = CountdownCircle(0.1, "1")
         self.power_chord_icon.setPixmap(self.power_chord_pixmap)
         self.power_chord_layout.addWidget(self.power_chord_icon)
         self.power_chord_layout.addWidget(self.power_chord_text)
+        self.power_chord_layout.addSpacing(100)  # добавляем отступ справа
 
         self.major_chord_widget = QWidget()
         self.major_chord_widget.setObjectName("major_chord_label")
         self.major_chord_layout = QHBoxLayout(self.major_chord_widget)
         self.major_chord_icon = QLabel()
-        self.major_chord_text = CountdownCircle(0.1)
+        self.major_chord_text = CountdownCircle(0.1, "2")
         self.major_chord_icon.setPixmap(self.major_chord_pixmap)
         self.major_chord_layout.addWidget(self.major_chord_icon)
         self.major_chord_layout.addWidget(self.major_chord_text)
+        self.major_chord_layout.addSpacing(100)  # добавляем отступ справа
         
         self.minor_chord_widget = QWidget()
         self.minor_chord_widget.setObjectName("minor_chord_label")
         self.minor_chord_layout = QHBoxLayout(self.minor_chord_widget)
         self.minor_chord_icon = QLabel()
-        self.minor_chord_text = CountdownCircle(0.1)
+        self.minor_chord_text = CountdownCircle(0.1, "3")
         self.minor_chord_icon.setPixmap(self.minor_chord_pixmap)
         self.minor_chord_layout.addWidget(self.minor_chord_icon)
         self.minor_chord_layout.addWidget(self.minor_chord_text)
+        self.minor_chord_layout.addSpacing(100)  # добавляем отступ справа
+
+        # Увеличиваем размер текста в CountdownCircle для всех аккордов
+        self.power_chord_text.setStyleSheet("font-size: 40px; font-weight: bold; color: white;")
+        self.major_chord_text.setStyleSheet("font-size: 40px; font-weight: bold; color: white;")
+        self.minor_chord_text.setStyleSheet("font-size: 40px; font-weight: bold; color: white;")
         
         weapon_row.addWidget(self.power_chord_widget)
         weapon_row.addWidget(self.major_chord_widget)
@@ -69,30 +81,53 @@ class HUD(QWidget):
         # Skills
         vbox = QVBoxLayout()
         
-        def create_cooldown_widget(label_text: str) -> QWidget:
+        def create_cooldown_widget(icon: str, key_text: str) -> QWidget:
             widget = QWidget()
             widget.setObjectName("skill_widget")
             layout = QHBoxLayout(widget)
-            
-            label = QLabel(label_text)
-            label.setObjectName("skill_label")
-            widget.circle = CountdownCircle(0.1)
+            # layout.setContentsMargins(0, 0, 0, 0)
 
-            layout.addWidget(label)
+            image = QLabel()
+            image.setPixmap(icon)
+            
+            widget.circle = CountdownCircle(0.1, key_text)
+
+            layout.addWidget(image)
             layout.addStretch()
             layout.addWidget(widget.circle)
 
             return widget
 
-        self.dodge_widget = create_cooldown_widget("Dash")
-        self.shield_widget = create_cooldown_widget("Shield")
-        self.ult_widget = create_cooldown_widget("Utimate")
-        # self.potion_widget = create_cooldown_widget("Heal")
+        self.dodge_widget = create_cooldown_widget(self.dash_pixmap, "SPC")
+        self.shield_widget = create_cooldown_widget(self.shield_pixmap, "RMB")
+        self.ult_widget = create_cooldown_widget(self.ult_pixmap, "Q")
+        
+        self.dodge_widget.circle.setFixedSize(120, 80)
+        self.shield_widget.circle.setFixedSize(120, 80)
+        self.ult_widget.circle.setFixedSize(120, 80)
+        
+        self.heal_widget = QWidget()
+        self.heal_widget.setObjectName("skill_widget")
+        self.heal_layout = QHBoxLayout(self.heal_widget)
+        self.heal_icon = QLabel()
+        self.heal_icon.setPixmap(self.heal_pixmap)
+        self.heal_text = QLabel("3/3")
+        self.heal_layout.addWidget(self.heal_icon)
+        self.heal_layout.addWidget(self.heal_text)
+        self.heal_text.setAlignment(Qt.AlignRight)
+        self.heal_text.setStyleSheet("""
+            color: white;
+            font-size: 40px;
+            font-weight: bold;
+            margin-top: 10px;
+            margin-right: 16px;
+        """)
 
         vbox.addWidget(self.dodge_widget)
         vbox.addWidget(self.shield_widget)
         vbox.addWidget(self.ult_widget)
-        # vbox.addWidget(self.potion_widget)
+        vbox.addWidget(self.heal_widget)
+        
         vbox.addStretch()
         
         hbox = QHBoxLayout()
@@ -105,6 +140,9 @@ class HUD(QWidget):
         main_layout.addLayout(hbox)
         main_layout.addLayout(weapon_row)
         main_layout.addLayout(hp_row)
+        
+    def update_heal(self, heal_count, max_heal_count):
+        self.heal_text.setText(f"{heal_count}/{max_heal_count}")
     
     def update_stats(self, hp, max_hp):
         self.hp_bar.setFormat(f"HP: {hp}/{max_hp} ({int(hp * 100 // max_hp)}%)")
@@ -130,10 +168,50 @@ class HUD(QWidget):
         update_style_property(self.power_chord_widget, "background-color", str(NOT_CHOSEN_WEAPON_COLOR))
         update_style_property(self.major_chord_widget, "background-color", str(NOT_CHOSEN_WEAPON_COLOR))
         update_style_property(self.minor_chord_widget, "background-color", str(NOT_CHOSEN_WEAPON_COLOR))
+        update_style_property(self.power_chord_widget, "min-width", "235px")
+        update_style_property(self.power_chord_widget, "max-width", "235px")
+        update_style_property(self.power_chord_widget, "min-height", "110px")
+        update_style_property(self.power_chord_widget, "max-height", "110px")
+        update_style_property(self.major_chord_widget, "min-width", "235px")
+        update_style_property(self.major_chord_widget, "max-width", "235px")
+        update_style_property(self.major_chord_widget, "min-height", "110px")
+        update_style_property(self.major_chord_widget, "max-height", "110px")
+        update_style_property(self.minor_chord_widget, "min-width", "235px")
+        update_style_property(self.minor_chord_widget, "max-width", "235px")
+        update_style_property(self.minor_chord_widget, "min-height", "110px")
+        update_style_property(self.minor_chord_widget, "max-height", "110px")
         match number:
             case 1:
                 update_style_property(self.power_chord_widget, "background-color", str(CHOSEN_WEAPON_COLOR))
+                update_style_property(self.power_chord_widget, "min-width", "245px")
+                update_style_property(self.power_chord_widget, "max-width", "245px")
+                update_style_property(self.power_chord_widget, "min-height", "120px")
+                update_style_property(self.power_chord_widget, "max-height", "120px")
             case 2:
                 update_style_property(self.major_chord_widget, "background-color", str(CHOSEN_WEAPON_COLOR))
+                update_style_property(self.major_chord_widget, "min-width", "245px")
+                update_style_property(self.major_chord_widget, "max-width", "245px")
+                update_style_property(self.major_chord_widget, "min-height", "120px")
+                update_style_property(self.major_chord_widget, "max-height", "120px")
             case 3:
                 update_style_property(self.minor_chord_widget, "background-color", str(CHOSEN_WEAPON_COLOR))
+                update_style_property(self.minor_chord_widget, "min-width", "245px")
+                update_style_property(self.minor_chord_widget, "max-width", "245px")
+                update_style_property(self.minor_chord_widget, "min-height", "120px")
+                update_style_property(self.minor_chord_widget, "max-height", "120px")
+    
+    def pause(self):
+        self.dodge_widget.circle.pause()
+        self.shield_widget.circle.pause()
+        self.ult_widget.circle.pause()
+        self.power_chord_text.pause()
+        self.major_chord_text.pause()
+        self.minor_chord_text.pause()
+
+    def resume(self):
+        self.dodge_widget.circle.resume()
+        self.shield_widget.circle.resume()
+        self.ult_widget.circle.resume()
+        self.power_chord_text.resume()
+        self.major_chord_text.resume()
+        self.minor_chord_text.resume()
