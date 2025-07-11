@@ -37,7 +37,7 @@ QSlider::groove:horizontal {{
 }}
 
 QSlider::handle:horizontal {{
-    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #ff8800, stop:1 #cc5500);
+    background-color: #4d1e90;
     border: 1px solid #000;
     width: 18px;
     height: 18px;
@@ -46,7 +46,7 @@ QSlider::handle:horizontal {{
 }}
 
 QSlider::sub-page:horizontal {{
-    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #ffaa00, stop:1 #ff4400);
+    background-color: #3f1875;
     border: 1px solid #222;
     height: 10px;
     border-radius: 3px;
