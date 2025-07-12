@@ -111,7 +111,7 @@ class HUD(QWidget):
         self.heal_layout = QHBoxLayout(self.heal_widget)
         self.heal_icon = QLabel()
         self.heal_icon.setPixmap(self.heal_pixmap)
-        self.heal_text = QLabel("3/3")
+        self.heal_text = QLabel("1/3")
         self.heal_layout.addWidget(self.heal_icon)
         self.heal_layout.addWidget(self.heal_text)
         self.heal_text.setAlignment(Qt.AlignRight)
