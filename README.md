@@ -10,7 +10,7 @@
 
 ### Setup
 1. Clone the repository:
-    git clone https://github.com/yourusername/metal-soul.git
+    git clone https://github.com/hoegel/metal-soul.git
     cd metal-soul
 2. Install dependencies:
     pip install -r requirements.txt
