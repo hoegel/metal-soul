@@ -34,7 +34,7 @@ class MainMenu(QWidget):
         self.difficulty_label = QLabel("Select Difficulty:")
         self.difficulty_label.setObjectName("difficulty_label")
         self.difficulty_selector = QComboBox()
-        self.difficulty_selector.addItems(["Easy", "Normal", "Hard", "Nightmare"])
+        self.difficulty_selector.addItems(["Easy", "Normal", "Hard", "Nightmare", "Senya"])
         self.difficulty_selector.setObjectName("difficulty_selector")
         layout.addWidget(self.difficulty_label)
         layout.addWidget(self.difficulty_selector)

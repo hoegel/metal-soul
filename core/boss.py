@@ -7,8 +7,8 @@ from core.projectile import Projectile
 from core.enemy import *
 
 class BossEnemy(Enemy):
-    def __init__(self, x, y, hp_multiplier, hp=500, speed=0.7, size=60):
-        super().__init__(x, y, damage=15, hp=round(hp * hp_multiplier, 0), max_hp=round(hp * hp_multiplier, 0), speed=speed, size=size)
+    def __init__(self, x, y, hp_multiplier, damage_multiplier, hp=500, speed=0.7, size=60):
+        super().__init__(x, y, damage=int(15 * damage_multiplier), hp=int(hp * hp_multiplier), max_hp=int(hp * hp_multiplier), speed=speed, size=size)
         self.attack_timer = 120
 
     def update_effects(self):
@@ -33,8 +33,8 @@ class BossEnemy(Enemy):
                 self.speed = self.base_speed
 
 class BossShooter(BossEnemy):
-    def __init__(self, x, y, hp_multiplier):
-        super().__init__(x, y, hp_multiplier, hp=500, speed=0.3, size=60)
+    def __init__(self, x, y, hp_multiplier, damage_multiplier):
+        super().__init__(x, y, hp_multiplier, damage_multiplier, hp=500, speed=0.3, size=60)
 
     def update(self, player_x, player_y, projectiles):
         super().update(player_x, player_y, projectiles)
@@ -51,8 +51,8 @@ class BossShooter(BossEnemy):
             self.attack_timer = 180
 
 class BossCharger(BossEnemy):
-    def __init__(self, x, y, hp_multiplier):
-        super().__init__(x, y, hp_multiplier, hp=600, speed=1.5, size=70)
+    def __init__(self, x, y, hp_multiplier, damage_multiplier):
+        super().__init__(x, y, hp_multiplier, damage_multiplier, hp=600, speed=1.5, size=70)
         self.charge_cooldown = 300
         self.charging = False
         self.charge_target = None
@@ -84,8 +84,8 @@ class BossCharger(BossEnemy):
                 self.charge_target = (player_x, player_y)
 
 class BossSpawner(BossEnemy):
-    def __init__(self, x, y, hp_multiplier):
-        super().__init__(x, y, hp_multiplier, hp=450, speed=0.3, size=80)
+    def __init__(self, x, y, hp_multiplier, damage_multiplier):
+        super().__init__(x, y, hp_multiplier, damage_multiplier, hp=450, speed=0.3, size=80)
         self.spawn_timer = 180
 
     def update(self, player_x, player_y, enemies):

@@ -198,7 +198,7 @@ class CrossShooterEnemy(Enemy):
         self.y = min(self.y, ROOM_SIZE[1] - BORDER_SIZE - self.size)
 
 
-def load_enemies_from_json(path, hp_multiplier):
+def load_enemies_from_json(path, hp_multiplier, damage_multiplier):
     with open(path, 'r') as f:
         data = json.load(f)
 
@@ -207,7 +207,7 @@ def load_enemies_from_json(path, hp_multiplier):
         enemy_type = entry.get("type", "base")
         x = entry.get("x", random.randint(100, 700))
         y = entry.get("y", random.randint(100, 500))
-        damage = entry.get("damage", 10)
+        damage = int(entry.get("damage", 10) * damage_multiplier)
         hp = int(entry.get("hp", 20) * hp_multiplier)
         max_hp = int(entry.get("max_hp", 20) * hp_multiplier)
         speed = entry.get("speed", 1.5)
