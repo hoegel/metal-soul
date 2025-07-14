@@ -22,7 +22,55 @@ class GameView(QWidget):
     def __init__(self, main_window, difficulty_name):
         super().__init__()
         self.main_window = main_window
+
+        self.pixmap_init()
+
+        self.set_difficulty(difficulty_name)
+
+        self.player_init()
+                                                                                                                            
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update_game)
+        self.timer.start(16)
+        self.timer.stop()
+
+        self.layout = QVBoxLayout(self)
+        self.layout.setContentsMargins(0, 0, 0, 0)
+
+        self.hud = HUD(self)
+        self.layout.addWidget(self.hud)
+        self.layout.setAlignment(self.hud, Qt.AlignBottom)
+
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+
+        self.bounds = [BORDER_SIZE, BORDER_SIZE, ROOM_SIZE[0] - BORDER_SIZE - self.player.size, ROOM_SIZE[1] - BORDER_SIZE - self.player.size]
+
+        self.floor = 0
+        self.level = Level(self.difficulty_config["room_count"])
+        self.current_room = self.level.get_room(*self.level.start_pos)
+        self.current_room.visited = True
+        self.current_room.cleared = True
+        self.room_coords = self.level.start_pos
+
+        self.current_room.artifact = None
+        self.artifact_pos = QPoint(ROOM_SIZE[0]//2 - 10, ROOM_SIZE[1]//2 - 10)
+        create_artifact_pool()
+
+        self.ult_music_plays = False
+
+        self.pressed_keys = set()
+
+        self.projectiles = []
+
+
+        self.effect_choices = []
+        self.load_unlocked_effects()
+
+        self.menus_init()
         
+        self.load_room()
+
+    def pixmap_init(self):
         self.background_pixmap = QPixmap("resources/images/backgrounds/level_background1.png")
         self.doors_up = QPixmap("resources/images/backgrounds/doors_up.png")
         self.doors_down = QPixmap("resources/images/backgrounds/doors_down.png")
@@ -41,57 +89,20 @@ class GameView(QWidget):
         self.doors_right_boss = QPixmap("resources/images/backgrounds/doors_right_boss.png")
         self.doors_left_boss = QPixmap("resources/images/backgrounds/doors_left_boss.png")
 
-        self.set_difficulty(difficulty_name)
-
+    def player_init(self):
         self.player = Player()
-        self.ult_music_plays = False
-
         self.player.size = 20
         self.player.x = ROOM_SIZE[0] // 2 - self.player.size // 2
         self.player.y = ROOM_SIZE[1] // 2 - self.player.size // 2
         self.player.speed = 4
-        self.pressed_keys = set()
-
-        self.bounds = [BORDER_SIZE, BORDER_SIZE, ROOM_SIZE[0] - BORDER_SIZE - self.player.size, ROOM_SIZE[1] - BORDER_SIZE - self.player.size]
-                                                                                                                                                
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.update_game)
-        self.timer.start(16)
-        self.timer.stop()
-
-        self.layout = QVBoxLayout(self)
-        self.layout.setContentsMargins(0, 0, 0, 0)
-
-        self.hud = HUD(self)
-        self.layout.addWidget(self.hud)
-        self.layout.setAlignment(self.hud, Qt.AlignBottom)
-
-        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
-
+        
         self.attack_effects = []
         for weapon in self.player.weapons.values():
             weapon.subscribe(self.on_enemies_hit)
 
         self.player.enemies = []
 
-        self.floor = 0
-        self.level = Level(self.difficulty_config["room_count"])
-        self.current_room = self.level.get_room(*self.level.start_pos)
-        self.current_room.visited = True
-        self.current_room.cleared = True
-        self.room_coords = self.level.start_pos
-
-        self.projectiles = []
-
-        self.load_room()
-
-        self.current_room.artifact = None
-        self.artifact_pos = QPoint(ROOM_SIZE[0]//2 - 10, ROOM_SIZE[1]//2 - 10)
-        create_artifact_pool()
-        
-        self.effect_choices = []
-        self.load_unlocked_effects()
-
+    def menus_init(self):
         #pause_menu
         self.isPaused = False
 
