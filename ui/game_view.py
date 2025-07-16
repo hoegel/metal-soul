@@ -16,6 +16,7 @@ from core.elemental import *
 from core.artifact_pool import get_random_artifact, create_artifact_pool
 from core.effect_registry import load_unlocked_effects, unlock_effect
 from core.boss import *
+from core.pickup import *
 from utils.music import music
 
 class GameView(QWidget):
@@ -55,6 +56,8 @@ class GameView(QWidget):
         self.current_room.artifact = None
         self.artifact_pos = QPoint(ROOM_SIZE[0]//2 - 10, ROOM_SIZE[1]//2 - 10)
         create_artifact_pool()
+
+        self.current_room.pickups = []
 
         self.ult_music_plays = False
 
@@ -276,6 +279,13 @@ class GameView(QWidget):
         if not self.player.enemies and not self.current_room.cleared:
             if self.current_room.room_type == "fight":
                 self.player.score += 10
+
+                if random.random() < 0.3:
+                    self.current_room.pickups.append(HealthPickup((self.player.x + 30), self.player.y))
+                    
+                if random.random() < 0.15:
+                    self.current_room.pickups.append(KeyPickup((self.player.x - 30), self.player.y))
+                
                 if random.random() < self.difficulty_config["heart_drop_chance"]:
                     if self.player.heal_fragments.add():
                         ...
@@ -312,23 +322,23 @@ class GameView(QWidget):
                     if self.player.start_roll(direction):
                         self.hud.dodge_widget.circle.start_countdown(self.player.dodge.get_cooldown())
 
-            if event.key() == Qt.Key_E and self.current_room.artifact:
-                dist = math.hypot(self.player.x - self.artifact_pos.x(), self.player.y - self.artifact_pos.y())
-                if dist < 40:
-                    artifact = self.current_room.artifact
+            # if event.key() == Qt.Key_E and self.current_room.artifact:
+            #     dist = math.hypot(self.player.x - self.artifact_pos.x(), self.player.y - self.artifact_pos.y())
+            #     if dist < 40:
+            #         artifact = self.current_room.artifact
 
-                    if hasattr(artifact, "effect_cls"):
-                        if artifact.apply(self.player):
-                            unlock_effect(artifact.effect_cls.__name__)
-                            QMessageBox.information(self, "New effect", f"New effect unlocked: {artifact.effect_cls.__name__}")
-                        else:
-                            QMessageBox.warning(self, "No space", "No free slots for effect!")
-                    else:
-                        artifact.apply(self.player)
-                        QMessageBox.information(self, "Artifact", f"Artifact received: {artifact.name}")
+            #         if hasattr(artifact, "effect_cls"):
+            #             if artifact.apply(self.player):
+            #                 unlock_effect(artifact.effect_cls.__name__)
+            #                 QMessageBox.information(self, "New effect", f"New effect unlocked: {artifact.effect_cls.__name__}")
+            #             else:
+            #                 QMessageBox.warning(self, "No space", "No free slots for effect!")
+            #         else:
+            #             artifact.apply(self.player)
+            #             QMessageBox.information(self, "Artifact", f"Artifact received: {artifact.name}")
 
-                    self.current_room.artifact = None
-                    self.current_room.cleared = True
+            #         self.current_room.artifact = None
+            #         self.current_room.cleared = True
 
             if event.key() == Qt.Key_Q:
                 if self.player.ultimate.activate():
@@ -533,6 +543,20 @@ class GameView(QWidget):
                 h.take_damage(proj.damage)
 
         self.projectiles = [p for p in self.projectiles if p.alive]
+
+        if self.current_room.artifact:
+            dist = math.hypot(self.player.x - self.artifact_pos.x(), self.player.y - self.artifact_pos.y())
+            if dist < 40:
+                self.current_room.artifact.apply(self.player)
+                self.current_room.artifact = None
+                self.current_room.cleared = True
+
+        for pickup in self.current_room.pickups:
+            if not pickup.collected and pickup.check_collision(self.player.x, self.player.y, self.player.size):
+                pickup.apply(self.player)
+                pickup.collected = True
+
+        self.current_room.pickups = [p for p in self.current_room.pickups if not p.collected]
 
         self.update()
 
@@ -769,6 +793,9 @@ class GameView(QWidget):
             painter.drawEllipse(x, y, 20, 20)
             painter.drawText(x - 10, y - 10, self.current_room.artifact.name)
             painter.drawText(40, 70, self.current_room.artifact.description)
+
+        for pickup in self.current_room.pickups:
+            pickup.draw(painter)
 
         if self.room_coords == self.level.start_pos and self.effect_choices:
             for i, eff_class in enumerate(self.effect_choices):

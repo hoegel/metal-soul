@@ -7,6 +7,7 @@ class Room:
         self.enemies = []
         self.cleared = False
         self.artifact = None
+        self.pickups = []
 
     def position(self):
         return (self.x, self.y)

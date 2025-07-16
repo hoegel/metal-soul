@@ -16,6 +16,7 @@ class Player:
         self.invincible = False
         self.invincible_timer = 0
         self.score = 0
+        self.keys = 0
 
         self.attack_type = 1
         self.weapons = {
