@@ -26,7 +26,7 @@ class HealthPickup(Pickup):
         super().__init__(x, y, size=10)
 
     def apply(self, player):
-        player.heal_percent(0.1)
+        player.heal_percent(10)
 
     def draw(self, painter):
         painter.setBrush(QColor(100, 255, 100))

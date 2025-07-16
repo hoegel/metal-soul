@@ -280,21 +280,21 @@ class GameView(QWidget):
             if self.current_room.room_type == "fight":
                 self.player.score += 10
 
-                if random.random() < 0.3:
+                if random.random() < 0.7:
                     self.current_room.pickups.append(HealthPickup((self.player.x + 30), self.player.y))
                     
-                if random.random() < 0.15:
+                if random.random() < 0.7:
                     self.current_room.pickups.append(KeyPickup((self.player.x - 30), self.player.y))
                 
                 if random.random() < self.difficulty_config["heart_drop_chance"]:
                     if self.player.heal_fragments.add():
-                        ...
+                        self.hud.update_heal(self.player.heal_fragments.get_count(), self.player.heal_fragments.get_max_count())
             elif self.current_room.room_type == "boss":
                 self.play_music_()
                 self.player.score += 40
                 if random.random() < self.difficulty_config["heart_drop_chance_boss"]:
                     if self.player.heal_fragments.add():
-                        ...
+                        self.hud.update_heal(self.player.heal_fragments.get_count(), self.player.heal_fragments.get_max_count())
             self.current_room.cleared = True
 
 
@@ -467,14 +467,22 @@ class GameView(QWidget):
         if new_y <= wall_thickness:
             if not (neighbors['up'] and abs(cx - ROOM_SIZE[0] // 2) <= door_width // 2 and not self.player.enemies):
                 blocked_y = True
+            elif (neighbors['up'].room_type == "treasure" and not self.player.keys and not neighbors['up'].visited):
+                blocked_y = True
         if new_y + self.player.size >= ROOM_SIZE[1] - wall_thickness:
             if not (neighbors['down'] and abs(cx - ROOM_SIZE[0] // 2) <= door_width // 2 and not self.player.enemies):
+                blocked_y = True
+            elif (neighbors['down'].room_type == "treasure" and not self.player.keys and not neighbors['down'].visited):
                 blocked_y = True
         if new_x <= wall_thickness:
             if not (neighbors['left'] and abs(cy - ROOM_SIZE[1] // 2) <= door_width // 2 and not self.player.enemies):
                 blocked_x = True
+            elif (neighbors['left'].room_type == "treasure" and not self.player.keys and not neighbors['left'].visited):
+                blocked_x = True
         if new_x + self.player.size >= ROOM_SIZE[0] - wall_thickness:
             if not (neighbors['right'] and abs(cy - ROOM_SIZE[1] // 2) <= door_width // 2 and not self.player.enemies):
+                blocked_x = True
+            elif (neighbors['right'].room_type == "treasure" and not self.player.keys and not neighbors['right'].visited):
                 blocked_x = True
 
         if not blocked_x:
@@ -515,6 +523,13 @@ class GameView(QWidget):
             if not self.current_room.cleared:
                 if self.current_room.room_type == "fight":
                     self.player.score += 10
+
+                    if random.random() < 0.7:
+                        self.current_room.pickups.append(HealthPickup((self.player.x + 30), self.player.y))
+                        
+                    if random.random() < 0.7:
+                        self.current_room.pickups.append(KeyPickup((self.player.x - 30), self.player.y))
+                    
                     if random.random() < self.difficulty_config["heart_drop_chance"]:
                         if self.player.heal_fragments.add():
                             self.hud.update_heal(self.player.heal_fragments.get_count(), self.player.heal_fragments.get_max_count())
@@ -547,7 +562,19 @@ class GameView(QWidget):
         if self.current_room.artifact:
             dist = math.hypot(self.player.x - self.artifact_pos.x(), self.player.y - self.artifact_pos.y())
             if dist < 40:
-                self.current_room.artifact.apply(self.player)
+                artifact = self.current_room.artifact
+
+                if hasattr(artifact, "effect_cls"):
+                    if artifact.apply(self.player):
+                        unlock_effect(artifact.effect_cls.__name__)
+                        # QMessageBox.information(self, "New effect", f"New effect unlocked: {artifact.effect_cls.__name__}")
+                    else:
+                        ...
+                        # QMessageBox.warning(self, "No space", "No free slots for effect!")
+                else:
+                    artifact.apply(self.player)
+                    # QMessageBox.information(self, "Artifact", f"Artifact received: {artifact.name}")
+
                 self.current_room.artifact = None
                 self.current_room.cleared = True
 
@@ -587,6 +614,11 @@ class GameView(QWidget):
                     self.player_win()
                     return
             else:
+                if next_room.room_type == "treasure" and not next_room.visited:
+                    if not self.player.keys:
+                        return
+                    else:
+                        self.player.keys -= 1
                 self.room_coords = (new_x, new_y)
                 self.current_room = next_room
                 
