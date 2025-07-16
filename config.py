@@ -3,25 +3,36 @@ DIFFICULTY_SETTINGS = {
         "room_count": 6,
         "hp_multiplier": 0.8,
         "heart_drop_chance": 0.4,
-        "heart_drop_chance_boss": 1
+        "heart_drop_chance_boss": 1,
+        "damage_multiplier": 1
     },
     "Normal": {
         "room_count": 8,
         "hp_multiplier": 1.0,
         "heart_drop_chance": 0.25,
-        "heart_drop_chance_boss": 0.8
+        "heart_drop_chance_boss": 0.8,
+        "damage_multiplier": 1.2
     },
     "Hard": {
         "room_count": 10,
         "hp_multiplier": 1.5,
         "heart_drop_chance": 0.15,
-        "heart_drop_chance_boss": 0.6
+        "heart_drop_chance_boss": 0.6,
+        "damage_multiplier": 1.5
     },
     "Nightmare": {
         "room_count": 12,
         "hp_multiplier": 2.0,
         "heart_drop_chance": 0.05,
-        "heart_drop_chance_boss": 0.4
+        "heart_drop_chance_boss": 0.4,
+        "damage_multiplier": 2
+    },
+    "Senya": {
+        "room_count": 15,
+        "hp_multiplier": 2.0,
+        "heart_drop_chance": 0.05,
+        "heart_drop_chance_boss": 0.4,
+        "damage_multiplier": 1000
     }
 }
 

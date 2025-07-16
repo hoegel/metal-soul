@@ -80,10 +80,9 @@ class Level:
         else:
             for dx, dy in directions:
                 nx, ny = bx + dx, by + dy
-                if (nx, ny) in self.rooms:
-                    continue
-                self.rooms[(nx, ny)] = Room(nx, ny, "next_level")
-                break
+                if (nx, ny) not in self.rooms:
+                    self.rooms[(nx, ny)] = Room(nx, ny, "next_level")
+                    break
 
 
 
