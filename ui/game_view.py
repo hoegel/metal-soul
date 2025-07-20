@@ -28,8 +28,6 @@ class GameView(QWidget):
         self.pixmap_init()
 
         self.set_difficulty(difficulty_name)
-
-        self.player_init()
                                                                                                                             
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_game)
@@ -45,14 +43,16 @@ class GameView(QWidget):
 
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
-        self.bounds = [BORDER_SIZE, BORDER_SIZE, ROOM_SIZE[0] - BORDER_SIZE - self.player.size, ROOM_SIZE[1] - BORDER_SIZE - self.player.size]
-
         self.floor = 0
         self.level = Level(self.difficulty_config["room_count"])
         self.current_room = self.level.get_room(*self.level.start_pos)
         self.current_room.visited = True
         self.current_room.cleared = True
         self.room_coords = self.level.start_pos
+
+        self.player_init()
+
+        self.bounds = [BORDER_SIZE, BORDER_SIZE, ROOM_SIZE[0] - BORDER_SIZE - self.player.size, ROOM_SIZE[1] - BORDER_SIZE - self.player.size]
 
         self.current_room.artifact = None
         self.artifact_pos = QPoint(ROOM_SIZE[0]//2 - 10, ROOM_SIZE[1]//2 - 10)
@@ -94,7 +94,7 @@ class GameView(QWidget):
         self.doors_left_boss = QPixmap("resources/images/backgrounds/doors_left_boss.png")
 
     def player_init(self):
-        self.player = Player()
+        self.player = Player(self.current_room)
         self.player.size = 20
         self.player.x = ROOM_SIZE[0] // 2 - self.player.size // 2
         self.player.y = ROOM_SIZE[1] // 2 - self.player.size // 2
@@ -577,7 +577,7 @@ class GameView(QWidget):
         self.attack_effects = [e for e in self.attack_effects if e['time'] > 0]
 
         for proj in self.projectiles:
-            proj.update()
+            proj.update(self.current_room)
             hits = proj.check_collision(self.player.enemies if proj.target_type == "enemy" else [self.player])
             for h in hits:
                 if h == self.player:
@@ -828,7 +828,7 @@ class GameView(QWidget):
                 
 
             elif atk_type == 'beam':
-                end = Beam(Player)._compute_wall_intersection(x, y, px, py)
+                end = Beam(Player, self.current_room)._compute_wall_intersection(x, y, px, py)
                 if end:
                     bx, by = end
                     if self.player.weapon.effect:

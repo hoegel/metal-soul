@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from config import ROOM_SIZE, BORDER_SIZE
+from config import ROOM_SIZE, BORDER_SIZE, TILE_SIZE
 import math
 import time
 
@@ -109,11 +109,13 @@ class Melee(Weapon):
         return angle
 
 class Beam(Weapon):
-    def __init__(self, player):
+    def __init__(self, player, current_room):
         super().__init__(player)
         self.damage = 12
         self.radius = 10
         self.cooldown = 1.0
+        self.spectral = False
+        self.room = current_room
 
     def attack(self, player_pos, target_pos, enemies): 
         if not self.can_attack():
@@ -158,39 +160,30 @@ class Beam(Weapon):
         self.notify(hit)
 
     def _compute_wall_intersection(self, px, py, tx, ty):
-        from PySide6.QtCore import QRectF
-        rect = QRectF(0, 0, ROOM_SIZE[0] - BORDER_SIZE // 2, ROOM_SIZE[1] - BORDER_SIZE // 2)
+        max_distance = 1000
+        steps = int(max_distance / 4)
+        dx = (tx - px) / steps
+        dy = (ty - py) / steps
 
-        dx = tx - px
-        dy = ty - py
+        x = px
+        y = py
+        for _ in range(steps):
+            x += dx
+            y += dy
+            tile_x = int((x - BORDER_SIZE) // TILE_SIZE)
+            tile_y = int((y - BORDER_SIZE) // TILE_SIZE)
 
-        if dx == 0 and dy == 0:
-            return None
+            if 0 <= tile_y < len(self.room.tiles) and 0 <= tile_x < len(self.room.tiles[0]):
+                tile = self.room.tiles[tile_y][tile_x]
+                if not tile.is_projectile_passable(self):
+                    return x, y
 
-        t_values = []
+            if x < BORDER_SIZE or x > ROOM_SIZE[0] - BORDER_SIZE:
+                return x, y
+            if y < BORDER_SIZE or y > ROOM_SIZE[1] - BORDER_SIZE:
+                return x, y
 
-        if dx != 0:
-            for x_edge in (rect.left(), rect.right()):
-                t = (x_edge - px) / dx
-                if t > 0:
-                    y = py + t * dy
-                    if rect.top() <= y <= rect.bottom():
-                        t_values.append((t, x_edge, y))
-
-        if dy != 0:
-            for y_edge in (rect.top(), rect.bottom()):
-                t = (y_edge - py) / dy
-                if t > 0:
-                    x = px + t * dx
-                    if rect.left() <= x <= rect.right():
-                        t_values.append((t, x, y_edge))
-
-        if not t_values:
-            return None
-
-        t_values.sort(key=lambda v: v[0])
-        _, bx, by = t_values[0]
-        return bx, by
+        return x, y
 
 class Bomb(Weapon):
     def __init__(self, player):

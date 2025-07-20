@@ -5,7 +5,7 @@ from core.ultimate import Ultimate
 from core.heal import HealFragment
 
 class Player:
-    def __init__(self):
+    def __init__(self, current_room):
         self.x = 100
         self.y = 100
         self.size = 20
@@ -22,7 +22,7 @@ class Player:
         self.attack_type = 1
         self.weapons = {
             1: Melee(self),
-            2: Beam(self),
+            2: Beam(self, current_room),
             3: Bomb(self)
         }
         self.weapon = self.weapons[self.attack_type]
