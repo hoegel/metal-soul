@@ -17,6 +17,8 @@ class Enemy:
         self.speed = speed
         self.size = size
 
+        self.is_flying = False
+
         self.dot = {"active": False, "damage": 0, "timer": 0}
         self.stun = {"active": False, "timer": 0, "cooldown": 0}
         self.slow = {"active": False, "factor": 1.0, "timer": 0}

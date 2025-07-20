@@ -1,4 +1,16 @@
 {
+  "tiles": [
+    "RRRRFFRRRR",
+    "RFFPFFPFFR",
+    "RFFPFFPFFR",
+    "RFFPFFPFFR",
+    "FFPFFFPFFF",
+    "FFPFFFPFFF",
+    "RFFFPFFFFR",
+    "RFFFPFFFFR",
+    "RFFFPFFFFR",
+    "RRRRFFRRRR"
+  ],
   "enemies": [
     {"type": "base", "x": 120, "y": 100, "damage": 8, "hp": 40, "max_hp": 40, "speed": 1.2, "size": 20},
     {"type": "base", "x": 200, "y": 300, "damage": 9, "hp": 45, "max_hp": 45, "speed": 1.0, "size": 22},

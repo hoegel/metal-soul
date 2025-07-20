@@ -18,6 +18,7 @@ from core.effect_registry import load_unlocked_effects, unlock_effect
 from core.boss import *
 from core.pickup import *
 from utils.music import music
+from core.tiles import *
 
 class GameView(QWidget):
     def __init__(self, main_window, difficulty_name):
@@ -252,8 +253,9 @@ class GameView(QWidget):
             self.current_room.artifact = None
             # room_id = f"floor{self.floor}_x{self.room_coords[0]}_y{self.room_coords[1]}"
             room_id = f"floor{self.floor}_{(self.room_coords[0] + self.room_coords[1]) % 4}"
-            path = f"resources/data/enemies/{room_id}.json"
+            path = f"resources/data/rooms/{room_id}.json"
             if os.path.exists(path):
+                self.current_room.load_layout_from_json(path)
                 self.player.enemies.extend(load_enemies_from_json(path, self.difficulty_config["hp_multiplier"], self.difficulty_config["damage_multiplier"]))
             else:
                 print(path)
@@ -432,6 +434,8 @@ class GameView(QWidget):
         
         if self.player.is_dodging():
             new_x, new_y = self.player.get_position()
+            new_x = int(new_x)
+            new_y = int(new_y)
         else:
             dx = dy = 0
             if Qt.Key_W in self.pressed_keys:
@@ -484,6 +488,12 @@ class GameView(QWidget):
                 blocked_x = True
             elif (neighbors['right'].room_type == "treasure" and not self.player.keys and not neighbors['right'].visited):
                 blocked_x = True
+
+        if not self.is_move_valid(new_x, self.player.y):
+            new_x = self.player.x
+
+        if not self.is_move_valid(self.player.x, new_y):
+            new_y = self.player.y
 
         if not blocked_x:
             self.player.x = new_x
@@ -587,6 +597,22 @@ class GameView(QWidget):
 
         self.update()
 
+    def is_move_valid(self, x, y):
+        corners = [
+            (x, y),
+            (x + self.player.size - 1, y),
+            (x, y + self.player.size - 1),
+            (x + self.player.size - 1, y + self.player.size - 1),
+        ]
+        for px, py in corners:
+            tile_x = (px - BORDER_SIZE) // TILE_SIZE
+            tile_y = (py - BORDER_SIZE) // TILE_SIZE
+            if 0 <= tile_y < len(self.current_room.tiles) and 0 <= tile_x < len(self.current_room.tiles[0]):
+                tile = self.current_room.tiles[tile_y][tile_x]
+                if not tile.is_walkable(self.player):
+                    return False
+        return True
+
     def try_move_room(self, dx, dy):
         if self.player.enemies:
             return
@@ -645,6 +671,10 @@ class GameView(QWidget):
             painter.drawPixmap(0, 0, scaled_pixmap)
         else:
             painter.fillRect(QRect(0, 0, 600, 600), Qt.lightGray)
+
+        for row in self.current_room.tiles:
+            for tile in row:
+                tile.draw(painter, TILE_SIZE)
 
         if self.player.shield.is_active():
             painter.setPen(QPen(QColor(0, 255, 255), 4))
