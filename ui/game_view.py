@@ -283,10 +283,12 @@ class GameView(QWidget):
                 self.player.score += 10
 
                 if random.random() < 0.7:
-                    self.current_room.pickups.append(HealthPickup((self.player.x + 30), self.player.y))
+                    x, y = self.find_valid_pickup_position()
+                    self.current_room.pickups.append(HealthPickup(x, y))
                     
                 if random.random() < 0.7:
-                    self.current_room.pickups.append(KeyPickup((self.player.x - 30), self.player.y))
+                    x, y = self.find_valid_pickup_position()
+                    self.current_room.pickups.append(KeyPickup(x, y))
                 
                 if random.random() < self.difficulty_config["heart_drop_chance"]:
                     if self.player.heal_fragments.add():
@@ -299,6 +301,22 @@ class GameView(QWidget):
                         self.hud.update_heal(self.player.heal_fragments.get_count(), self.player.heal_fragments.get_max_count())
             self.current_room.cleared = True
 
+    def find_valid_pickup_position(self):
+        center_x = ROOM_SIZE[0] // 2
+        center_y = ROOM_SIZE[1] // 2
+        for _ in range(40):
+            offset_x = random.randint(-60, 60)
+            offset_y = random.randint(-60, 60)
+            x = center_x + offset_x
+            y = center_y + offset_y
+            tile_x = (x - BORDER_SIZE) // TILE_SIZE
+            tile_y = (y - BORDER_SIZE) // TILE_SIZE
+            if (0 <= tile_y < len(self.current_room.tiles) and
+                0 <= tile_x < len(self.current_room.tiles[0])):
+                tile = self.current_room.tiles[tile_y][tile_x]
+                if tile.is_walkable(self.player):
+                    return x, y
+        return center_x, center_y 
 
     def keyPressEvent(self, event: QKeyEvent):
         if event.key() == Qt.Key.Key_Escape:
@@ -535,10 +553,12 @@ class GameView(QWidget):
                     self.player.score += 10
 
                     if random.random() < 0.7:
-                        self.current_room.pickups.append(HealthPickup((self.player.x + 30), self.player.y))
+                        x, y = self.find_valid_pickup_position()
+                        self.current_room.pickups.append(KeyPickup(x, y))
                         
                     if random.random() < 0.7:
-                        self.current_room.pickups.append(KeyPickup((self.player.x - 30), self.player.y))
+                        x, y = self.find_valid_pickup_position()
+                        self.current_room.pickups.append(KeyPickup(x, y))
                     
                     if random.random() < self.difficulty_config["heart_drop_chance"]:
                         if self.player.heal_fragments.add():
