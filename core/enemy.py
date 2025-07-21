@@ -37,7 +37,7 @@ class Enemy:
         if self.stun["active"]:
             return
 
-        if not self.is_flying:
+        if not self.is_flying and self.room.tiles:
             self.move_smart_towards(player_x, player_y)
         else:
             self.move_towards(player_x, player_y)

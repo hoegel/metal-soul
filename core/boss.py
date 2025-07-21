@@ -8,7 +8,7 @@ from core.enemy import *
 
 class BossEnemy(Enemy):
     def __init__(self, x, y, hp_multiplier, damage_multiplier, hp=500, speed=0.7, size=60, current_room=None):
-        super().__init__(x, y, damage=int(15 * damage_multiplier), hp=int(hp * hp_multiplier), max_hp=int(hp * hp_multiplier), speed=speed, size=size, current_room=current_room)
+        super().__init__(x, y, damage=int(15 * damage_multiplier), hp=int(hp * hp_multiplier), max_hp=int(hp * hp_multiplier), speed=speed, size=size, is_flying=True, current_room=current_room)
         self.attack_timer = 120
 
     def update_effects(self):
