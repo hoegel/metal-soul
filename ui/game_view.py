@@ -256,21 +256,21 @@ class GameView(QWidget):
             path = f"resources/data/rooms/{room_id}.json"
             if os.path.exists(path):
                 self.current_room.load_layout_from_json(path)
-                self.player.enemies.extend(load_enemies_from_json(path, self.difficulty_config["hp_multiplier"], self.difficulty_config["damage_multiplier"]))
+                self.player.enemies.extend(load_enemies_from_json(path, self.difficulty_config["hp_multiplier"], self.difficulty_config["damage_multiplier"], self.current_room))
             else:
                 print(path)
-                self.player.enemies.extend(load_enemies_from_json("resources/data/enemies.json", self.difficulty_config["hp_multiplier"], self.difficulty_config["damage_multiplier"]))
+                self.player.enemies.extend(load_enemies_from_json("resources/data/enemies.json", self.difficulty_config["hp_multiplier"], self.difficulty_config["damage_multiplier"], self.current_room))
             room.enemies = self.player.enemies
         elif room.room_type == "boss" and not room.cleared:
             music.play_music(f"boss/boss{self.floor}", loop=True, temporary=True)
             self.current_room.artifact = None
             match self.floor:
                 case 0:
-                    self.player.enemies.append(BossCharger(ROOM_SIZE[0] // 2 - 40, ROOM_SIZE[1] // 2 - 40, self.difficulty_config["hp_multiplier"], self.difficulty_config["damage_multiplier"]))
+                    self.player.enemies.append(BossCharger(ROOM_SIZE[0] // 2 - 40, ROOM_SIZE[1] // 2 - 40, self.difficulty_config["hp_multiplier"], self.difficulty_config["damage_multiplier"], self.current_room))
                 case 1:
-                    self.player.enemies.append(BossShooter(ROOM_SIZE[0] // 2 - 40, ROOM_SIZE[1] // 2 - 40, self.difficulty_config["hp_multiplier"], self.difficulty_config["damage_multiplier"]))
+                    self.player.enemies.append(BossShooter(ROOM_SIZE[0] // 2 - 40, ROOM_SIZE[1] // 2 - 40, self.difficulty_config["hp_multiplier"], self.difficulty_config["damage_multiplier"], self.current_room))
                 case _:
-                    self.player.enemies.append(BossSpawner(ROOM_SIZE[0] // 2 - 40, ROOM_SIZE[1] // 2 - 40, self.difficulty_config["hp_multiplier"], self.difficulty_config["damage_multiplier"]))
+                    self.player.enemies.append(BossSpawner(ROOM_SIZE[0] // 2 - 40, ROOM_SIZE[1] // 2 - 40, self.difficulty_config["hp_multiplier"], self.difficulty_config["damage_multiplier"], self.current_room))
         elif room.room_type == "treasure" and not room.cleared and self.current_room.artifact == None:
             self.current_room.artifact = get_random_artifact()
 
