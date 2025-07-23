@@ -888,31 +888,7 @@ class GameView(QWidget):
                 painter.drawText(110 + i*140, 125, eff_class.__name__)
 
 
-        minimap_scale = 8
-        minimap_offset_x = WINDOW_WIDTH - 125
-        minimap_offset_y = 85
-        room_size = 20
-
-        for (rx, ry), room in self.level.rooms.items():
-            color = QColor(100, 100, 100)
-            if room == self.current_room:
-                color = QColor(0, 255, 0)
-            elif room.room_type == "boss":
-                color = QColor(255, 0, 0)
-            elif room.room_type == "treasure":
-                color = QColor(255, 215, 0)
-            elif room.visited:
-                color = QColor(200, 200, 200)
-            elif room.room_type == "next_level":
-                continue
-
-            painter.setBrush(color)
-            painter.setPen(QPen(Qt.black))
-            painter.drawRect(
-                minimap_offset_x + (rx - self.level.start_pos[0]) * room_size,
-                minimap_offset_y + (ry - self.level.start_pos[1]) * room_size,
-                room_size, room_size
-            )
+        self.minimap_paint(painter)
 
         if self.player.ultimate.is_active():
             painter.setOpacity(0.25)
@@ -931,3 +907,46 @@ class GameView(QWidget):
         text_y = 40
 
         painter.drawText(text_x, text_y, score_text)
+
+    def minimap_paint(self, painter):
+        minimap_scale = 8
+        minimap_offset_x = WINDOW_WIDTH - 125
+        minimap_offset_y = 85
+        room_size = 20
+
+        visited_rooms = {pos for pos, room in self.level.rooms.items() if room.visited}
+        visited_rooms.add(self.level.start_pos)  # если нужно показывать старт
+
+        neighbor_rooms = set()
+        for vx, vy in visited_rooms:
+            for dx, dy in [(-1,0), (1,0), (0,-1), (0,1)]:
+                neighbor_pos = (vx + dx, vy + dy)
+                if neighbor_pos in self.level.rooms:
+                    neighbor_rooms.add(neighbor_pos)
+
+        # Комнаты для отображения
+        rooms_to_draw = visited_rooms | neighbor_rooms
+
+        for (rx, ry) in rooms_to_draw:
+            if (rx, ry) not in self.level.rooms:
+                continue
+            room = self.level.rooms[(rx, ry)]
+
+            if room == self.current_room:
+                color = QColor(0, 0, 255)  # Текущая комната — синий
+            elif room.room_type == "boss":
+                color = QColor(255, 0, 0)
+            elif room.room_type == "treasure":
+                color = QColor(255, 215, 0)
+            elif room.visited:
+                color = QColor(200, 200, 200)  # Светло-серый
+            else:
+                color = QColor(100, 100, 100)  # Соседняя — тёмно-серый
+
+            painter.setBrush(color)
+            painter.setPen(QPen(Qt.black))
+            painter.drawRect(
+                minimap_offset_x + (rx - self.level.start_pos[0]) * room_size,
+                minimap_offset_y + (ry - self.level.start_pos[1]) * room_size,
+                room_size, room_size
+            )
