@@ -194,11 +194,15 @@ class Bomb(Weapon):
         self.tod = 10
         self.cooldown = 1.5
 
+    def can_attack(self):
+        return ((time.time() - self.last_attack_time) >= self.cooldown) and self.player.bombs
+
     def attack(self, player_pos, target_pos, enemies):
         if not self.can_attack():
             return
         
         self.reset_cooldown()
+        self.player.bombs -= 1
 
         tx, ty = target_pos
         hit = []
