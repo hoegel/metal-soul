@@ -940,6 +940,9 @@ class GameView(QWidget):
                 continue
             room = self.level.rooms[(rx, ry)]
 
+            if room.room_type == "next_level":
+                continue
+
             if room == self.current_room:
                 color = QColor(0, 0, 255)  # Текущая комната — синий
             elif room.room_type == "boss":
