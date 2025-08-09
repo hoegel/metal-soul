@@ -1,0 +1,7 @@
+{
+  "enemies": [
+    {"type": "shooter", "x": 489, "y": 138, "damage": 10, "hp": 54, "max_hp": 57, "speed": 1.07, "size": 21, "cooldown": 118},
+    {"type": "base", "x": 261, "y": 114, "damage": 10, "hp": 32, "max_hp": 36, "speed": 1.46, "size": 24 },
+    {"type": "base", "x": 320, "y": 310, "damage": 12, "hp": 36, "max_hp": 36, "speed": 1.0, "size": 22}
+  ]
+}

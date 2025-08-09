@@ -1,0 +1,39 @@
+QVBoxLayout#main_menu {{
+    background-color: #3c3ca7;
+}}
+
+QLabel#menu_title {{
+    color: #ffd4d4d4;
+    font-family: monospace;
+    font-size: 64px;
+    font-weight: bold;
+    margin-bottom: 30px;
+    letter-spacing: 4px;
+}}
+
+QPushButton#menu_button {{
+    background-color: #7289da;
+    border: none;
+    border-radius: 8px;
+    height: 40px;
+    color: #dcd7d7;
+    font-family: monospace;
+    font-size: 24px;
+    font-weight: bold;
+    padding: 10px 20px;
+    min-width: 200px;
+    margin-bottom: 10px;
+}}
+
+QPushButton#menu_button:hover {{
+    background-color: #5b6eae;
+}}
+
+QPushButton#menu_button:pressed {{
+    background-color: #4a5a8e;
+}}
+
+QPushButton#menu_button:disabled {{
+    background-color: #a0a0a0;
+    border: none;
+}}

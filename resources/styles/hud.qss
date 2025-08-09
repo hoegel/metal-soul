@@ -1,0 +1,57 @@
+QWidget#power_chord_label,
+QWidget#major_chord_label,
+QWidget#minor_chord_label {{
+    min-width: 235px;
+    max-width: 235px;
+    min-height: 110px;
+    max-height: 110px;
+
+    margin-bottom: 8px;
+
+    padding: 8px 15px;
+    border: none;
+    border-radius: 8px;
+
+    font-size: 16px;
+    color: white;
+    font-weight: bold;
+
+    background-color: {CHOSEN_WEAPON_COLOR};
+}}
+
+QWidget#skill_widget{{
+    min-width: 200;
+    max-width: 200;
+    min-height: 82px;
+    max-height: 82px;
+
+    padding: 8px 15px;
+    border: none;
+    border-radius: 8px;
+
+    font-size: 16px;
+    color: white;
+    font-weight: bold;
+    
+    background-color: {NOT_CHOSEN_WEAPON_COLOR};
+}}
+
+QLabel#skill_label{{
+    font-size: 24px;
+    color: white;
+    font-weight: bold;
+}}
+
+QProgressBar {{
+    border: 1px solid #000;
+    background-color: #444;
+    height: 40px;
+    text-align: center;
+    color: white;
+    font-size: 15px;
+    font-family: monospace;
+    font-weight: bold;
+}}
+QProgressBar::chunk {{
+    background-color: {GOOD_HP_BAR};
+}}
