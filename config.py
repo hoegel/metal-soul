@@ -1,7 +1,7 @@
 DIFFICULTY_SETTINGS = {
     "Easy": {
-        "room_count": 6,
-        "hp_multiplier": 0.8,
+        "room_count": 2,
+        "hp_multiplier": 0.01,
         "heart_drop_chance": 0.4,
         "heart_drop_chance_boss": 1,
         "damage_multiplier": 1
@@ -41,6 +41,7 @@ WINDOW_WIDTH = 850
 WINDOW_HEIGHT = 800
 ROOM_SIZE = (600, 600) #width height
 FIELD_SIZE = (530, 530) #play field width height
+TILE_SIZE = 46
 BORDER_SIZE = 70
 
 DASH_COOLDOWN = 1000

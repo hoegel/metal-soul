@@ -15,6 +15,7 @@ class Projectile:
         self.radius = radius
         self.source = source
         self.target_type = target_type
+        self.spectral = False
 
         dx = tx - x
         dy = ty - y
@@ -27,7 +28,7 @@ class Projectile:
 
         self.alive = True
 
-    def update(self):
+    def update(self, current_room):
         if not self.alive:
             return
 
@@ -42,6 +43,16 @@ class Projectile:
             self.alive = False
         if self.y < BORDER_SIZE // 2 or self.y > ROOM_SIZE[1] - BORDER_SIZE:
             self.alive = False
+
+        tile_x = int((self.x - BORDER_SIZE) // TILE_SIZE)
+        tile_y = int((self.y - BORDER_SIZE) // TILE_SIZE)
+        if (
+            0 <= tile_y < len(current_room.tiles) and
+            0 <= tile_x < len(current_room.tiles[0])
+        ):
+            tile = current_room.tiles[tile_y][tile_x]
+            if not tile.is_projectile_passable(self):
+                self.alive = False
 
     def check_collision(self, targets):
         if not self.alive:

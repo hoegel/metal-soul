@@ -18,6 +18,7 @@ from core.effect_registry import load_unlocked_effects, unlock_effect
 from core.boss import *
 from core.pickup import *
 from utils.music import music
+from core.tiles import *
 
 class GameView(QWidget):
     def __init__(self, main_window, difficulty_name):
@@ -27,8 +28,6 @@ class GameView(QWidget):
         self.pixmap_init()
 
         self.set_difficulty(difficulty_name)
-
-        self.player_init()
                                                                                                                             
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_game)
@@ -44,14 +43,16 @@ class GameView(QWidget):
 
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
-        self.bounds = [BORDER_SIZE, BORDER_SIZE, ROOM_SIZE[0] - BORDER_SIZE - self.player.size, ROOM_SIZE[1] - BORDER_SIZE - self.player.size]
-
         self.floor = 0
         self.level = Level(self.difficulty_config["room_count"])
         self.current_room = self.level.get_room(*self.level.start_pos)
         self.current_room.visited = True
         self.current_room.cleared = True
         self.room_coords = self.level.start_pos
+
+        self.player_init()
+
+        self.bounds = [BORDER_SIZE, BORDER_SIZE, ROOM_SIZE[0] - BORDER_SIZE - self.player.size, ROOM_SIZE[1] - BORDER_SIZE - self.player.size]
 
         self.current_room.artifact = None
         self.artifact_pos = QPoint(ROOM_SIZE[0]//2 - 10, ROOM_SIZE[1]//2 - 10)
@@ -93,7 +94,7 @@ class GameView(QWidget):
         self.doors_left_boss = QPixmap("resources/images/backgrounds/doors_left_boss.png")
 
     def player_init(self):
-        self.player = Player()
+        self.player = Player(self.current_room)
         self.player.size = 20
         self.player.x = ROOM_SIZE[0] // 2 - self.player.size // 2
         self.player.y = ROOM_SIZE[1] // 2 - self.player.size // 2
@@ -252,23 +253,24 @@ class GameView(QWidget):
             self.current_room.artifact = None
             # room_id = f"floor{self.floor}_x{self.room_coords[0]}_y{self.room_coords[1]}"
             room_id = f"floor{self.floor}_{(self.room_coords[0] + self.room_coords[1]) % 4}"
-            path = f"resources/data/enemies/{room_id}.json"
+            path = f"resources/data/rooms/{room_id}.json"
             if os.path.exists(path):
-                self.player.enemies.extend(load_enemies_from_json(path, self.difficulty_config["hp_multiplier"], self.difficulty_config["damage_multiplier"]))
+                self.current_room.load_layout_from_json(path)
+                self.player.enemies.extend(load_enemies_from_json(path, self.difficulty_config["hp_multiplier"], self.difficulty_config["damage_multiplier"], self.current_room))
             else:
                 print(path)
-                self.player.enemies.extend(load_enemies_from_json("resources/data/enemies.json", self.difficulty_config["hp_multiplier"], self.difficulty_config["damage_multiplier"]))
+                self.player.enemies.extend(load_enemies_from_json("resources/data/enemies.json", self.difficulty_config["hp_multiplier"], self.difficulty_config["damage_multiplier"], self.current_room))
             room.enemies = self.player.enemies
         elif room.room_type == "boss" and not room.cleared:
             music.play_music(f"boss/boss{self.floor}", loop=True, temporary=True)
             self.current_room.artifact = None
             match self.floor:
                 case 0:
-                    self.player.enemies.append(BossCharger(ROOM_SIZE[0] // 2 - 40, ROOM_SIZE[1] // 2 - 40, self.difficulty_config["hp_multiplier"], self.difficulty_config["damage_multiplier"]))
+                    self.player.enemies.append(BossCharger(ROOM_SIZE[0] // 2 - 40, ROOM_SIZE[1] // 2 - 40, self.difficulty_config["hp_multiplier"], self.difficulty_config["damage_multiplier"], self.current_room))
                 case 1:
-                    self.player.enemies.append(BossShooter(ROOM_SIZE[0] // 2 - 40, ROOM_SIZE[1] // 2 - 40, self.difficulty_config["hp_multiplier"], self.difficulty_config["damage_multiplier"]))
+                    self.player.enemies.append(BossShooter(ROOM_SIZE[0] // 2 - 40, ROOM_SIZE[1] // 2 - 40, self.difficulty_config["hp_multiplier"], self.difficulty_config["damage_multiplier"], self.current_room))
                 case _:
-                    self.player.enemies.append(BossSpawner(ROOM_SIZE[0] // 2 - 40, ROOM_SIZE[1] // 2 - 40, self.difficulty_config["hp_multiplier"], self.difficulty_config["damage_multiplier"]))
+                    self.player.enemies.append(BossSpawner(ROOM_SIZE[0] // 2 - 40, ROOM_SIZE[1] // 2 - 40, self.difficulty_config["hp_multiplier"], self.difficulty_config["damage_multiplier"], self.current_room))
         elif room.room_type == "treasure" and not room.cleared and self.current_room.artifact == None:
             self.current_room.artifact = get_random_artifact()
 
@@ -281,10 +283,12 @@ class GameView(QWidget):
                 self.player.score += 10
 
                 if random.random() < 0.7:
-                    self.current_room.pickups.append(HealthPickup((self.player.x + 30), self.player.y))
+                    x, y = self.find_valid_pickup_position()
+                    self.current_room.pickups.append(HealthPickup(x, y))
                     
                 if random.random() < 0.7:
-                    self.current_room.pickups.append(KeyPickup((self.player.x - 30), self.player.y))
+                    x, y = self.find_valid_pickup_position()
+                    self.current_room.pickups.append(KeyPickup(x, y))
                 
                 if random.random() < self.difficulty_config["heart_drop_chance"]:
                     if self.player.heal_fragments.add():
@@ -297,6 +301,22 @@ class GameView(QWidget):
                         self.hud.update_heal(self.player.heal_fragments.get_count(), self.player.heal_fragments.get_max_count())
             self.current_room.cleared = True
 
+    def find_valid_pickup_position(self):
+        center_x = ROOM_SIZE[0] // 2
+        center_y = ROOM_SIZE[1] // 2
+        for _ in range(40):
+            offset_x = random.randint(-60, 60)
+            offset_y = random.randint(-60, 60)
+            x = center_x + offset_x
+            y = center_y + offset_y
+            tile_x = (x - BORDER_SIZE) // TILE_SIZE
+            tile_y = (y - BORDER_SIZE) // TILE_SIZE
+            if (0 <= tile_y < len(self.current_room.tiles) and
+                0 <= tile_x < len(self.current_room.tiles[0])):
+                tile = self.current_room.tiles[tile_y][tile_x]
+                if tile.is_walkable(self.player):
+                    return x, y
+        return center_x, center_y 
 
     def keyPressEvent(self, event: QKeyEvent):
         if event.key() == Qt.Key.Key_Escape:
@@ -432,6 +452,8 @@ class GameView(QWidget):
         
         if self.player.is_dodging():
             new_x, new_y = self.player.get_position()
+            new_x = int(new_x)
+            new_y = int(new_y)
         else:
             dx = dy = 0
             if Qt.Key_W in self.pressed_keys:
@@ -485,6 +507,12 @@ class GameView(QWidget):
             elif (neighbors['right'].room_type == "treasure" and not self.player.keys and not neighbors['right'].visited):
                 blocked_x = True
 
+        if not self.is_move_valid(new_x, self.player.y):
+            new_x = self.player.x
+
+        if not self.is_move_valid(self.player.x, new_y):
+            new_y = self.player.y
+
         if not blocked_x:
             self.player.x = new_x
         if not blocked_y:
@@ -525,10 +553,12 @@ class GameView(QWidget):
                     self.player.score += 10
 
                     if random.random() < 0.7:
-                        self.current_room.pickups.append(HealthPickup((self.player.x + 30), self.player.y))
+                        x, y = self.find_valid_pickup_position()
+                        self.current_room.pickups.append(KeyPickup(x, y))
                         
                     if random.random() < 0.7:
-                        self.current_room.pickups.append(KeyPickup((self.player.x - 30), self.player.y))
+                        x, y = self.find_valid_pickup_position()
+                        self.current_room.pickups.append(KeyPickup(x, y))
                     
                     if random.random() < self.difficulty_config["heart_drop_chance"]:
                         if self.player.heal_fragments.add():
@@ -547,7 +577,7 @@ class GameView(QWidget):
         self.attack_effects = [e for e in self.attack_effects if e['time'] > 0]
 
         for proj in self.projectiles:
-            proj.update()
+            proj.update(self.current_room)
             hits = proj.check_collision(self.player.enemies if proj.target_type == "enemy" else [self.player])
             for h in hits:
                 if h == self.player:
@@ -586,6 +616,22 @@ class GameView(QWidget):
         self.current_room.pickups = [p for p in self.current_room.pickups if not p.collected]
 
         self.update()
+
+    def is_move_valid(self, x, y):
+        corners = [
+            (x, y),
+            (x + self.player.size - 1, y),
+            (x, y + self.player.size - 1),
+            (x + self.player.size - 1, y + self.player.size - 1),
+        ]
+        for px, py in corners:
+            tile_x = (px - BORDER_SIZE) // TILE_SIZE
+            tile_y = (py - BORDER_SIZE) // TILE_SIZE
+            if 0 <= tile_y < len(self.current_room.tiles) and 0 <= tile_x < len(self.current_room.tiles[0]):
+                tile = self.current_room.tiles[tile_y][tile_x]
+                if not tile.is_walkable(self.player):
+                    return False
+        return True
 
     def try_move_room(self, dx, dy):
         if self.player.enemies:
@@ -645,6 +691,10 @@ class GameView(QWidget):
             painter.drawPixmap(0, 0, scaled_pixmap)
         else:
             painter.fillRect(QRect(0, 0, 600, 600), Qt.lightGray)
+
+        for row in self.current_room.tiles:
+            for tile in row:
+                tile.draw(painter, TILE_SIZE)
 
         if self.player.shield.is_active():
             painter.setPen(QPen(QColor(0, 255, 255), 4))
@@ -778,7 +828,7 @@ class GameView(QWidget):
                 
 
             elif atk_type == 'beam':
-                end = Beam(Player)._compute_wall_intersection(x, y, px, py)
+                end = Beam(Player, self.current_room)._compute_wall_intersection(x, y, px, py)
                 if end:
                     bx, by = end
                     if self.player.weapon.effect:
