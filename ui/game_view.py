@@ -289,6 +289,10 @@ class GameView(QWidget):
                 if random.random() < 0.7:
                     x, y = self.find_valid_pickup_position()
                     self.current_room.pickups.append(KeyPickup(x, y))
+
+                if random.random() < 0.7:
+                    x, y = self.find_valid_pickup_position()
+                    self.current_room.pickups.append(BombPickup(x, y))
                 
                 if random.random() < self.difficulty_config["heart_drop_chance"]:
                     if self.player.heal_fragments.add():
@@ -554,11 +558,15 @@ class GameView(QWidget):
 
                     if random.random() < 0.7:
                         x, y = self.find_valid_pickup_position()
-                        self.current_room.pickups.append(KeyPickup(x, y))
-                        
+                        self.current_room.pickups.append(HealthPickup(x, y))
+                    
                     if random.random() < 0.7:
                         x, y = self.find_valid_pickup_position()
                         self.current_room.pickups.append(KeyPickup(x, y))
+
+                    if random.random() < 0.7:
+                        x, y = self.find_valid_pickup_position()
+                        self.current_room.pickups.append(BombPickup(x, y))
                     
                     if random.random() < self.difficulty_config["heart_drop_chance"]:
                         if self.player.heal_fragments.add():
@@ -931,6 +939,9 @@ class GameView(QWidget):
             if (rx, ry) not in self.level.rooms:
                 continue
             room = self.level.rooms[(rx, ry)]
+
+            if room.room_type == "next_level":
+                continue
 
             if room == self.current_room:
                 color = QColor(0, 0, 255)  # Текущая комната — синий

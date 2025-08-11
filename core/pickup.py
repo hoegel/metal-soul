@@ -47,3 +47,16 @@ class KeyPickup(Pickup):
         painter.drawEllipse(self.x, self.y, self.size, self.size)
         painter.setPen(QColor(50, 50, 0))
         painter.drawText(self.x + 2, self.y + 14, "🔑")
+
+class BombPickup(Pickup):
+    def __init__(self, x, y):
+        super().__init__(x, y, size=10)
+
+    def apply(self, player):
+        player.bombs += 5
+
+    def draw(self, painter):
+        painter.setBrush(QColor(10, 10, 10))
+        painter.drawEllipse(self.x, self.y, self.size, self.size)
+        painter.setPen(QColor(50, 50, 0))
+        painter.drawText(self.x + 2, self.y + 14, "bombx5")
