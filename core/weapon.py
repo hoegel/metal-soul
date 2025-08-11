@@ -142,20 +142,21 @@ class Beam(Weapon):
             ex += esize / 2
             ey += esize / 2
 
-            t = max(0, min(1, ((ex - px) * dx + (ey - py) * dy) / len_sq))
-            closest_x = px + t * dx
-            closest_y = py + t * dy
+            t = ((ex - px) * dx + (ey - py) * dy) / len_sq
+            if 0 <= t <= 1:
+                closest_x = px + t * dx
+                closest_y = py + t * dy
+                dist = math.hypot(closest_x - ex, closest_y - ey)
 
-            dist = math.hypot(closest_x - ex, closest_y - ey)
-            if dist < self.radius + esize:
-                if enemy.take_damage(self.damage * self.player.ult_active_multiplier):
-                    hit.append(enemy)
-                elif self.effect:
-                    for eff in self.effect:
-                        if eff.name != "wah":
-                            eff.apply(enemy)
-                        else:
-                            eff.apply(self.player)
+                if dist < self.radius + esize / 2:
+                    if enemy.take_damage(self.damage * self.player.ult_active_multiplier):
+                        hit.append(enemy)
+                    elif self.effect:
+                        for eff in self.effect:
+                            if eff.name != "wah":
+                                eff.apply(enemy)
+                            else:
+                                eff.apply(self.player)
 
         self.notify(hit)
 

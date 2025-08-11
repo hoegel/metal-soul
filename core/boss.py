@@ -102,7 +102,7 @@ class BossSpawner(BossEnemy):
                 spawn_x = min(spawn_x, ROOM_SIZE[0] - BORDER_SIZE - 18)
                 spawn_y = max(spawn_y, BORDER_SIZE)
                 spawn_y = min(spawn_y, ROOM_SIZE[1] - BORDER_SIZE - 18)
-                enemies.append(Enemy(spawn_x, spawn_y, 5, 15, 15, 1.0, 18))
+                enemies.append(Enemy(spawn_x, spawn_y, 5, 15, 15, 1.0, 18, True, self.room))
             for _ in range(2):
                 spawn_x = self.x + random.randint(-60, 60)
                 spawn_y = self.y + random.randint(-60, 60)
@@ -110,7 +110,7 @@ class BossSpawner(BossEnemy):
                 spawn_x = min(spawn_x, ROOM_SIZE[0] - BORDER_SIZE - 18)
                 spawn_y = max(spawn_y, BORDER_SIZE)
                 spawn_y = min(spawn_y, ROOM_SIZE[1] - BORDER_SIZE - 18)
-                enemies.append(ShooterEnemy(spawn_x, spawn_y, 80, 5, 15, 15, 1.0, 18))
+                enemies.append(ShooterEnemy(spawn_x, spawn_y, 80, 5, 15, 15, 1.0, 18, True, self.room))
             self.spawn_timer = 300
 
         self.move_towards(player_x, player_y)
