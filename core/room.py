@@ -2,6 +2,8 @@ import json
 from core.tiles.floor import *
 from core.tiles.pit import *
 from core.tiles.rock import *
+from core.tiles.spike import *
+from core.tiles.rock_spike import *
 
 class Room:
     def __init__(self, x, y, room_type="normal"):
@@ -29,6 +31,8 @@ class Room:
                         case 'F': tile = FloorTile(x, y)
                         case 'P': tile = PitTile(x, y)
                         case 'R': tile = RockTile(x, y)
+                        case 'S': tile = SpikeTile(x, y)
+                        case 'M': tile = RockSpikeTile(x, y)
                         case _:   tile = FloorTile(x, y)
                     tile_row.append(tile)
                 self.tiles.append(tile_row)
