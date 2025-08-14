@@ -2,6 +2,7 @@ from core.tiles.base import Tile
 from PySide6.QtGui import QColor
 from PySide6.QtCore import Qt
 from config import *
+from core.player import Player
 
 class RockSpikeTile(Tile):
     def __init__(self, x, y, damage=10):
@@ -9,7 +10,7 @@ class RockSpikeTile(Tile):
         self.damage = damage
 
     def is_walkable(self, entity=None):
-        if entity and hasattr(entity, "take_damage"):
+        if entity and hasattr(entity, "take_damage") and (entity is Player):
             entity.take_damage(self.damage)
         return False
 
