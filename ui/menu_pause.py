@@ -8,10 +8,11 @@ class PauseMenu(QWidget):
     resumeRequested = Signal()
     exitRequested = Signal()
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, current_level_number=0):
         super().__init__(parent)
+        self.current_level_number = current_level_number
         self.setObjectName("pause_menu")
-        self.setFixedSize(400, 350)
+        self.setFixedSize(400, 430)
 
         self.setup_ui()
 
@@ -22,6 +23,10 @@ class PauseMenu(QWidget):
         title = QLabel("Pause", self)
         title.setObjectName("pause_title")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.level_title = QLabel(f"Level - {self.current_level_number + 1}", self)
+        self.level_title.setObjectName("description")
+        self.level_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.resumeButton = QPushButton("Continue", self)
         self.exitButton = QPushButton("Exit to menu", self)
@@ -34,6 +39,8 @@ class PauseMenu(QWidget):
         layout.setContentsMargins(30, 30, 30, 30)
         layout.setSpacing(15)
         layout.addWidget(title)
+        layout.addSpacing(10)
+        layout.addWidget(self.level_title)
         layout.addSpacing(10)
         layout.addWidget(self.resumeButton)
         layout.addWidget(self.exitButton)
@@ -68,3 +75,7 @@ class PauseMenu(QWidget):
         layout.addLayout(sfx_layout)
 
         layout.addStretch()
+
+    def update_level(self, level):
+        self.current_level_number = level
+        self.level_title.setText(f"Level - {self.current_level_number + 1}")
