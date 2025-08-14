@@ -9,7 +9,7 @@ from ui.countdown_circle import CountdownCircle
 class HUD(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setFixedHeight(WINDOW_HEIGHT // 1.3)
+        self.setFixedHeight(WINDOW_HEIGHT // 1.2)
         self.setFixedWidth(WINDOW_WIDTH)
         
         self.power_chord_pixmap = QPixmap("resources/images/icons/axe_guitar.png")
@@ -19,6 +19,8 @@ class HUD(QWidget):
         self.ult_pixmap = QPixmap("resources/images/icons/ult.png")
         self.dash_pixmap = QPixmap("resources/images/icons/dash.png")
         self.heal_pixmap = QPixmap("resources/images/icons/heal.png")
+        self.key_pixmap = QPixmap("resources/images/icons/key.png")
+        self.bomb_pixmap = QPixmap("resources/images/icons/bomb.png")
 
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(10, 5, 10, 5)
@@ -123,10 +125,46 @@ class HUD(QWidget):
             margin-right: 16px;
         """)
 
+        self.key_widget = QWidget()
+        self.key_widget.setObjectName("skill_widget")
+        self.key_layout = QHBoxLayout(self.key_widget)
+        self.key_icon = QLabel()
+        self.key_icon.setPixmap(self.key_pixmap)
+        self.key_text = QLabel("1")
+        self.key_layout.addWidget(self.key_icon)
+        self.key_layout.addWidget(self.key_text)
+        self.key_text.setAlignment(Qt.AlignRight)
+        self.key_text.setStyleSheet("""
+            color: white;
+            font-size: 40px;
+            font-weight: bold;
+            margin-top: 10px;
+            margin-right: 16px;
+        """)
+
+        self.bomb_widget = QWidget()
+        self.bomb_widget.setObjectName("skill_widget")
+        self.bomb_layout = QHBoxLayout(self.bomb_widget)
+        self.bomb_icon = QLabel()
+        self.bomb_icon.setPixmap(self.bomb_pixmap)
+        self.bomb_text = QLabel("5")
+        self.bomb_layout.addWidget(self.bomb_icon)
+        self.bomb_layout.addWidget(self.bomb_text)
+        self.bomb_text.setAlignment(Qt.AlignRight)
+        self.bomb_text.setStyleSheet("""
+            color: white;
+            font-size: 40px;
+            font-weight: bold;
+            margin-top: 10px;
+            margin-right: 16px;
+        """)
+
         vbox.addWidget(self.dodge_widget)
         vbox.addWidget(self.shield_widget)
         vbox.addWidget(self.ult_widget)
         vbox.addWidget(self.heal_widget)
+        vbox.addWidget(self.key_widget)
+        vbox.addWidget(self.bomb_widget)
         
         vbox.addStretch()
         
@@ -143,6 +181,12 @@ class HUD(QWidget):
         
     def update_heal(self, heal_count, max_heal_count):
         self.heal_text.setText(f"{heal_count}/{max_heal_count}")
+
+    def update_key(self, key_count):
+        self.key_text.setText(f"{key_count}")
+
+    def update_bomb(self, bomb_count):
+        self.bomb_text.setText(f"{bomb_count}")
     
     def update_stats(self, hp, max_hp):
         self.hp_bar.setFormat(f"HP: {hp}/{max_hp} ({int(hp * 100 // max_hp)}%)")
