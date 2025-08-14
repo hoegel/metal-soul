@@ -11,7 +11,7 @@ class SpikeTile(Tile):
         self.spike_pixmap = QPixmap("resources/images/backgrounds/spikes.png")
         self.scaled_pixmap = self.spike_pixmap.scaled(TILE_SIZE, TILE_SIZE, Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
     def is_walkable(self, entity=None):
-        if entity and hasattr(entity, "take_damage") and not getattr(entity, "flying", False) and (entity is Player):
+        if entity and hasattr(entity, "take_damage") and not getattr(entity, "flying", False) and isinstance(entity, Player):
             entity.take_damage(self.damage)
         return True
 

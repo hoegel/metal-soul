@@ -34,6 +34,10 @@ class GameView(QWidget):
         self.timer.start(16)
         self.timer.stop()
 
+        self.total_time_seconds = 0
+        self.time_timer = QTimer()
+        self.time_timer.timeout.connect(self.update_game_time)
+
         self.layout = QVBoxLayout(self)
         self.layout.setContentsMargins(0, 0, 0, 0)
 
@@ -135,6 +139,9 @@ class GameView(QWidget):
     def set_difficulty(self, difficulty_name):
         self.difficulty_name = difficulty_name
         self.difficulty_config = DIFFICULTY_SETTINGS[difficulty_name]
+
+    def update_game_time(self):
+        self.total_time_seconds += 1
       
     def load_unlocked_effects(self):
         self.effect_choices = []
@@ -168,6 +175,7 @@ class GameView(QWidget):
         self.pauseMenu.show()
         self.pauseMenu.move(270, 200)
         self.timer.stop()
+        self.time_timer.stop()
         music.play_music("menu", loop=True, temporary=True)
         self.player.on_pause_on()
         
@@ -176,6 +184,7 @@ class GameView(QWidget):
         self.hud.resume()
         self.pauseMenu.hide()
         self.timer.start()
+        self.time_timer.start()
         self.play_music_()
         self.player.on_pause_off()
 
@@ -183,6 +192,7 @@ class GameView(QWidget):
         self.pauseMenu.hide()
         self.isPaused = False
         self.timer.start(16)
+        self.time_timer.start(1000)
         music.play_music("background", loop=True)
 
     def check_player_death(self):
@@ -195,6 +205,8 @@ class GameView(QWidget):
         self.isDead = True
         self.isPaused = True
         self.timer.stop()
+        self.deathMenu.set_score(self.player.score)
+        self.deathMenu.set_time(self.total_time_seconds)
         self.deathMenu.show()
         self.deathMenu.move(270, 200)
         music.play_music("death", loop=True)
@@ -216,6 +228,8 @@ class GameView(QWidget):
         create_artifact_pool()
         self.deathMenu.hide()
         self.timer.start(16)
+        self.total_time_seconds = 0
+        self.time_timer.start(1000)
         
         self.room_coords = self.level.start_pos
         self.current_room = self.level.get_room(*self.room_coords)
@@ -236,9 +250,11 @@ class GameView(QWidget):
         self.isPaused = True
         self.timer.stop()
         self.winMenu.set_score(self.player.score)
+        self.winMenu.set_time(self.total_time_seconds)
         self.winMenu.show()
         self.winMenu.move(250, 200)
         music.play_music("win", loop=True)
+
 
     def restart_game(self):
         self.winMenu.hide()
@@ -918,6 +934,16 @@ class GameView(QWidget):
         text_y = 40
 
         painter.drawText(text_x, text_y, score_text)
+
+        minutes = self.total_time_seconds // 60
+        seconds = self.total_time_seconds % 60
+        time_text = f"Time: {minutes:02}:{seconds:02}"
+
+        time_rect = painter.fontMetrics().boundingRect(time_text)
+        time_x = ROOM_SIZE[0] // 2 - time_rect.width() // 2
+        time_y = text_y + 30  # на 30px ниже score
+
+        painter.drawText(time_x, time_y, time_text)
 
     def minimap_paint(self, painter):
         minimap_scale = 8

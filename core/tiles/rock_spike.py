@@ -12,7 +12,7 @@ class RockSpikeTile(Tile):
         self.scaled_pixmap = self.spike_rock_pixmap.scaled(TILE_SIZE, TILE_SIZE, Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
 
     def is_walkable(self, entity=None):
-        if entity and hasattr(entity, "take_damage") and (entity is Player):
+        if entity and hasattr(entity, "take_damage") and isinstance(entity, Player):
             entity.take_damage(self.damage)
         return False
 
