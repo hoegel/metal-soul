@@ -110,7 +110,7 @@ class GameView(QWidget):
         #pause_menu
         self.isPaused = False
 
-        self.pauseMenu = PauseMenu(self)
+        self.pauseMenu = PauseMenu(self, current_level_number=self.floor)
         self.pauseMenu.setGeometry(100, 100, 200, 100)
 
         self.pauseMenu.resumeRequested.connect(self.resume_game)
@@ -657,6 +657,7 @@ class GameView(QWidget):
                     return
                 if self.floor < MAX_FLOORS - 1:
                     self.floor += 1
+                    self.pauseMenu.update_level(self.floor)
                     self.level = Level(self.difficulty_config["room_count"])  # Generate new floor
                     self.current_room = self.level.get_room(*self.level.start_pos)
                     self.current_room.visited = True
