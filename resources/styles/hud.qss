@@ -22,14 +22,14 @@ QWidget#minor_chord_label {{
 QWidget#skill_widget{{
     min-width: 200;
     max-width: 200;
-    min-height: 82px;
-    max-height: 82px;
+    min-height: 72px;
+    max-height: 72px;
 
-    padding: 8px 15px;
+    padding: 6px 15px;
     border: none;
     border-radius: 8px;
 
-    font-size: 16px;
+    font-size: 12px;
     color: white;
     font-weight: bold;
     
@@ -37,7 +37,7 @@ QWidget#skill_widget{{
 }}
 
 QLabel#skill_label{{
-    font-size: 24px;
+    font-size: 16px;
     color: white;
     font-weight: bold;
 }}

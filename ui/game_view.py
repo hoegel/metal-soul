@@ -534,6 +534,8 @@ class GameView(QWidget):
         damage, hp, max_hp, speed = self.player.get_stats()
 
         self.hud.update_stats(hp, max_hp)
+        self.hud.update_key(self.player.keys)
+        self.hud.update_bomb(self.player.bombs)
         
         self.player.update_invincibility()
 
