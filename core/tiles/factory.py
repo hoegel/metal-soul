@@ -1,11 +1,15 @@
 from core.tiles.floor import FloorTile
 from core.tiles.rock import RockTile
 from core.tiles.pit import PitTile
+from core.tiles.spike import SpikeTile
+from core.tiles.rock_spike import RockSpikeTile
 
 TILE_TYPES = {
     "F": FloorTile,
     "R": RockTile,
-    "P": PitTile
+    "P": PitTile,
+    "S": SpikeTile,
+    "M": RockSpikeTile
 }
 
 def create_tile(char, x, y):

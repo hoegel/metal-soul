@@ -1,15 +1,15 @@
 {
   "tiles": [
-    "RRRRFFRRRR",
+    "RRRRFFRMMR",
     "RFFPFFPFFR",
     "RFFPFFPFFR",
     "RFFPFFPFFR",
-    "FFPFFFPFFF",
-    "FFPFFFPFFF",
+    "FFPFFFSFFF",
+    "FFSFFFPFFF",
     "RFFFPFFFFR",
     "RFFFPFFFFR",
     "RFFFPFFFFR",
-    "RRRRFFRRRR"
+    "RMMRFFRRRR"
   ],
   "enemies": [
     {"type": "shooter", "x": 489, "y": 138, "damage": 7, "hp": 54, "max_hp": 57, "speed": 1.07, "size": 21, "cooldown": 118},
