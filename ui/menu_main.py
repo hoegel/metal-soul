@@ -39,6 +39,11 @@ class MainMenu(QWidget):
         layout.addWidget(self.difficulty_label)
         layout.addWidget(self.difficulty_selector)
 
+        self.tutorial_button = QPushButton("Tutorial")
+        self.set_button_style(self.tutorial_button)
+        layout.addWidget(self.tutorial_button)
+        self.tutorial_button.clicked.connect(self.show_tutorial)
+
         music_layout = QHBoxLayout()
         music_label = QLabel("Music Volume")
         music_label.setFixedWidth(100)
@@ -86,3 +91,6 @@ class MainMenu(QWidget):
     def handle_new_game(self):
         selected_difficulty = self.difficulty_selector.currentText()
         self.main_window.new_game(selected_difficulty)
+
+    def show_tutorial(self):
+        self.main_window.show_tutorial()
