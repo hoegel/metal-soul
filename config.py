@@ -1,7 +1,7 @@
 DIFFICULTY_SETTINGS = {
     "Easy": {
-        "room_count": 2,
-        "hp_multiplier": 0.01,
+        "room_count": 6,
+        "hp_multiplier": 0.8,
         "heart_drop_chance": 0.4,
         "heart_drop_chance_boss": 1,
         "damage_multiplier": 1
