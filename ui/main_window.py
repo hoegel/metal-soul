@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import QMainWindow, QStackedWidget
 from ui.menu_main import MainMenu
 from ui.game_view import GameView
+from ui.menu_tutorial import TutorialMenu
 from config import *
 from utils.music import music
 
@@ -15,7 +16,10 @@ class MainWindow(QMainWindow):
 
         self.main_menu = MainMenu(self)
 
+        self.tutorial_menu = TutorialMenu(self)
+
         self.stack.addWidget(self.main_menu)
+        self.stack.addWidget(self.tutorial_menu)
 
         self.stack.setCurrentWidget(self.main_menu)
         
@@ -40,3 +44,9 @@ class MainWindow(QMainWindow):
     def go_to_main_menu(self):
         self.stack.setCurrentWidget(self.main_menu)
         music.play_music("menu", loop=True)
+
+    def show_tutorial(self):
+        self.stack.setCurrentWidget(self.tutorial_menu)
+
+    def show_main_menu(self):
+        self.stack.setCurrentWidget(self.main_menu)
